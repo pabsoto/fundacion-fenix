@@ -1,0 +1,42 @@
+# ---- Sistema operativo ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Editores / IDEs ----
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ---- Node / React ----
+node_modules/
+dist/
+build/
+.env
+.env.local
+npm-debug.log*
+yarn-error.log*
+
+# ---- Flutter / Dart ----
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+**/ios/Pods/
+**/android/.gradle/
+
+# ---- .NET / ASP.NET Core ----
+bin/
+obj/
+*.user
+appsettings.Development.json
+
+# ---- Bases de datos / secretos locales ----
+*.mdf
+*.ldf
+*.env
+
+# ---- Logs ----
+*.log
