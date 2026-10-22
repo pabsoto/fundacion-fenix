@@ -35,7 +35,7 @@ describe('database configuration', () => {
     ).toThrow('DATABASE_URL no debe contener parámetros SSL');
   });
 
-  it('builds metadata for the five existing tables without connecting', async () => {
+  it('builds metadata for the six tables without connecting', async () => {
     const dataSource = new DataSource(createDatabaseOptions(testEnvironment));
     const metadataBuilder = dataSource as DataSource & {
       buildMetadatas(): Promise<void>;
@@ -52,8 +52,9 @@ describe('database configuration', () => {
       'canales_contacto',
       'contenido_institucional',
       'datos_donacion',
+      'sesiones_admin',
     ]);
-    expect(DATABASE_ENTITIES).toHaveLength(5);
+    expect(DATABASE_ENTITIES).toHaveLength(6);
 
     const expectedColumns: Record<string, string[]> = {
       administradores: [
@@ -120,6 +121,18 @@ describe('database configuration', () => {
         'telefono',
         'titular',
       ],
+      sesiones_admin: [
+        'administrador_id',
+        'creada_en',
+        'csrf_token',
+        'expira_en',
+        'id',
+        'motivo_revocacion',
+        'revocada_en',
+        'token_emitido_en',
+        'token_hash',
+        'ultima_actividad_en',
+      ],
     };
 
     for (const [tableName, columnNames] of Object.entries(expectedColumns)) {
@@ -152,10 +165,26 @@ describe('database configuration', () => {
       expect(id?.default).toBeTypeOf('function');
     }
 
+    const clavesForaneas = dataSource.entityMetadatas.flatMap(
+      ({ foreignKeys }) =>
+        foreignKeys.map((clave) => ({
+          nombre: clave.name,
+          onDelete: clave.onDelete,
+        })),
+    );
+
+    // La clave foránea de las sesiones se borra en cascada (las sesiones son
+    // efímeras); el resto de relaciones conservan la política del proyecto.
     expect(
-      dataSource.entityMetadatas.flatMap(({ foreignKeys }) =>
-        foreignKeys.map(({ onDelete }) => onDelete),
-      ),
+      clavesForaneas.find(
+        (clave) => clave.nombre === 'fk_sesiones_admin_administrador',
+      )?.onDelete,
+    ).toBe('CASCADE');
+
+    expect(
+      clavesForaneas
+        .filter((clave) => clave.nombre !== 'fk_sesiones_admin_administrador')
+        .map((clave) => clave.onDelete),
     ).toEqual(['RESTRICT', 'RESTRICT', 'RESTRICT', 'RESTRICT', 'RESTRICT']);
 
     expect(
@@ -169,6 +198,10 @@ describe('database configuration', () => {
       'ck_canales_tipo',
       'ck_canales_url_segura',
       'ck_contenido_clave_formato',
+      'ck_sesiones_admin_csrf_token_formato',
+      'ck_sesiones_admin_expira_posterior_creacion',
+      'ck_sesiones_admin_revocation_coherente',
+      'ck_sesiones_admin_token_hash_formato',
     ]);
 
     expect(
@@ -178,6 +211,8 @@ describe('database configuration', () => {
     ).toEqual([
       'ix_auditoria_creado_en',
       'ix_auditoria_tabla_registro',
+      'ix_sesiones_admin_administrador_id',
+      'ix_sesiones_admin_expira_en',
       'ux_datos_donacion_un_solo_activo',
     ]);
   });

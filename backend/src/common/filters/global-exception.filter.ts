@@ -35,7 +35,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       error: details.error,
       message: details.message,
       timestamp: new Date().toISOString(),
-      path: request.originalUrl,
+      // Se omite la cadena de consulta: puede contener códigos de
+      // autorización u otros datos sensibles que no deben devolverse.
+      path: request.originalUrl.split('?')[0],
     };
 
     response.status(statusCode).json(body);
