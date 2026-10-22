@@ -18,15 +18,18 @@ afterEach(() => {
 });
 
 describe('WhatsAppFloatingButton', () => {
-  it('renderiza el enlace wa.me configurado con destino y accesibilidad', () => {
+  it('renderiza el enlace wa.me oficial con destino y accesibilidad', () => {
     render(<WhatsAppFloatingButton />);
 
     const link = screen.getByRole('link', { name: ariaLabel });
 
     const expectedHref = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+    expect(WHATSAPP_PHONE).toBe('59170544491');
+    expect(WHATSAPP_MESSAGE).toBe(
+      'Hola, me gustaría obtener información sobre la Fundación FÉNIX LPB.',
+    );
     expect(WHATSAPP_URL).toBe(expectedHref);
     expect(link.getAttribute('href')).toBe(expectedHref);
-    expect(WHATSAPP_PHONE).toMatch(/^\d+$/);
     expect(link.getAttribute('target')).toBe('_blank');
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
     expect(link.classList.contains('wa-float')).toBe(true);
@@ -34,6 +37,7 @@ describe('WhatsAppFloatingButton', () => {
     expect(link.querySelector('.wa-float__tooltip')?.textContent).toBe(
       '¿Hablamos?',
     );
+    expect(link.parentElement).toBe(document.body);
   });
 
   it.each([
