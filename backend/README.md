@@ -646,6 +646,9 @@ TEST_DATABASE_URL=postgresql://fenix:fenix_test@localhost:55432/fenix_test \
 El contrato que necesita el frontend está en
 [`../docs/contratos/contrato-autenticacion-frontend.md`](../docs/contratos/contrato-autenticacion-frontend.md).
 
+El contrato de los endpoints institucionales públicos está en
+[`../docs/contratos/contrato-contenido-publico-frontend.md`](../docs/contratos/contrato-contenido-publico-frontend.md).
+
 Resumen: el login se inicia navegando a `GET /api/auth/google`; la sesión se
 consulta con `GET /api/auth/me`; el logout es `POST /api/auth/logout`; las
 peticiones deben enviarse con `credentials: 'include'`; las operaciones de
