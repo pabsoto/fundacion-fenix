@@ -1,19 +1,29 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Header,
+  HttpCode,
+  HttpStatus,
+  Post,
   Put,
   Req,
   UnauthorizedException,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
   ApiBody,
   ApiConflictResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiConsumes,
+  ApiNotFoundResponse,
+  ApiPayloadTooLargeResponse,
   ApiProperty,
   ApiSecurity,
   ApiServiceUnavailableResponse,
@@ -27,10 +37,20 @@ import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
 import { DonacionesAdminService } from '../donaciones/donaciones-admin.service.js';
 import {
+  DonacionesQrService,
+  TAMANO_MAXIMO_QR,
+  type ArchivoQrCargado,
+} from '../donaciones/donaciones-qr.service.js';
+import {
   RespuestaDonacionAdminDto,
   ResultadoGuardarDonacionDto,
 } from '../donaciones/dto/dato-donacion-admin.dto.js';
 import { GuardarDatoDonacionDto } from '../donaciones/dto/guardar-dato-donacion.dto.js';
+import {
+  ArchivoQrSwaggerDto,
+  ResultadoQrDonacionDto,
+  SubirQrDonacionDto,
+} from '../donaciones/dto/subir-qr-donacion.dto.js';
 
 /**
  * Respuesta del endpoint privado de comprobación.
@@ -71,7 +91,10 @@ export class ComprobacionAdminDto {
 @Controller('admin')
 @UseGuards(SesionAdminGuard)
 export class AdminController {
-  constructor(private readonly donaciones: DonacionesAdminService) {}
+  constructor(
+    private readonly donaciones: DonacionesAdminService,
+    private readonly qr: DonacionesQrService,
+  ) {}
 
   @Get('health')
   @Header('Cache-Control', 'no-store')
@@ -194,5 +217,113 @@ export class AdminController {
     }
 
     return this.donaciones.guardar(entrada, administradorId);
+  }
+
+  @Post('donaciones/qr')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CsrfGuard)
+  @UseInterceptors(
+    FileInterceptor('archivo', { limits: { fileSize: TAMANO_MAXIMO_QR } }),
+  )
+  @Header('Cache-Control', 'no-store')
+  @ApiTags('Donaciones administrativas')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Subir o reemplazar el QR de donaciones',
+    description:
+      'Valida PNG, JPG/JPEG o WebP de hasta 2 MB, crea un objeto único en Storage y actualiza PostgreSQL con auditoría. Conserva todos los datos bancarios.',
+  })
+  @ApiBody({ type: ArchivoQrSwaggerDto })
+  @ApiOkResponse({
+    description: 'QR registrado y referencia confirmada en PostgreSQL.',
+    type: ResultadoQrDonacionDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Falta el archivo, el formato no es válido o la fecha es inválida.',
+    type: ErrorResponseDto,
+  })
+  @ApiPayloadTooLargeResponse({
+    description: 'La imagen supera 2 MB.',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'No existe una sesión válida.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta está desactivada o el token CSRF es inválido.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Primero deben registrarse los datos bancarios.',
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'La configuración activa es inconsistente.',
+    type: ErrorResponseDto,
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Supabase Storage, PostgreSQL o la auditoría fallaron.',
+    type: ErrorResponseDto,
+  })
+  subirQr(
+    @UploadedFile() archivo: ArchivoQrCargado | undefined,
+    @Body() entrada: SubirQrDonacionDto,
+    @Req() request: PeticionConSesion,
+  ): Promise<ResultadoQrDonacionDto> {
+    return this.qr.reemplazar(
+      archivo,
+      entrada.qrVenceEl,
+      this.obtenerAdministradorId(request),
+    );
+  }
+
+  @Delete('donaciones/qr')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiTags('Donaciones administrativas')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Retirar el QR de donaciones',
+    description:
+      'Elimina la referencia al QR mediante una transacción auditada y después intenta limpiar el objeto de Storage. No modifica los datos bancarios.',
+  })
+  @ApiOkResponse({
+    description: 'QR retirado o configuración ya sin QR.',
+    type: ResultadoQrDonacionDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'No existe una sesión válida.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta está desactivada o el token CSRF es inválido.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'No existe configuración bancaria activa.',
+    type: ErrorResponseDto,
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'PostgreSQL o la auditoría fallaron.',
+    type: ErrorResponseDto,
+  })
+  retirarQr(
+    @Req() request: PeticionConSesion,
+  ): Promise<ResultadoQrDonacionDto> {
+    return this.qr.retirar(this.obtenerAdministradorId(request));
+  }
+
+  private obtenerAdministradorId(request: PeticionConSesion): string {
+    const administradorId = request.administradorSesion?.id;
+    if (!administradorId) {
+      throw new UnauthorizedException(
+        'No hay un administrador autenticado para gestionar el QR',
+      );
+    }
+    return administradorId;
   }
 }

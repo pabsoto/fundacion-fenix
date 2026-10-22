@@ -71,6 +71,31 @@ Swagger UI no puede leer ni establecer manualmente una cookie HttpOnly. **Try it
 
 La documentación está habilitada por defecto fuera de producción y puede deshabilitarse con `SWAGGER_ENABLED=false`. En `NODE_ENV=production` queda deshabilitada por defecto y sólo se publica con la decisión explícita `SWAGGER_ENABLED=true`; no se recomienda habilitarla en un despliegue público.
 
+## QR de donaciones con Supabase Storage
+
+El backend usa exclusivamente credenciales de servidor para subir y retirar el QR. Configuración requerida:
+
+```dotenv
+SUPABASE_URL=https://TU_PROYECTO.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<secreto sólo del backend>
+SUPABASE_STORAGE_BUCKET=fenix-donaciones
+```
+
+El bucket `fenix-donaciones` debe configurarse en Supabase como público para permitir la lectura de las imágenes autorizadas, con límite de 2 MB y tipos MIME `image/png`, `image/jpeg` e `image/webp`. No debe existir ninguna política que permita `INSERT`, `UPDATE` o `DELETE` a `anon` o `authenticated`; las escrituras pasan únicamente por NestJS usando la credencial de servidor.
+
+La aplicación **no crea el bucket ni modifica políticas automáticamente**. En el proyecto Supabase de Fundación FÉNIX, `fenix-donaciones` ya fue verificado como público, con límite de 2 MB y los tres MIME indicados; no se encontraron políticas de escritura directa para `anon`, `authenticated` o `public`. Tampoco realiza SQL directo sobre `storage.objects`.
+
+Endpoints:
+
+- `POST /api/admin/donaciones/qr`: `multipart/form-data`, campo binario `archivo` y campo opcional `qrVenceEl` (`YYYY-MM-DD`). Requiere sesión y `X-CSRF-Token`.
+- `DELETE /api/admin/donaciones/qr`: retira el QR sin borrar los datos bancarios; requiere sesión y `X-CSRF-Token`.
+- `GET /api/public/donaciones`: devuelve `qrUrl` sólo cuando existe un QR y no está vencido; nunca expone `qr_ruta`.
+
+> **Vencimiento y limpieza:** al vencer un QR, la API deja de publicar su URL,
+> pero el archivo puede continuar accesible mediante su URL directa mientras siga
+> almacenado en el bucket público. Operaciones debe retirar o depurar esos objetos
+> cuando corresponda; el vencimiento por sí solo no elimina el archivo de Storage.
+
 ## Comandos
 
 ```bash

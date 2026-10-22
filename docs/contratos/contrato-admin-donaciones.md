@@ -18,7 +18,11 @@ Devuelve la configuración activa sin identificadores de administradores:
     "numeroCuenta": "123-456",
     "avisoEs": "Verifique el titular",
     "avisoEn": "Verify the account holder",
-    "activo": true
+    "activo": true,
+    "qr": {
+      "disponible": true,
+      "venceEl": "2027-12-31"
+    }
   }
 }
 ```
@@ -59,7 +63,11 @@ Respuesta de creación o actualización:
     "numeroCuenta": "123-456",
     "avisoEs": "Verifique el titular",
     "avisoEn": "Verify the account holder",
-    "activo": true
+    "activo": true,
+    "qr": {
+      "disponible": false,
+      "venceEl": null
+    }
   }
 }
 ```
@@ -74,6 +82,48 @@ La donación y su entrada de auditoría se guardan dentro de la misma transacci�
 `SERIALIZABLE`. Si falla la auditoría, toda la operación se revierte. Los
 campos QR existentes se conservan sin cambios.
 
+## `POST /api/admin/donaciones/qr`
+
+Requiere sesión, `X-CSRF-Token` y `multipart/form-data`:
+
+- `archivo`: PNG, JPG/JPEG o WebP válido, máximo 2 MB.
+- `qrVenceEl`: fecha opcional `YYYY-MM-DD`, vigente durante todo ese día.
+
+```json
+{
+  "qr": {
+    "disponible": true,
+    "venceEl": "2027-12-31"
+  }
+}
+```
+
+El nombre y la ruta del objeto son generados por el backend. La ruta interna
+no se expone ni puede enviarse desde el cliente. Si todavía no existe una
+configuración bancaria activa, responde `404`.
+
+## `DELETE /api/admin/donaciones/qr`
+
+Retira el QR sin alterar los datos bancarios. Requiere sesión y
+`X-CSRF-Token`.
+
+```json
+{
+  "qr": {
+    "disponible": false,
+    "venceEl": null
+  }
+}
+```
+
+La actualización de PostgreSQL y la auditoría son atómicas. La limpieza del
+objeto de Storage se realiza después y un fallo queda registrado como limpieza
+pendiente sin revertir la referencia ya confirmada.
+
+Un QR vencido devuelve `qrUrl: null`, pero su objeto puede conservar una URL
+directa accesible mientras permanezca en el bucket público. El vencimiento no
+elimina automáticamente el archivo: su depuración es un requisito operativo.
+
 ## Respuestas de seguridad y error
 
 - `400`: DTO inválido o campos no permitidos.
@@ -82,3 +132,4 @@ campos QR existentes se conservan sin cambios.
 - `409`: configuración activa inconsistente o conflicto del índice único.
 - `503`: PostgreSQL no está disponible o la escritura atómica no pudo
   completarse.
+- `413`: la imagen supera 2 MB.

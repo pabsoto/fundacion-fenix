@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DatoDonacionPublicoDto } from './dto/dato-donacion-publico.dto.js';
 import { DatoDonacion } from './entities/dato-donacion.entity.js';
+import { StorageService } from '../storage/storage.service.js';
 
 @Injectable()
 export class DonacionesPublicasService {
   constructor(
     @InjectRepository(DatoDonacion)
     private readonly repositorio: Repository<DatoDonacion>,
+    private readonly storage: StorageService,
   ) {}
 
   async obtenerActiva(): Promise<DatoDonacionPublicoDto | null> {
@@ -23,6 +25,8 @@ export class DonacionesPublicasService {
           numeroCuenta: true,
           avisoEs: true,
           avisoEn: true,
+          qrRuta: true,
+          qrVenceEl: true,
         },
         where: { activo: true },
         take: 2,
@@ -51,7 +55,25 @@ export class DonacionesPublicasService {
       referencia: configuracion.referencia,
       numeroCuenta: configuracion.numeroCuenta,
       aviso: { es: configuracion.avisoEs, en: configuracion.avisoEn },
-      qrUrl: null,
+      qrUrl: this.obtenerQrUrl(configuracion),
     };
+  }
+
+  private obtenerQrUrl(configuracion: DatoDonacion): string | null {
+    if (!configuracion.qrRuta || this.estaVencido(configuracion.qrVenceEl)) {
+      return null;
+    }
+
+    try {
+      return this.storage.obtenerUrlPublica(configuracion.qrRuta);
+    } catch {
+      return null;
+    }
+  }
+
+  private estaVencido(venceEl: string | null): boolean {
+    if (!venceEl) return false;
+    const hoyUtc = new Date().toISOString().slice(0, 10);
+    return venceEl < hoyUtc;
   }
 }

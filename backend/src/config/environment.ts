@@ -7,6 +7,7 @@ import {
   ConfiguracionSesionInvalidaError,
   validarConfiguracionSesion,
 } from './sesion.js';
+import { validateSupabaseStorageEnvironment } from './supabase-storage.js';
 
 const DEFAULT_PORT = 3000;
 const FORBIDDEN_DATABASE_SSL_PARAMETERS = [
@@ -64,6 +65,7 @@ export function validateEnvironment(
   );
   const googleOAuth = validateGoogleOAuthEnvironment(values);
   const sesion = validateSessionEnvironment(values, allowedOrigins);
+  const storage = validateSupabaseStorageEnvironment(values);
 
   return {
     ...values,
@@ -73,6 +75,7 @@ export function validateEnvironment(
     ...(certificatePath ? { DATABASE_CA_CERT_PATH: certificatePath } : {}),
     ...googleOAuth,
     ...sesion,
+    ...storage,
   };
 }
 

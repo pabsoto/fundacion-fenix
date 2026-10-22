@@ -3,12 +3,22 @@ import { Repository } from 'typeorm';
 import { vi } from 'vitest';
 import { DonacionesPublicasService } from './donaciones-publicas.service.js';
 import { DatoDonacion } from './entities/dato-donacion.entity.js';
+import { StorageService } from '../storage/storage.service.js';
 
 describe('DonacionesPublicasService', () => {
   const find = vi.fn();
-  const servicio = new DonacionesPublicasService({
-    find,
-  } as unknown as Repository<DatoDonacion>);
+  const obtenerUrlPublica = vi.fn(
+    (ruta: string) =>
+      `https://proyecto.supabase.co/storage/v1/object/public/fenix-donaciones/${ruta}`,
+  );
+  const servicio = new DonacionesPublicasService(
+    {
+      find,
+    } as unknown as Repository<DatoDonacion>,
+    {
+      obtenerUrlPublica,
+    } as unknown as StorageService,
+  );
 
   beforeEach(() => vi.clearAllMocks());
 
@@ -23,7 +33,8 @@ describe('DonacionesPublicasService', () => {
         avisoEs: 'Aviso',
         avisoEn: 'Notice',
         id: 'no-debe-exponerse',
-        qrRuta: 'ruta/interna.png',
+        qrRuta: null,
+        qrVenceEl: null,
         creadoPorId: 'no-debe-exponerse',
       },
     ]);
@@ -41,8 +52,45 @@ describe('DonacionesPublicasService', () => {
       expect.objectContaining({ where: { activo: true }, take: 2 }),
     );
     expect(find.mock.calls[0][0].select).not.toHaveProperty('id');
-    expect(find.mock.calls[0][0].select).not.toHaveProperty('qrRuta');
     expect(find.mock.calls[0][0].select).not.toHaveProperty('creadoPorId');
+  });
+
+  it('publica la URL autorizada de un QR vigente sin exponer su ruta', async () => {
+    find.mockResolvedValue([
+      {
+        titular: 'Fundación FÉNIX',
+        banco: 'Banco',
+        telefono: '70000000',
+        referencia: 'Donación',
+        numeroCuenta: null,
+        avisoEs: null,
+        avisoEn: null,
+        qrRuta: 'qr/id/archivo.png',
+        qrVenceEl: '2099-12-31',
+      },
+    ]);
+    const resultado = await servicio.obtenerActiva();
+    expect(resultado?.qrUrl).toContain('/qr/id/archivo.png');
+    expect(resultado).not.toHaveProperty('qrRuta');
+  });
+
+  it('oculta un QR vencido', async () => {
+    find.mockResolvedValue([
+      {
+        titular: 'Fundación FÉNIX',
+        banco: 'Banco',
+        telefono: '70000000',
+        referencia: 'Donación',
+        numeroCuenta: null,
+        avisoEs: null,
+        avisoEn: null,
+        qrRuta: 'qr/id/vencido.png',
+        qrVenceEl: '2020-01-01',
+      },
+    ]);
+    await expect(servicio.obtenerActiva()).resolves.toMatchObject({
+      qrUrl: null,
+    });
   });
 
   it('devuelve null cuando no hay una configuración activa', async () => {

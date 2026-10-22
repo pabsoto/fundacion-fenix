@@ -115,6 +115,7 @@ describe('application bootstrap (e2e)', () => {
     expect(Object.keys(document.paths).sort()).toEqual(
       [
         '/api/admin/donaciones',
+        '/api/admin/donaciones/qr',
         '/api/admin/health',
         '/api/auth/google',
         '/api/auth/google/callback',
@@ -128,6 +129,8 @@ describe('application bootstrap (e2e)', () => {
     );
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('get');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('put');
+    expect(document.paths['/api/admin/donaciones/qr']).toHaveProperty('post');
+    expect(document.paths['/api/admin/donaciones/qr']).toHaveProperty('delete');
     expect(document.components.securitySchemes).toMatchObject({
       cookieAuth: { type: 'apiKey', in: 'cookie' },
       csrfToken: {

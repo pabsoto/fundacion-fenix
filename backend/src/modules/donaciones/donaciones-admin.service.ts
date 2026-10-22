@@ -50,6 +50,8 @@ export class DonacionesAdminService {
           avisoEs: true,
           avisoEn: true,
           activo: true,
+          qrRuta: true,
+          qrVenceEl: true,
         },
         where: { activo: true },
         take: 2,
@@ -179,6 +181,10 @@ export class DonacionesAdminService {
       avisoEs: donacion.avisoEs,
       avisoEn: donacion.avisoEn,
       activo: donacion.activo,
+      qr: {
+        disponible: donacion.qrRuta !== null,
+        venceEl: donacion.qrVenceEl,
+      },
     };
   }
 
