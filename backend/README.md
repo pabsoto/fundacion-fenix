@@ -50,6 +50,27 @@ No agregues `ssl`, `sslmode`, `sslrootcert`, `sslcert` ni `sslkey` a `DATABASE_U
 
 TypeORM está configurado con `synchronize: false`, `dropSchema: false`, `migrationsRun: false` e `installExtensions: false`. El archivo `src/database/typeorm.datasource.ts` queda preparado como DataSource para migraciones futuras, pero esta etapa no crea ni ejecuta migraciones.
 
+## Swagger / OpenAPI
+
+En desarrollo, con el backend ejecutándose en el puerto predeterminado:
+
+- Swagger UI: `http://localhost:3000/api/docs`
+- OpenAPI JSON: `http://localhost:3000/api/docs/openapi.json`
+
+La interfaz agrupa salud, autenticación, administración y los módulos públicos. Los ejemplos son ficticios y los esquemas contienen únicamente los campos que cada endpoint devuelve realmente.
+
+Los endpoints públicos pueden ejecutarse directamente con **Try it out**. Para probar los administrativos:
+
+1. abre `http://localhost:3000/api/auth/google` en ese mismo navegador;
+2. completa el login real de Google y vuelve a Swagger UI;
+3. ejecuta `GET /api/auth/me`; la cookie HttpOnly se envía automáticamente;
+4. copia el `csrfToken` de esa respuesta y proporciónalo como `X-CSRF-Token` en una escritura;
+5. ejecuta `POST /api/auth/logout` con el mismo encabezado para cerrar la sesión.
+
+Swagger UI no puede leer ni establecer manualmente una cookie HttpOnly. **Try it out** funciona para rutas protegidas sólo cuando el navegador ya posee la cookie para el mismo origen. No se utiliza autenticación Bearer.
+
+La documentación está habilitada por defecto fuera de producción y puede deshabilitarse con `SWAGGER_ENABLED=false`. En `NODE_ENV=production` queda deshabilitada por defecto y sólo se publica con la decisión explícita `SWAGGER_ENABLED=true`; no se recomienda habilitarla en un despliegue público.
+
 ## Comandos
 
 ```bash
@@ -648,6 +669,9 @@ El contrato que necesita el frontend está en
 
 El contrato de los endpoints institucionales públicos está en
 [`../docs/contratos/contrato-contenido-publico-frontend.md`](../docs/contratos/contrato-contenido-publico-frontend.md).
+
+El contrato administrativo de donaciones está en
+[`../docs/contratos/contrato-admin-donaciones.md`](../docs/contratos/contrato-admin-donaciones.md).
 
 Resumen: el login se inicia navegando a `GET /api/auth/google`; la sesión se
 consulta con `GET /api/auth/me`; el logout es `POST /api/auth/logout`; las
