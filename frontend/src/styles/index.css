@@ -148,7 +148,7 @@ html {
   scroll-behavior: smooth;
 }
 
-section[id] {
+main [id] {
   scroll-margin-top: 96px;
 }
 
@@ -157,13 +157,22 @@ section[id] {
   outline-offset: 3px;
 }
 
+/* HU-19 / RNF-02: foco visible también sobre fondos oscuros */
+.bg-negro:focus-visible,
+.bg-negro :focus-visible {
+  outline-color: var(--color-crema);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
-
