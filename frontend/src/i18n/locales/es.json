@@ -1,0 +1,88 @@
+{
+  "nav": {
+    "inicio": "Inicio",
+    "quienes_somos": "Quiénes somos",
+    "lo_que_hacemos": "Lo que hacemos",
+    "nuestro_programa": "Nuestro programa",
+    "resultados": "Resultados",
+    "como_colaborar": "Cómo colaborar",
+    "contactos": "Contactos",
+    "donar": "Donar"
+  },
+  "hero": {
+    "chip": "Fundación sin fines de lucro · La Paz, Bolivia",
+    "title_line1": "Creemos que",
+    "title_line2": "cada vida puede",
+    "title_line3": "renacer…",
+    "subtitle": "y nuestra labor consiste en hacerlo realidad.",
+    "donar": "Donar",
+    "como_ayudar": "Cómo ayudar",
+    "pill_1": "Jornadas 100% gratuitas",
+    "pill_2": "La Paz, Bolivia · desde 2020",
+    "alt": "Perros del albergue de la Fundación Fénix LPB mirando a la cámara"
+  },
+  "stats": {
+    "stat1": "+1.000",
+    "label1": "perros y gatos con una nueva historia",
+    "stat2": "100%",
+    "label2": "gratuito y sin ninguna excepción",
+    "stat3": "2020",
+    "label3": "año en que nació la fundación en La Paz",
+    "stat4": "3",
+    "label4": "pilares: rehabilitación, educación y esterilización"
+  },
+  "sections": {
+    "quienes_somos": "Quiénes somos",
+    "lo_que_hacemos": "Lo que hacemos",
+    "nuestro_programa": "Nuestro programa",
+    "resultados": "Resultados",
+    "como_colaborar": "Cómo colaborar",
+    "donar": "Donar"
+  },
+  "about": {
+    "eyebrow": "Fundación Fénix LPB",
+    "title": "Quiénes somos",
+    "lead": "Fundación Fénix LPB nace del deseo de transformar la vida de los animales en estado de vulnerabilidad.",
+    "text": "Somos una fundación sin fines de lucro, legalmente constituida, creada en la ciudad de La Paz, Bolivia, el 28 de julio de 2020, dirigida por su fundadora Ariana Castillo Illanes.",
+    "founder_pill": "Ariana Castillo Illanes · Fundadora",
+    "founder_alt": "Ariana Castillo Illanes, fundadora, abrazando a un perro",
+    "phoenix_eyebrow": "El Ave Fénix",
+    "phoenix_text": "Así como el Ave Fénix simboliza el renacer, nosotros trabajamos para ofrecer nuevas oportunidades a aquellos perros y gatos que han sido maltratados, abandonados o que viven en situación de vulnerabilidad. Queremos verlos levantarse nuevamente, encontrar un hogar donde puedan sanar, sentirse amados y vivir la felicidad que siempre merecieron.",
+    "kitten_alt": "Gatito rescatado en brazos"
+  },
+  "pillars": {
+    "title": "Lo que hacemos",
+    "subtitle": "Nuestro trabajo se sustenta en tres pilares fundamentales",
+    "pilar1_title": "Rehabilitación integral",
+    "pilar1_text": "Velamos por la salud física y emocional de los animales bajo nuestro cuidado, priorizando su esterilización y el bienestar general como base para una adopción responsable.",
+    "pilar1_alt": "Rehabilitación integral",
+    "pilar2_title": "Educación y sensibilización",
+    "pilar2_text": "Mediante programas educativos que promueven la tenencia responsable y fomentan el respeto y la empatía hacia los animales.",
+    "pilar2_alt": "Educación y sensibilización",
+    "pilar3_title": "Esterilización masiva y gratuita",
+    "pilar3_text": "A través de nuestro programa “Por menos de ellos sufriendo” dirigidas a zonas o comunidades con escaso acceso a servicios veterinarios, contribuyendo a reducir el abandono y la sobrepoblación animal.",
+    "pilar3_alt": "Esterilización masiva y gratuita",
+    "future_text": "De cara al futuro, aspiramos a fortalecer y ampliar esta labor, consolidando el programa de esterilización masiva y gratuita como una respuesta real y sostenible frente a la problemática de los animales en situación de calle, y como el camino más efectivo hacia un cambio social duradero."
+  },
+  "program": {
+    "chip": "Programa principal",
+    "title": "Nuestro programa",
+    "motto": "Por menos de ellos sufriendo",
+    "paragraph1": "Nuestro principal programa, llamado “Por menos de ellos sufriendo”, es uno de los pilares más fuertes de nuestra labor. Surgió con el objetivo de romper el ciclo de maltrato, abandono y la sobrepoblación animal.",
+    "paragraph2": "Consiste en realizar <strong>jornadas de esterilización masivas, totalmente gratuitas y sin ninguna excepción</strong>: perros y gatos, machos y hembras, de raza o mestizos.",
+    "highlight_box": "Porque creemos que todos merecen la misma oportunidad.",
+    "paragraph3": "Llevamos estas jornadas especialmente a zonas o comunidades donde el acceso a servicios veterinarios es escaso o inexistente.",
+    "photo_alt": "Mujer sostiene su certificado de esterilización con su perro en el aguayo",
+    "card_title": "100% gratuito",
+    "card_subtitle": "sin ninguna excepción"
+  },
+  "financing": {
+    "title": "¿Cómo financiamos este programa?",
+    "paragraph1": "Nuestras jornadas de esterilización masiva son posibles gracias a las <strong>donaciones solidarias</strong> de nuestros seguidores y de personas comprometidas que creen en nuestra labor. Su apoyo constante es la base que nos permite mantener este servicio <strong>100% gratuito</strong> para los animales que más lo necesitan.",
+    "paragraph2": "Cada aporte, por pequeño que parezca, significa más animales esterilizados, más sufrimiento evitado y más esperanza para la población beneficiada.",
+    "paragraph3": "Por eso, <strong>tu ayuda realmente importa.</strong>",
+    "donar_ahora": "Donar ahora",
+    "photo_alt": "Personas esperando en una jornada de esterilización"
+  }
+}
+
