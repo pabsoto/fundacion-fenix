@@ -79,3 +79,22 @@ Respuesta esperada:
 ```
 
 La ruta ejecuta una consulta de solo lectura `SELECT 1`. Si PostgreSQL no está disponible, responde HTTP 503 con `status: "error"` y `database: "down"`, sin incluir detalles internos de la conexión.
+
+## Integración continua
+
+El workflow `.github/workflows/ci.yml` comprueba el backend cuando se abre o actualiza un Pull Request hacia `develop` o `main`, cuando se publica un cambio en esas ramas y cuando se inicia manualmente desde GitHub Actions.
+
+La integración continua usa Node.js 24, instala las dependencias reproducibles con `npm ci` y ejecuta, en orden:
+
+```bash
+npm run lint
+npm run build
+npm test
+npm run test:e2e
+```
+
+Estas mismas comprobaciones pueden ejecutarse localmente desde `backend/`. Las pruebas E2E sustituyen el `DataSource` de TypeORM y no se conectan a Supabase. El workflow utiliza variables ficticias de entorno, no ejecuta migraciones y no necesita secretos del repositorio.
+
+Los resultados se consultan en la pestaña **Actions** del repositorio o en la sección de comprobaciones del Pull Request. Si una comprobación falla, revisa el paso que produjo el error, reproduce su comando desde `backend/`, corrige el problema y vuelve a publicar la rama para ejecutar CI otra vez.
+
+El despliegue continuo queda pendiente hasta definir el proveedor de alojamiento, los entornos y el manejo de secretos de despliegue.
