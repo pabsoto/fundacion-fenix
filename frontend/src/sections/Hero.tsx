@@ -61,7 +61,7 @@ export function Hero() {
                 src="/images/hero-perros.jpg"
                 alt={t('hero.alt')}
                 radius="panel"
-                className="w-full h-auto"
+                className="w-full h-auto aspect-[1504/1230] object-cover"
                 loading="eager"
               />
               
@@ -79,4 +79,3 @@ export function Hero() {
     </section>
   );
 }
-

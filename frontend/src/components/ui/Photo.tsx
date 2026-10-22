@@ -30,7 +30,7 @@ export function Photo({ alt, radius = 'card', className, ...props }: PhotoProps)
         aria-label={alt}
       >
         <PawIcon className="mb-2 h-8 w-8 text-negro opacity-30" />
-        <span className="t-small text-negro opacity-50">{alt}</span>
+        <span className="t-small text-negro opacity-80">{alt}</span>
       </div>
     );
   }
@@ -46,4 +46,3 @@ export function Photo({ alt, radius = 'card', className, ...props }: PhotoProps)
     />
   );
 }
-
