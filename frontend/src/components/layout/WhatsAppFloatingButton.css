@@ -1,3 +1,5 @@
+/* HU-06 / RF-04 — Botón flotante de contacto (estilo + animación) */
+
 .wa-float {
   position: fixed;
   right: 20px;
@@ -5,14 +7,147 @@
   z-index: 1000;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  text-decoration: none;
+  animation: wa-enter 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s both;
 }
 
+/* Burbuja */
 .wa-float__icon {
-  display: inline-flex;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--color-naranja, #ff5402);
+  color: var(--color-blanco, #ffffff);
+  box-shadow: var(--shadow-lift, 0 12px 30px rgb(28 28 28 / 0.16));
+  transition:
+    transform 0.25s ease,
+    background-color 0.25s ease;
+  animation: wa-wiggle 6s ease-in-out 3s infinite;
+}
+
+.wa-float__icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* Anillos de pulso */
+.wa-float__icon::before,
+.wa-float__icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--color-naranja, #ff5402);
+  opacity: 0;
+  pointer-events: none;
+  animation: wa-pulse 2.6s ease-out infinite;
+}
+.wa-float__icon::after {
+  animation-delay: 1.3s;
+}
+
+/* Hover / foco */
+.wa-float:hover .wa-float__icon,
+.wa-float:focus-visible .wa-float__icon {
+  background: var(--color-naranja-hover, #ff9700);
+  transform: scale(1.08);
+  animation-play-state: paused;
 }
 
 .wa-float:focus-visible {
-  outline: 2px solid currentColor;
+  outline: 3px solid var(--color-negro, #1c1c1c);
   outline-offset: 4px;
+  border-radius: 9999px;
+}
+
+/* Tooltip: absoluto, a la izquierda de la burbuja */
+.wa-float__tooltip {
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translate(8px, -50%);
+  padding: 10px 16px;
+  border-radius: var(--radius-btn, 12px);
+  background: var(--color-crema, #fefbf6);
+  color: var(--color-negro, #1c1c1c);
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: var(--shadow-soft, 0 3px 10px rgb(28 28 28 / 0.1));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.wa-float:hover .wa-float__tooltip,
+.wa-float:focus-visible .wa-float__tooltip {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* Animaciones */
+@keyframes wa-enter {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes wa-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Pequeño "toque" cada pocos segundos para llamar la atención */
+@keyframes wa-wiggle {
+  0%, 88%, 100% { transform: rotate(0) scale(1); }
+  91% { transform: rotate(-10deg) scale(1.06); }
+  94% { transform: rotate(8deg) scale(1.06); }
+  97% { transform: rotate(-4deg) scale(1.03); }
+}
+
+/* Móvil: más compacto y sin tooltip */
+@media (max-width: 480px) {
+  .wa-float {
+    right: 14px;
+    bottom: 14px;
+  }
+  .wa-float__icon {
+    width: 54px;
+    height: 54px;
+  }
+  .wa-float__tooltip {
+    display: none;
+  }
+}
+
+/* Accesibilidad: sin movimiento si el usuario lo pide */
+@media (prefers-reduced-motion: reduce) {
+  .wa-float,
+  .wa-float__icon,
+  .wa-float__icon::before,
+  .wa-float__icon::after {
+    animation: none;
+  }
+  .wa-float__icon,
+  .wa-float__tooltip {
+    transition: none;
+  }
 }
