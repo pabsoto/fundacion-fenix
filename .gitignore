@@ -15,8 +15,11 @@ dist/
 build/
 .env
 .env.local
+.env.*
+!.env.example
 npm-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # ---- Flutter / Dart ----
 .dart_tool/
@@ -37,6 +40,16 @@ appsettings.Development.json
 *.mdf
 *.ldf
 *.env
+/backend/certs/
 
 # ---- Logs ----
 *.log
+
+# ---- Cobertura / temporales ----
+coverage/
+.cache/
+.tmp/
+tmp/
+temp/
+*.tmp
+*.tsbuildinfo
