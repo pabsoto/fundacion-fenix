@@ -6,7 +6,7 @@ export function PublicLayout() {
   return (
     <div>
       <Navbar />
-      <main>
+      <main id="contenido" tabIndex={-1} className="outline-none">
         <Outlet />
       </main>
       <ContactFooter />

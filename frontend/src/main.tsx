@@ -5,7 +5,9 @@ import { createRoot } from 'react-dom/client'
 import './styles/index.css'
 import { Providers } from './app/providers'
 import { Router } from './app/router'
+import { syncHtmlLang } from './i18n/syncHtmlLang'
 
+syncHtmlLang()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Providers>
