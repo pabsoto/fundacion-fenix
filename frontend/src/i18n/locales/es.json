@@ -7,7 +7,12 @@
     "resultados": "Resultados",
     "como_colaborar": "Cómo colaborar",
     "contactos": "Contactos",
-    "donar": "Donar"
+    "donar": "Donar",
+    "skip": "Saltar al contenido",
+    "label": "Principal",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "language": "Idioma"
   },
   "hero": {
     "chip": "Fundación sin fines de lucro · La Paz, Bolivia",
@@ -85,4 +90,3 @@
     "photo_alt": "Personas esperando en una jornada de esterilización"
   }
 }
-
