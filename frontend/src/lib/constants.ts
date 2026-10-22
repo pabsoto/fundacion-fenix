@@ -10,11 +10,11 @@ export const SECTION_IDS = {
 } as const;
 
 export const WHATSAPP_PHONE = (
-  import.meta.env.VITE_WHATSAPP_PHONE || '000000000000'
+  import.meta.env.VITE_WHATSAPP_PHONE || '59170544491'
 ).replace(/\D/g, '');
 export const WHATSAPP_MESSAGE =
   import.meta.env.VITE_WHATSAPP_MESSAGE ||
-  'Hola, quisiera más información sobre la Fundación FÉNIX LPB.';
+  'Hola, me gustaría obtener información sobre la Fundación FÉNIX LPB.';
 
 if (!WHATSAPP_PHONE) {
   throw new Error(
