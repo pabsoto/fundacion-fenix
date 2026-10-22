@@ -257,4 +257,40 @@ describe('environment configuration', () => {
       );
     });
   });
+
+  describe('configuración de Supabase Storage', () => {
+    it('acepta la configuración completa del bucket de donaciones', () => {
+      expect(
+        validateEnvironment({
+          ...BASE,
+          SUPABASE_URL: 'https://proyecto.supabase.co/',
+          SUPABASE_SERVICE_ROLE_KEY:
+            'service-role-ficticia-solo-para-pruebas-1234567890',
+          SUPABASE_STORAGE_BUCKET: 'fenix-donaciones',
+        }),
+      ).toMatchObject({
+        SUPABASE_URL: 'https://proyecto.supabase.co',
+        SUPABASE_STORAGE_BUCKET: 'fenix-donaciones',
+      });
+    });
+
+    it('rechaza configuraciones parciales y nombres de bucket inseguros', () => {
+      expect(() =>
+        validateEnvironment({
+          ...BASE,
+          SUPABASE_URL: 'https://proyecto.supabase.co',
+        }),
+      ).toThrow('SUPABASE_SERVICE_ROLE_KEY es obligatoria');
+
+      expect(() =>
+        validateEnvironment({
+          ...BASE,
+          SUPABASE_URL: 'https://proyecto.supabase.co',
+          SUPABASE_SERVICE_ROLE_KEY:
+            'service-role-ficticia-solo-para-pruebas-1234567890',
+          SUPABASE_STORAGE_BUCKET: '../bucket',
+        }),
+      ).toThrow('SUPABASE_STORAGE_BUCKET debe ser un nombre seguro');
+    });
+  });
 });

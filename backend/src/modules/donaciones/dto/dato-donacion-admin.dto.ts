@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EstadoQrDonacionDto } from './subir-qr-donacion.dto.js';
 
 export class DatoDonacionAdminDto {
   @ApiProperty({ example: 'Fundación FÉNIX LPB' })
@@ -30,6 +31,9 @@ export class DatoDonacionAdminDto {
 
   @ApiProperty({ example: true })
   readonly activo: boolean;
+
+  @ApiProperty({ type: () => EstadoQrDonacionDto })
+  readonly qr: EstadoQrDonacionDto;
 }
 
 export class RespuestaDonacionAdminDto {

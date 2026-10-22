@@ -11,6 +11,7 @@ import { configureApplication } from '../src/config/configure-application.js';
 import { CanalContacto } from '../src/modules/canales-contacto/entities/canal-contacto.entity.js';
 import { ContenidoInstitucional } from '../src/modules/contenido-institucional/entities/contenido-institucional.entity.js';
 import { DatoDonacion } from '../src/modules/donaciones/entities/dato-donacion.entity.js';
+import { StorageService } from '../src/modules/storage/storage.service.js';
 
 describe('API pública de contenido (e2e)', () => {
   let app: INestApplication<App>;
@@ -73,6 +74,8 @@ describe('API pública de contenido (e2e)', () => {
       .useValue(repositorioDonaciones)
       .overrideProvider(getRepositoryToken(CanalContacto))
       .useValue(repositorioContactos)
+      .overrideProvider(StorageService)
+      .useValue({ obtenerUrlPublica: vi.fn().mockReturnValue(null) })
       .compile();
 
     app = modulo.createNestApplication();

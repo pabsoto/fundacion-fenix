@@ -106,6 +106,7 @@ describe('DonacionesAdminService', () => {
         avisoEs: 'Aviso anterior',
         avisoEn: 'Previous notice',
         activo: true,
+        qr: { disponible: true, venceEl: '2027-01-31' },
       },
     });
     expect(findPublicoAdmin.mock.calls[0][0].select).not.toHaveProperty(
