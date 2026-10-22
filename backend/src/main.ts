@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { AppModule } from './app.module.js';
 import { configureApplication } from './config/configure-application.js';
+import { configureSwagger } from './config/swagger.js';
 
 const logger = new Logger('Bootstrap');
 
@@ -12,6 +13,7 @@ async function bootstrap() {
   const config = app.get(ConfigService);
 
   configureApplication(app, config);
+  configureSwagger(app, config);
 
   // La conexión se establece de forma explícita y determinista al arrancar.
   // TypeORM está configurado con `manualInitialization: true`, por lo que

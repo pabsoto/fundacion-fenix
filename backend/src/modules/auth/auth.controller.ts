@@ -14,13 +14,27 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import {
+  ApiBadRequestResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiSecurity,
+  ApiServiceUnavailableResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import type { Request, Response } from 'express';
+import { ErrorResponseDto } from '../../common/dto/error-response.dto.js';
 import { CsrfGuard } from '../../common/guards/csrf.guard.js';
 import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
 import { leerConfiguracionSesion } from '../../config/sesion.js';
 import { AutorizacionAdministradorService } from '../administradores/services/autorizacion-administrador.service.js';
-import type { SesionActualDto } from './dto/sesion-actual.dto.js';
+import { SesionActualDto } from './dto/sesion-actual.dto.js';
 import { GoogleAuthService } from './services/google-auth.service.js';
 import { CookieSesionService } from './services/cookie-sesion.service.js';
 import {
@@ -46,6 +60,7 @@ export const COOKIE_TRANSACCION_OAUTH = 'fenix_oauth_tx';
  * `https://<host>/api/auth/google/callback`.
  */
 @Controller('auth')
+@ApiTags('Autenticación')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
@@ -58,6 +73,29 @@ export class AuthController {
   ) {}
 
   @Get('google')
+  @ApiOperation({
+    summary: 'Iniciar sesión con Google',
+    description:
+      'Inicia Authorization Code + PKCE, establece una cookie temporal de correlación y redirige a Google. Debe abrirse como navegación del navegador.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FOUND,
+    description: 'Redirección al consentimiento de Google.',
+    headers: {
+      Location: {
+        description: 'URL de autorización de Google',
+        schema: { type: 'string', format: 'uri' },
+      },
+      'Set-Cookie': {
+        description: 'Cookie HttpOnly temporal del flujo OAuth',
+        schema: { type: 'string' },
+      },
+    },
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Google OAuth no está configurado o no está disponible.',
+    type: ErrorResponseDto,
+  })
   async iniciar(@Res() response: Response): Promise<void> {
     const inicio = await this.googleAuth.iniciar();
 
@@ -83,6 +121,63 @@ export class AuthController {
    * orígenes CORS permitidos.
    */
   @Get('google/callback')
+  @ApiOperation({
+    summary: 'Completar el callback de Google',
+    description:
+      'Valida la respuesta de Google y la cuenta administrativa, crea la sesión HttpOnly y redirige al frontend autorizado. Normalmente lo invoca Google, no Swagger UI.',
+  })
+  @ApiQuery({
+    name: 'code',
+    required: false,
+    description: 'Código de autorización devuelto por Google.',
+  })
+  @ApiQuery({
+    name: 'state',
+    required: false,
+    description: 'Valor de correlación y protección CSRF del flujo OAuth.',
+  })
+  @ApiQuery({
+    name: 'iss',
+    required: false,
+    description: 'Emisor OIDC informado por Google.',
+  })
+  @ApiQuery({
+    name: 'error',
+    required: false,
+    description: 'Error OAuth devuelto por Google en lugar de code.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FOUND,
+    description:
+      'Sesión creada; redirección al frontend administrativo configurado.',
+    headers: {
+      Location: {
+        description: 'URL fija del frontend administrativo',
+        schema: { type: 'string', format: 'uri' },
+      },
+      'Set-Cookie': {
+        description: 'Cookie de sesión HttpOnly',
+        schema: { type: 'string' },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Respuesta OAuth incompleta o inválida.',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'El flujo no concluyó correctamente.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description:
+      'La identidad no corresponde a un administrador activo y vinculado.',
+    type: ErrorResponseDto,
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Google o el almacenamiento de sesiones no están disponibles.',
+    type: ErrorResponseDto,
+  })
   async recibirCallback(
     @Query() query: Record<string, string | undefined>,
     @Req() request: Request,
@@ -126,6 +221,28 @@ export class AuthController {
   @Get('me')
   @Header('Cache-Control', 'no-store')
   @UseGuards(SesionAdminGuard)
+  @ApiSecurity('cookieAuth')
+  @ApiOperation({
+    summary: 'Consultar la sesión actual',
+    description:
+      'Devuelve información mínima del administrador y el token CSRF de su sesión. Nunca devuelve la cookie, el correo ni tokens de Google.',
+  })
+  @ApiOkResponse({
+    description: 'Sesión administrativa válida.',
+    type: SesionActualDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'No existe una sesión válida.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta administrativa está desactivada.',
+    type: ErrorResponseDto,
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'No se puede comprobar la sesión o autorización.',
+    type: ErrorResponseDto,
+  })
   async sesionActual(
     @Req() request: PeticionConSesion,
     @Res({ passthrough: true }) response: Response,
@@ -162,6 +279,25 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(SesionAdminGuard, CsrfGuard)
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Cerrar la sesión administrativa',
+    description:
+      'Revoca la sesión en el servidor y elimina la cookie. Requiere cookie de sesión y X-CSRF-Token.',
+  })
+  @ApiNoContentResponse({ description: 'Sesión revocada y cookie eliminada.' })
+  @ApiUnauthorizedResponse({
+    description: 'No existe una sesión válida.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta está desactivada o el token CSRF es inválido.',
+    type: ErrorResponseDto,
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'El almacenamiento de sesiones no está disponible.',
+    type: ErrorResponseDto,
+  })
   async cerrarSesion(
     @Req() request: PeticionConSesion,
     @Res({ passthrough: true }) response: Response,

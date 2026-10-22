@@ -7,6 +7,11 @@ import { App } from 'supertest/types.js';
 import { vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApplication } from '../src/config/configure-application.js';
+import {
+  configureSwagger,
+  OPENAPI_JSON_PATH,
+  SWAGGER_UI_PATH,
+} from '../src/config/swagger.js';
 
 describe('application bootstrap (e2e)', () => {
   let app: INestApplication<App>;
@@ -29,6 +34,7 @@ describe('application bootstrap (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     configureApplication(app, app.get(ConfigService));
+    configureSwagger(app, app.get(ConfigService));
     await app.init();
   });
 
@@ -87,6 +93,55 @@ describe('application bootstrap (e2e)', () => {
     expect(
       rejectedOrigin.headers['access-control-allow-origin'],
     ).toBeUndefined();
+  });
+
+  it('serves Swagger UI and a complete OpenAPI document in development', async () => {
+    await request(app.getHttpServer())
+      .get(`/${SWAGGER_UI_PATH}`)
+      .expect(200)
+      .expect('Content-Type', /text\/html/);
+
+    const response = await request(app.getHttpServer())
+      .get(`/${OPENAPI_JSON_PATH}`)
+      .expect(200)
+      .expect('Content-Type', /json/);
+
+    const document = response.body as {
+      openapi: string;
+      paths: Record<string, Record<string, unknown>>;
+      components: { securitySchemes: Record<string, unknown> };
+    };
+    expect(document.openapi).toMatch(/^3\./);
+    expect(Object.keys(document.paths).sort()).toEqual(
+      [
+        '/api/admin/donaciones',
+        '/api/admin/health',
+        '/api/auth/google',
+        '/api/auth/google/callback',
+        '/api/auth/logout',
+        '/api/auth/me',
+        '/api/health',
+        '/api/public/contactos',
+        '/api/public/donaciones',
+        '/api/public/institucional',
+      ].sort(),
+    );
+    expect(document.paths['/api/admin/donaciones']).toHaveProperty('get');
+    expect(document.paths['/api/admin/donaciones']).toHaveProperty('put');
+    expect(document.components.securitySchemes).toMatchObject({
+      cookieAuth: { type: 'apiKey', in: 'cookie' },
+      csrfToken: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'X-CSRF-Token',
+      },
+    });
+    expect(document.paths['/api/admin/donaciones'].put).toMatchObject({
+      security: [{ cookieAuth: [], csrfToken: [] }],
+    });
+    expect(document.paths['/api/public/donaciones'].get).not.toHaveProperty(
+      'security',
+    );
   });
 
   afterAll(async () => {
