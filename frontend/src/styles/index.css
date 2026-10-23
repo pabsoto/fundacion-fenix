@@ -148,8 +148,14 @@ html {
   scroll-behavior: smooth;
 }
 
-main [id] {
-  scroll-margin-top: 96px;
+[id] {
+  scroll-margin-top: calc(72px + 8px);
+}
+
+@media (min-width: 1280px) {
+  [id] {
+    scroll-margin-top: calc(88px + 8px);
+  }
 }
 
 :focus-visible {

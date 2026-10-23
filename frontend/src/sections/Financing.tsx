@@ -12,6 +12,8 @@ export function Financing() {
         src="/images/jornada-en-comunidad.jpg"
         alt={t('financing.photo_alt')}
         radius="panel"
+        width={520}
+        height={600}
         className="mx-auto aspect-[520/600] h-auto w-full max-w-[520px] lg:mx-0"
       />
 
@@ -24,7 +26,7 @@ export function Financing() {
         <p className="t-body-lg text-negro">
           <Trans i18nKey="financing.paragraph3" components={{ strong: <strong /> }} />
         </p>
-        <div>
+        <div className="mt-8">
           <Button href={`#${SECTION_IDS.donate}`} variant="primary" size="lg">
             {t('financing.donar_ahora')}
           </Button>

@@ -1,8 +1,7 @@
 {
   "nav": {
-    "inicio": "Inicio",
-    "quienes_somos": "Quiénes somos",
-    "lo_que_hacemos": "Lo que hacemos",
+    "goHome": "Ir al inicio",
+    "nosotros": "Nosotros",
     "nuestro_programa": "Nuestro programa",
     "resultados": "Resultados",
     "como_colaborar": "Cómo colaborar",
@@ -12,7 +11,19 @@
     "label": "Principal",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
-    "language": "Idioma"
+    "language": "Idioma",
+    "es_label": "ES",
+    "es_name": "Español",
+    "en_label": "EN",
+    "en_name": "Inglés"
+  },
+  "logo": {
+    "name": "Fénix LPB",
+    "sub": "Fundación"
+  },
+  "meta": {
+    "title": "Fundación Fénix LPB · Cada vida puede renacer",
+    "description": "ONG de esterilización masiva y gratuita de perros y gatos en La Paz, Bolivia"
   },
   "hero": {
     "chip": "Fundación sin fines de lucro · La Paz, Bolivia",
@@ -111,7 +122,8 @@
     "go_donate": "Ir a Donar",
     "place": "{{place}}, {{city}}",
     "years_label": "Filtrar por año",
-    "list_label": "Lista de jornadas"
+    "list_label": "Lista de jornadas",
+    "photo_alt": "{{place}} foto {{number}}"
   },
   "results": {
     "title": "Resultados",
@@ -139,5 +151,53 @@
     "photo_placeholder": "Foto · Mascota",
     "prev": "Ver historias anteriores",
     "next": "Ver más historias"
+  },
+  "collaborate": {
+    "title": "Cómo colaborar",
+    "subtitle": "Tu ayuda puede llegar de muchas maneras",
+    "donate_title": "Donando",
+    "donate_text": "Cada donación nos ayuda a cubrir los gastos en la rehabilitación, esterilización y el bienestar de los animales que están a nuestro cuidado.",
+    "donate_cta": "Ir a donar",
+    "sponsor_title": "Apadrinando una esterilización",
+    "sponsor_text": "Tu aporte nos permite sostener nuestro programa “Por menos de ellos sufriendo” y llevar jornadas de esterilización gratuita a las comunidades que más las necesitan.",
+    "sponsor_cta": "Ir a donar",
+    "adopt_title": "Adoptando",
+    "adopt_text": "Al adoptar, no solo transformas la vida de un animalito; también liberas un espacio en el albergue para que otro ser necesitado pueda ocuparlo. Si estás en La Paz, Bolivia, escríbenos a nuestro WhatsApp para más información.",
+    "adopt_cta": "Escribir por WhatsApp"
+  },
+  "donate": {
+    "title": "Donar",
+    "subtitle": "Tu ayuda hace posible el cambio",
+    "lead": "Cada donación se transforma en esterilizaciones gratuitas, prevención y nuevas oportunidades para cientos de animales.",
+    "thanks": "Gracias por ayudarnos a construir un futuro con menos animales sufriendo.",
+    "whatsapp_info": "Si necesitas más información, escríbenos al WhatsApp: <wa>76560084</wa>",
+    "account_eyebrow": "Datos de la cuenta",
+    "holder": "Titular",
+    "bank": "Banco",
+    "phone": "Teléfono",
+    "reference": "Referencia",
+    "copy": "Copiar {{field}}",
+    "copied": "Copiado",
+    "notice": "Verifique que los datos del beneficiario correspondan a Fundación Fénix LPB antes de confirmar su transferencia.",
+    "qr_title": "Escanea para donar",
+    "qr_alt": "Código QR de donación Yape, con el respaldo del BCP",
+    "qr_caption": "Con el respaldo del BCP"
+  },
+  "facebook": {
+    "eyebrow": "Facebook",
+    "title": "Nuestra comunidad en vivo",
+    "placeholder": "Aquí va el feed de Facebook (plugin embebido)",
+    "note": "Widget del plugin de Facebook · el diseño final se define al integrarlo"
+  },
+  "footer": {
+    "title": "Contactos",
+    "text": "¿Quieres donar, adoptar, apoyar nuestro programa de esterilizaciones o conocer más de nuestra labor? Escríbenos o visítanos en nuestras redes sociales.",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "whatsapp": "WhatsApp",
+    "brand": "FÉNIX · LPB",
+    "brand_sub": "Fundación",
+    "copyright": "© 2026 Fundación Fénix LPB · La Paz, Bolivia"
   }
 }

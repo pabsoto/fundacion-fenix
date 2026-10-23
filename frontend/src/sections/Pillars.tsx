@@ -29,34 +29,34 @@ export function Pillars() {
   ];
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-      <SectionHeader
-        title={t('pillars.title')}
-        subtitle={t('pillars.subtitle')}
-      />
+    <div>
+      <SectionHeader title={t('pillars.title')} subtitle={t('pillars.subtitle')} />
 
-      {/* 3 Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-16">
-        {pillars.map((pillar, index) => (
-          <Card key={index} radius="card" className="p-8 flex flex-col items-center text-center h-full">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {pillars.map((pillar) => (
+          <Card
+            key={pillar.title}
+            radius="card"
+            className="flex h-full flex-col items-center p-6 text-center lg:p-8"
+          >
             <Photo
               src={pillar.image}
               alt={pillar.alt}
               radius="full"
-              className="w-36 h-36 mb-6"
+              width={144}
+              height={144}
+              className="mb-6 h-36 w-36"
             />
-            <h3 className="t-heading-card text-negro mb-4">{pillar.title}</h3>
+            <h3 className="mb-4 t-heading-card text-negro">{pillar.title}</h3>
             <p className="t-body text-negro">{pillar.text}</p>
           </Card>
         ))}
       </div>
 
-      {/* Future statement */}
-      <div className="max-w-[880px] mx-auto flex items-start gap-4">
-        <FlameIcon className="h-9 w-9 text-naranja-hover flex-shrink-0 mt-1" />
+      <div className="mx-auto mt-20 flex max-w-[880px] items-start gap-4">
+        <FlameIcon className="mt-1 h-9 w-9 shrink-0" />
         <p className="t-body-lg text-negro">{t('pillars.future_text')}</p>
       </div>
     </div>
   );
 }
-

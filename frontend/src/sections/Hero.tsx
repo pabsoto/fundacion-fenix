@@ -10,26 +10,25 @@ export function Hero() {
   const { t } = useTranslation();
 
   return (
-    <section id={SECTION_IDS.home} className="bg-crema pt-14">
-      <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Text Column */}
-          <div className="order-2 lg:order-1">
+    <section id={SECTION_IDS.home} className="overflow-x-clip bg-crema pb-14 pt-10 lg:pb-20 lg:pt-14">
+      <div className="mx-auto w-full max-w-[1264px] px-6 lg:px-8">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+          <div className="order-2 flex flex-col gap-8 lg:order-1">
             <Chip>{t('hero.chip')}</Chip>
-            
-            <h1 className="mt-6 t-hero text-negro leading-tight">
+
+            <h1 className="t-hero leading-tight text-negro">
               {t('hero.title_line1')}
               <br />
               {t('hero.title_line2')}
               <br />
-              <span className="inline-block bg-amarillo rounded-btn px-4 pb-1">
+              <span className="inline-block rounded-btn bg-amarillo px-4 pb-1">
                 {t('hero.title_line3')}
               </span>
             </h1>
 
-            <p className="mt-6 t-heading-md text-negro">{t('hero.subtitle')}</p>
+            <p className="t-heading-md text-negro">{t('hero.subtitle')}</p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4">
               <Button variant="primary" size="lg" href={`#${SECTION_IDS.donate}`}>
                 {t('hero.donar')}
               </Button>
@@ -39,33 +38,24 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Image Column */}
-          <div className="order-1 lg:order-2 relative">
-            {/* Decorative circles */}
-            <div className="absolute -right-8 -top-8 w-[340px] h-[340px] rounded-full bg-amarillo" />
-            <div className="absolute -left-4 bottom-20 w-16 h-16 rounded-full bg-naranja" />
-            
-            {/* Decorative paws */}
-            <PawIcon 
-              className="absolute -right-4 bottom-12 w-[72px] h-[72px] text-naranja-hover"
-              style={{ transform: 'rotate(18deg)' }}
-            />
-            <PawIcon 
-              className="absolute left-8 -top-4 w-10 h-10 text-amarillo"
-              style={{ transform: 'rotate(-18deg)' }}
-            />
+          <div className="relative order-1 lg:order-2">
+            <div className="absolute -top-8 -right-8 h-[340px] w-[340px] rounded-full bg-amarillo" />
+            <div className="absolute bottom-20 -left-4 h-16 w-16 rounded-full bg-naranja" />
 
-            {/* Main photo */}
+            <PawIcon className="absolute right-0 bottom-12 size-[72px] rotate-[18deg] text-naranja-hover" />
+            <PawIcon className="absolute top-0 left-8 size-10 -rotate-[18deg] text-amarillo" />
+
             <div className="relative">
-              <Photo 
+              <Photo
                 src="/images/hero-perros.jpg"
                 alt={t('hero.alt')}
                 radius="panel"
-                className="w-full h-auto aspect-[1504/1230] object-cover"
+                width={1504}
+                height={1230}
+                fetchPriority="high"
                 loading="eager"
+                className="aspect-[1504/1230] h-auto w-full object-cover"
               />
-              
-              {/* Pills */}
               <div className="absolute top-4 left-4">
                 <Pill>{t('hero.pill_1')}</Pill>
               </div>

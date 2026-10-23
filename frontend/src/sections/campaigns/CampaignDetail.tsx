@@ -1,7 +1,7 @@
 import { Trans, useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Photo } from '@/components/ui/Photo';
-import { formatNumber } from '@/lib/format';
+import { formatCampaignLabel, formatNumber } from '@/lib/format';
 import { SECTION_IDS } from '@/lib/constants';
 import type { Campaign } from '@/types';
 
@@ -10,7 +10,8 @@ interface CampaignDetailProps {
 }
 
 export function CampaignDetail({ campaign }: CampaignDetailProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage;
   const placeTitle = t('campaigns.place', {
     place: campaign.place,
     city: campaign.city,
@@ -20,7 +21,9 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
   return (
     <div className="flex w-full flex-col items-start">
       <div className="rounded-t-btn bg-naranja px-6 py-2.5">
-        <p className="t-body-strong text-negro">{campaign.label}</p>
+        <p className="t-body-strong text-negro">
+          {formatCampaignLabel(campaign.year, campaign.months, lang)}
+        </p>
       </div>
 
       <div className="w-full rounded-bl-panel rounded-br-panel rounded-tr-panel rounded-tl-btn bg-blanco p-8 shadow-lift">
@@ -33,7 +36,7 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
             {t('campaigns.total_label')}
           </p>
           <div className="flex flex-wrap items-baseline gap-2.5">
-            <span className="t-stat text-naranja">{formatNumber(campaign.total)}</span>
+            <span className="t-stat text-naranja">{formatNumber(campaign.total, lang)}</span>
             <span className="t-body-lg text-negro">{t('campaigns.sterilizations')}</span>
           </div>
         </div>
@@ -44,8 +47,8 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
           </p>
           <p className="t-body-lg text-negro">
             {t('campaigns.dogs_cats_value', {
-              dogs: formatNumber(campaign.dogs),
-              cats: formatNumber(campaign.cats),
+              dogs: formatNumber(campaign.dogs, lang),
+              cats: formatNumber(campaign.cats, lang),
             })}
           </p>
         </div>
@@ -56,8 +59,8 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
           </p>
           <p className="t-body-lg text-negro">
             {t('campaigns.males_females_value', {
-              males: formatNumber(campaign.males),
-              females: formatNumber(campaign.females),
+              males: formatNumber(campaign.males, lang),
+              females: formatNumber(campaign.females, lang),
             })}
           </p>
         </div>
@@ -74,7 +77,7 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
                   <Photo
                     key={i}
                     src={src}
-                    alt={`${placeTitle} ${i + 1}`}
+                    alt={t('campaigns.photo_alt', { place: placeTitle, number: i + 1 })}
                     radius="card"
                     className="h-24 min-w-0 flex-1 object-cover"
                   />

@@ -82,7 +82,7 @@ export function Stories() {
                     {statusLabel}
                   </span>
                 </div>
-                <p className="t-body text-negro">{story.text}</p>
+                <p className="t-body text-negro">{t(story.textKey)}</p>
                 <a
                   href="#historias"
                   className="t-body-strong inline-flex items-center gap-2 text-negro underline underline-offset-2"

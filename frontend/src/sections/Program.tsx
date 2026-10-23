@@ -7,7 +7,7 @@ export function Program() {
   const { t } = useTranslation();
 
   return (
-    <div className="bg-naranja rounded-panel grid items-center gap-10 p-8 text-negro lg:grid-cols-2 lg:gap-16 lg:p-16">
+    <div className="grid items-center gap-10 rounded-panel bg-naranja p-6 text-negro lg:grid-cols-2 lg:gap-16 lg:p-16">
       <div className="flex flex-col gap-6">
         <Chip variant="solid-crema">{t('program.chip')}</Chip>
         <h2 className="t-section text-negro">{t('program.title')}</h2>
@@ -27,6 +27,8 @@ export function Program() {
           src="/images/programa-por-menos-de-ellos-sufriendo.jpg"
           alt={t('program.photo_alt')}
           radius="panel"
+          width={460}
+          height={640}
           className="aspect-[460/640] h-auto w-full"
         />
         <div className="absolute bottom-6 left-4 flex items-center gap-3.5 rounded-card bg-blanco py-4 pl-4 pr-6 shadow-lift">

@@ -3,7 +3,7 @@ export type Campaign = {
   place: string;
   city: 'El Alto' | 'La Paz';
   year: number;
-  label: string;
+  months: number[];
   total: number;
   dogs: number;
   cats: number;
@@ -27,6 +27,6 @@ export type Story = {
   id: string;
   name: string;
   status: 'adopted' | 'recovering';
-  text: string;
+  textKey: string;
   photo?: string;
 };

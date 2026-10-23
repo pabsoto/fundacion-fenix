@@ -7,7 +7,7 @@ export function Results() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col gap-16">
+    <div className="flex flex-col gap-20">
       <SectionHeader
         title={t('results.title')}
         subtitle={t('results.subtitle')}

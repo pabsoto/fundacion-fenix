@@ -1,6 +1,5 @@
 import { Outlet } from 'react-router-dom'
 import { Navbar } from './Navbar'
-import { ContactFooter } from './ContactFooter'
 import { WhatsAppFloatingButton } from './WhatsAppFloatingButton'
 
 export function PublicLayout() {
@@ -10,7 +9,6 @@ export function PublicLayout() {
       <main id="contenido" tabIndex={-1} className="outline-none">
         <Outlet />
       </main>
-      <ContactFooter />
       <WhatsAppFloatingButton />
     </div>
   )
