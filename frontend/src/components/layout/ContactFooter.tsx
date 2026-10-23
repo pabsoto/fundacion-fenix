@@ -7,18 +7,7 @@ import {
   TikTokIcon,
   WhatsAppIcon,
 } from '@/components/ui/icons';
-import { SECTION_IDS, SOCIAL, WHATSAPP_URL } from '@/lib/constants';
-
-const FOOTER_LINKS = [
-  { id: SECTION_IDS.home, navKey: 'inicio' },
-  { id: SECTION_IDS.about, navKey: 'quienes_somos' },
-  { id: SECTION_IDS.pillars, navKey: 'lo_que_hacemos' },
-  { id: SECTION_IDS.program, navKey: 'nuestro_programa' },
-  { id: SECTION_IDS.results, navKey: 'resultados' },
-  { id: SECTION_IDS.collaborate, navKey: 'como_colaborar' },
-  { id: SECTION_IDS.donate, navKey: 'donar' },
-  { id: SECTION_IDS.contact, navKey: 'contactos' },
-] as const;
+import { FOOTER_LINKS, SOCIAL, WHATSAPP_URL } from '@/lib/constants';
 
 const socialBtn =
   'flex h-14 w-14 items-center justify-center rounded-full border-[1.5px] border-negro bg-crema text-negro';
@@ -95,11 +84,11 @@ export function ContactFooter() {
           <nav aria-label={t('nav.label')} className="flex flex-wrap gap-x-6 gap-y-2">
             {FOOTER_LINKS.map((link) => (
               <a
-                key={link.id}
-                href={`#${link.id}`}
-                className="t-small text-negro"
+                key={link.labelKey}
+                href={`#${link.targetId}`}
+                className="t-small min-h-11 inline-flex items-center text-negro"
               >
-                {t(`nav.${link.navKey}`)}
+                {t(link.labelKey)}
               </a>
             ))}
           </nav>

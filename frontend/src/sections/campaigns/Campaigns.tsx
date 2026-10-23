@@ -29,7 +29,7 @@ export function Campaigns() {
   }
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-12">
       <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-start">
         <div className="flex flex-col gap-3">
           <h2 className="t-section text-negro">{t('campaigns.title')}</h2>

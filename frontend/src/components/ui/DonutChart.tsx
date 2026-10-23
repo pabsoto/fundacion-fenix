@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { formatNumber } from '@/lib/format';
 
 const SIZE = 216;
@@ -23,6 +24,7 @@ export function DonutChart({
   centerLabel,
   ariaLabel,
 }: DonutChartProps) {
+  const { i18n } = useTranslation();
   const malesPct = total > 0 ? males / total : 0;
   const femalesPct = total > 0 ? females / total : 0;
   const available = Math.max(0, CIRCUMFERENCE - GAP * 2);
@@ -56,7 +58,9 @@ export function DonutChart({
         </g>
       </svg>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="t-heading-lg text-negro">{formatNumber(total)}</span>
+        <span className="t-heading-lg text-negro">
+          {formatNumber(total, i18n.resolvedLanguage)}
+        </span>
         <span className="t-small text-negro">{centerLabel}</span>
       </div>
     </div>

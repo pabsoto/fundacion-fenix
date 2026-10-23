@@ -1,8 +1,7 @@
 {
   "nav": {
-    "inicio": "Inicio",
-    "quienes_somos": "Quiénes somos",
-    "lo_que_hacemos": "Lo que hacemos",
+    "goHome": "Ir al inicio",
+    "nosotros": "Nosotros",
     "nuestro_programa": "Nuestro programa",
     "resultados": "Resultados",
     "como_colaborar": "Cómo colaborar",
@@ -12,7 +11,17 @@
     "label": "Principal",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
-    "language": "Idioma"
+    "language": "Idioma",
+    "lang_es": "Español",
+    "lang_en": "Inglés"
+  },
+  "logo": {
+    "name": "Fénix LPB",
+    "sub": "Fundación"
+  },
+  "meta": {
+    "title": "Fundación Fénix LPB · Cada vida puede renacer",
+    "description": "ONG de esterilización masiva y gratuita de perros y gatos en La Paz, Bolivia"
   },
   "hero": {
     "chip": "Fundación sin fines de lucro · La Paz, Bolivia",

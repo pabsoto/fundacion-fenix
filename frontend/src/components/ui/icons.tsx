@@ -1,37 +1,24 @@
-export function PawIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+export function PawIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      style={style}
-      aria-hidden="true"
-    >
-      <ellipse cx="12" cy="14" rx="5" ry="7" fill="currentColor" />
-      <ellipse cx="24" cy="10" rx="5" ry="7" fill="currentColor" />
-      <ellipse cx="36" cy="14" rx="5" ry="7" fill="currentColor" />
-      <ellipse cx="8" cy="26" rx="5" ry="7" fill="currentColor" />
-      <ellipse cx="40" cy="26" rx="5" ry="7" fill="currentColor" />
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <ellipse cx="4.3" cy="11.4" rx="2.1" ry="2.9" transform="rotate(-24 4.3 11.4)" />
+      <ellipse cx="8.7" cy="6.1" rx="2.3" ry="3.2" transform="rotate(-9 8.7 6.1)" />
+      <ellipse cx="15.3" cy="6.1" rx="2.3" ry="3.2" transform="rotate(9 15.3 6.1)" />
+      <ellipse cx="19.7" cy="11.4" rx="2.1" ry="2.9" transform="rotate(24 19.7 11.4)" />
+      <path d="M12 11.6c-2.9 0-5.6 2.6-5.6 5.3 0 2 1.5 3.2 3.3 3.2.9 0 1.6-.4 2.3-.4s1.4.4 2.3.4c1.8 0 3.3-1.2 3.3-3.2 0-2.7-2.7-5.3-5.6-5.3z" />
     </svg>
   );
 }
 
-export function FlameIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+export function FlameIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      style={style}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
       <path
-        d="M24 4C24 4 16 16 16 24C16 30.6274 21.3726 36 28 36C34.6274 36 40 30.6274 40 24C40 16 32 4 32 4C32 4 28 8 24 8C20 8 16 4 16 4C16 4 20 8 24 4Z"
-        fill="#ffc200"
-        stroke="#1c1c1c"
+        d="M24 6c2 6-1 10-1 15 0 3 2 5 5 5 6 0 10-6 10-13 0-4-2-8-4-11 4 5 8 12 8 18 0 9-7 16-18 16S6 29 6 20c0-6 4-12 8-16-1 5 1 9 3 12 1-4 4-8 7-10Z"
+        fill="var(--color-naranja)"
+        stroke="var(--color-negro)"
         strokeWidth="2"
+        strokeLinejoin="round"
       />
     </svg>
   );

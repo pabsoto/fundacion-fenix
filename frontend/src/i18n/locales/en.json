@@ -1,18 +1,27 @@
 {
   "nav": {
-    "inicio": "Inicio",
-    "quienes_somos": "Quiénes somos",
-    "lo_que_hacemos": "Lo que hacemos",
-    "nuestro_programa": "Nuestro programa",
-    "resultados": "Resultados",
-    "como_colaborar": "Cómo colaborar",
-    "contactos": "Contactos",
-    "donar": "Donar",
+    "goHome": "Go to the top of the page",
+    "nosotros": "About us",
+    "nuestro_programa": "Our program",
+    "resultados": "Results",
+    "como_colaborar": "How to help",
+    "contactos": "Contact",
+    "donar": "Donate",
     "skip": "Skip to content",
     "label": "Main",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "language": "Language"
+    "language": "Language",
+    "lang_es": "Spanish",
+    "lang_en": "English"
+  },
+  "logo": {
+    "name": "Fénix LPB",
+    "sub": "Foundation"
+  },
+  "meta": {
+    "title": "Fundación Fénix LPB · Every life can be reborn",
+    "description": "Nonprofit for free mass sterilization of dogs and cats in La Paz, Bolivia"
   },
   "hero": {
     "chip": "Fundación sin fines de lucro · La Paz, Bolivia",
