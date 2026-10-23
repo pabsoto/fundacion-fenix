@@ -1,6 +1,7 @@
-import { Outlet } from 'react-router-dom';
-import { Navbar } from './Navbar';
-import { ContactFooter } from './ContactFooter';
+import { Outlet } from 'react-router-dom'
+import { Navbar } from './Navbar'
+import { ContactFooter } from './ContactFooter'
+import { WhatsAppFloatingButton } from './WhatsAppFloatingButton'
 
 export function PublicLayout() {
   return (
@@ -10,7 +11,7 @@ export function PublicLayout() {
         <Outlet />
       </main>
       <ContactFooter />
-      {/* WhatsAppFloat will be rendered here when implemented by team member */}
+      <WhatsAppFloatingButton />
     </div>
-  );
+  )
 }
