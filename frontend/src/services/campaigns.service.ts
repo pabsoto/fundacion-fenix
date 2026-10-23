@@ -1,8 +1,7 @@
 import { campaignsMock } from '@/data/campaigns.mock';
+import { DEMO_SHOWCASE } from '@/lib/demo';
 import type { Campaign } from '@/types';
 import { fetchApi } from './api';
-
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
 
 type ApiCampaign = {
   id: string;
@@ -33,7 +32,7 @@ function fromApi(campaign: ApiCampaign): Campaign {
 }
 
 export async function getCampaigns(params?: { year?: number }): Promise<Campaign[]> {
-  if (USE_MOCKS) {
+  if (DEMO_SHOWCASE) {
     if (params?.year != null) {
       return campaignsMock.filter((c) => c.year === params.year);
     }
@@ -45,7 +44,7 @@ export async function getCampaigns(params?: { year?: number }): Promise<Campaign
 }
 
 export async function getCampaign(id: string): Promise<Campaign | undefined> {
-  if (USE_MOCKS) {
+  if (DEMO_SHOWCASE) {
     return campaignsMock.find((c) => c.id === id);
   }
   const campaigns = await getCampaigns();

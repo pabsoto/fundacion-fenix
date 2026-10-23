@@ -6,6 +6,8 @@ import { Photo } from '@/components/ui/Photo';
 import { cn } from '@/lib/cn';
 import { useCarousel } from '@/hooks/useCarousel';
 import { useStories } from '@/hooks/useStories';
+import { DemoBadge } from '@/components/ui/DemoBadge';
+import { DEMO_SHOWCASE } from '@/lib/demo';
 
 export function Stories() {
   const { t } = useTranslation();
@@ -16,6 +18,7 @@ export function Stories() {
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="text-center sm:text-left">
+          {DEMO_SHOWCASE && <DemoBadge />}
           <p className="t-eyebrow mb-3 text-negro">{t('stories.eyebrow')}</p>
           <h3 className="t-heading-lg text-negro">{t('stories.title')}</h3>
         </div>

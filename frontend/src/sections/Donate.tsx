@@ -6,7 +6,8 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
 import { useWhatsAppContact } from '@/hooks/useWhatsAppContact';
 import { useDonation } from '@/hooks/useDonation';
-import { isDemoDonation } from '@/services/donations.service';
+import { getDonationAvailability } from '@/services/donations.service';
+import { DEMO_SHOWCASE } from '@/lib/demo';
 
 function CopyRow({
   label,
@@ -55,8 +56,8 @@ export function Donate() {
   const { data: whatsapp } = useWhatsAppContact();
   const donationQuery = useDonation();
   const donation = donationQuery.data ?? null;
-  const isDemo = donation ? isDemoDonation(donation) : false;
-  const canDonate = donation !== null && !isDemo;
+  const { isDemo, canDonate, showDemoQr, showOfficialQr, showQr } =
+    getDonationAvailability(donation, DEMO_SHOWCASE);
   const language = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'es';
 
   const rows = donation
@@ -119,7 +120,7 @@ export function Donate() {
             <Lock className="mt-0.5 h-5 w-5 shrink-0 text-negro" aria-hidden />
             <p className="t-small text-negro">
               {canDonate
-                ? donation.aviso[language] ?? t('donate.notice')
+                ? donation?.aviso[language] ?? t('donate.notice')
                 : unavailableMessage}
             </p>
           </div>
@@ -127,10 +128,15 @@ export function Donate() {
 
         <div className="flex w-full flex-col items-center gap-5 rounded-panel border border-linea bg-blanco p-8 shadow-lift lg:w-[440px] lg:justify-self-end">
           <p className="t-heading-card text-negro">{t('donate.qr_title')}</p>
-          {canDonate && donation.qrUrl ? (
+          {showDemoQr && (
+            <p className="rounded-btn bg-amarillo px-4 py-2 text-center t-body-strong text-negro" role="status">
+              {t('donate.demo_qr_warning')}
+            </p>
+          )}
+          {showQr && donation?.qrUrl ? (
             <Photo
               src={donation.qrUrl}
-              alt={t('donate.qr_alt')}
+              alt={showDemoQr ? t('donate.demo_qr_alt') : t('donate.qr_alt')}
               radius="card"
               className="aspect-square h-auto w-full"
             />
@@ -140,7 +146,11 @@ export function Donate() {
             </div>
           )}
           <p className="t-small text-negro">
-            {canDonate && donation.qrUrl ? t('donate.qr_caption') : t('donate.qr_unavailable')}
+            {showDemoQr
+              ? t('donate.demo_qr_caption')
+              : showOfficialQr
+                ? t('donate.qr_caption')
+                : t('donate.qr_unavailable')}
           </p>
         </div>
       </div>

@@ -11,18 +11,21 @@ export function Pillars() {
 
   const pillars = [
     {
+      id: 'rehabilitation',
       image: '/images/pilar-rehabilitacion.jpg',
       alt: t('pillars.pilar1_alt'),
       title: text('pilar_rehabilitacion', 'titulo'),
       text: text('pilar_rehabilitacion'),
     },
     {
+      id: 'education',
       image: '/images/pilar-educacion.jpg',
       alt: t('pillars.pilar2_alt'),
       title: text('pilar_educacion', 'titulo'),
       text: text('pilar_educacion'),
     },
     {
+      id: 'sterilization',
       image: '/images/pilar-esterilizacion.jpg',
       alt: t('pillars.pilar3_alt'),
       title: text('pilar_esterilizacion', 'titulo'),
@@ -40,7 +43,8 @@ export function Pillars() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {pillars.map((pillar) => (
           <Card
-            key={pillar.title}
+            key={pillar.id}
+            data-pillar-id={pillar.id}
             radius="card"
             className="flex h-full flex-col items-center p-6 text-center lg:p-8"
           >

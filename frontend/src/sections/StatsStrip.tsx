@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/Card';
+import { DemoBadge } from '@/components/ui/DemoBadge';
 import { useStats } from '@/hooks/useStats';
 import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
+import { DEMO_SHOWCASE } from '@/lib/demo';
 import { formatNumber } from '@/lib/format';
 
 export function StatsStrip() {
@@ -37,6 +39,11 @@ export function StatsStrip() {
     <section className="bg-crema pb-16">
       <div className="mx-auto w-full max-w-[1264px] px-6 lg:px-8">
         <Card radius="panel" className="px-6 py-8 lg:px-10">
+          {DEMO_SHOWCASE && (
+            <div className="mb-5 flex justify-center">
+              <DemoBadge />
+            </div>
+          )}
           <div className="grid grid-cols-2 divide-x divide-y divide-linea lg:grid-cols-4 lg:divide-y-0">
             {stats.map((item) => (
               <div

@@ -25,6 +25,13 @@ Copia `.env.example` a `.env` y configura las variables necesarias:
 cp .env.example .env
 ```
 
+`VITE_DEMO_SHOWCASE=true` activa únicamente las campañas, estadísticas e
+historias de demostración guardadas en `src/data`. También permite visualizar
+un QR marcado como DEMO cuando la API devuelve una URL vigente, sin habilitar
+la copia de los datos bancarios. El valor de ejemplo es `false`, por lo que los
+builds públicos usan las APIs reales y las historias quedan vacías mientras no
+exista un endpoint oficial.
+
 ## Desarrollo
 
 ```bash
