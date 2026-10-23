@@ -13,16 +13,16 @@ export function Program() {
     <div className="grid items-center gap-10 rounded-panel bg-naranja p-6 text-negro lg:grid-cols-2 lg:gap-16 lg:p-16">
       <div className="flex flex-col gap-6">
         <Chip variant="solid-crema">{t('program.chip')}</Chip>
-        <h2 className="t-section text-negro">{text('programa_encabezado', 'titulo')}</h2>
-        <p className="t-heading-lg text-negro">{text('programa_encabezado')}</p>
-        <p className="t-body-lg text-negro">{text('programa_intro')}</p>
-        <p className="t-body-lg text-negro">
+        <h2 className="t-section text-blanco">{text('programa_encabezado', 'titulo')}</h2>
+        <p className="t-heading-lg text-blanco">{text('programa_encabezado')}</p>
+        <p className="t-body-lg text-blanco">{text('programa_intro')}</p>
+        <p className="t-body-lg text-blanco">
           <SafeRichText text={text('programa_alcance')} />
         </p>
         <div className="rounded-card bg-crema px-6 py-5">
           <p className="t-heading-card text-negro">{text('programa_igualdad')}</p>
         </div>
-        <p className="t-body-lg text-negro">{text('programa_comunidades')}</p>
+        <p className="t-body-lg text-blanco">{text('programa_comunidades')}</p>
       </div>
 
       <div className="relative mx-auto w-full max-w-[460px] lg:mx-0 lg:justify-self-end">
