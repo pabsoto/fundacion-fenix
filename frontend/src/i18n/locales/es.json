@@ -12,8 +12,10 @@
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "language": "Idioma",
-    "lang_es": "Español",
-    "lang_en": "Inglés"
+    "es_label": "ES",
+    "es_name": "Español",
+    "en_label": "EN",
+    "en_name": "Inglés"
   },
   "logo": {
     "name": "Fénix LPB",
@@ -120,7 +122,8 @@
     "go_donate": "Ir a Donar",
     "place": "{{place}}, {{city}}",
     "years_label": "Filtrar por año",
-    "list_label": "Lista de jornadas"
+    "list_label": "Lista de jornadas",
+    "photo_alt": "{{place}} foto {{number}}"
   },
   "results": {
     "title": "Resultados",

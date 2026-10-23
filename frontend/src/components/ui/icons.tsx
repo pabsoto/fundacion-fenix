@@ -14,7 +14,7 @@ export function FlameIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
       <path
-        d="M24 6c2 6-1 10-1 15 0 3 2 5 5 5 6 0 10-6 10-13 0-4-2-8-4-11 4 5 8 12 8 18 0 9-7 16-18 16S6 29 6 20c0-6 4-12 8-16-1 5 1 9 3 12 1-4 4-8 7-10Z"
+        d="M24 4c2.5 7-1 12-1 17 0 4 2.5 6 5.5 6 6.5 0 11-6.5 11-14 0-4.5-2.5-9-5-12 4.5 5.5 9 13 9 19.5 0 9.5-7.5 17-18.5 17S5.5 30 5.5 20.5c0-6.5 4.5-13 8.5-17-1.5 5.5 1 9.5 3 13 1.5-4.5 4.5-8.5 7-11Z"
         fill="var(--color-naranja)"
         stroke="var(--color-negro)"
         strokeWidth="2"

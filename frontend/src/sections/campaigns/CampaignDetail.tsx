@@ -77,7 +77,7 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
                   <Photo
                     key={i}
                     src={src}
-                    alt={`${placeTitle} ${i + 1}`}
+                    alt={t('campaigns.photo_alt', { place: placeTitle, number: i + 1 })}
                     radius="card"
                     className="h-24 min-w-0 flex-1 object-cover"
                   />
