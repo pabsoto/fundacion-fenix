@@ -1,15 +1,10 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
 
-export async function fetchApi<T>(endpoint: string): Promise<T> {
-  if (USE_MOCKS) {
-    // When using mocks, services will return mock data directly
-    throw new Error('Mock mode: use service-specific mock functions');
-  }
-
+export async function fetchApi<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${API_URL}${endpoint}`, {
+    signal,
     headers: {
-      'Content-Type': 'application/json',
+      Accept: 'application/json',
     },
   });
 

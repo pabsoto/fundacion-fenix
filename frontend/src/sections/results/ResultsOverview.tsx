@@ -79,9 +79,15 @@ function SpeciesCard({
 export function ResultsOverview() {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage;
-  const { data: stats } = useStats();
+  const { data: stats, isPending, isError } = useStats();
 
-  if (!stats) return null;
+  if (!stats) {
+    return (
+      <p className="t-body text-center text-negro" role="status">
+        {isPending ? t('results.loading') : isError ? t('results.error') : t('results.empty')}
+      </p>
+    );
+  }
 
   const grandTotal = stats.caninos.total + stats.felinos.total;
 
@@ -114,10 +120,11 @@ export function ResultsOverview() {
         />
       </div>
 
-      <div className="grid gap-12 md:grid-cols-2">
-        <p className="t-body text-negro">{t('results.close1')}</p>
-        <p className="t-body text-negro">{t('results.close2')}</p>
-      </div>
+      {grandTotal === 0 && (
+        <p className="t-body text-center text-negro" role="status">
+          {t('results.empty')}
+        </p>
+      )}
     </div>
   );
 }

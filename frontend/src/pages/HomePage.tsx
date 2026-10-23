@@ -12,11 +12,26 @@ import { FacebookFeed } from '@/sections/FacebookFeed';
 import { SectionBand } from '@/components/ui/SectionBand';
 import { ContactFooter } from '@/components/layout/ContactFooter';
 import { SECTION_IDS } from '@/lib/constants';
+import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
+import { useTranslation } from 'react-i18next';
 
 export function HomePage() {
+  const { t } = useTranslation();
+  const institutional = useInstitutionalContent();
+  const contentUnavailable =
+    institutional.isError || (!institutional.isPending && institutional.data?.length === 0);
+
   return (
     <>
       <Hero />
+      {institutional.isPending && (
+        <p className="sr-only" role="status">{t('content.loading')}</p>
+      )}
+      {contentUnavailable && (
+        <div className="bg-crema px-6 pb-8 text-center">
+          <p className="t-body text-negro" role="status">{t('content.unavailable')}</p>
+        </div>
+      )}
       <StatsStrip />
 
       <SectionBand id={SECTION_IDS.about} tone="crema">

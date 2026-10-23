@@ -29,6 +29,16 @@ export async function getPublicContacts(): Promise<PublicContactChannel[]> {
   return contacts as PublicContactChannel[]
 }
 
+export function isSafePublicContact(contact: PublicContactChannel): boolean {
+  try {
+    const url = new URL(contact.url)
+    if (contact.tipo === 'email') return url.protocol === 'mailto:'
+    return url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 export function isValidWhatsAppUrl(value: string): boolean {
   try {
     const url = new URL(value)

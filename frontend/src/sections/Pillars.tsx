@@ -3,34 +3,39 @@ import { Card } from '@/components/ui/Card';
 import { Photo } from '@/components/ui/Photo';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { FlameIcon } from '@/components/ui/icons';
+import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
 
 export function Pillars() {
   const { t } = useTranslation();
+  const { text } = useInstitutionalContent();
 
   const pillars = [
     {
       image: '/images/pilar-rehabilitacion.jpg',
       alt: t('pillars.pilar1_alt'),
-      title: t('pillars.pilar1_title'),
-      text: t('pillars.pilar1_text'),
+      title: text('pilar_rehabilitacion', 'titulo'),
+      text: text('pilar_rehabilitacion'),
     },
     {
       image: '/images/pilar-educacion.jpg',
       alt: t('pillars.pilar2_alt'),
-      title: t('pillars.pilar2_title'),
-      text: t('pillars.pilar2_text'),
+      title: text('pilar_educacion', 'titulo'),
+      text: text('pilar_educacion'),
     },
     {
       image: '/images/pilar-esterilizacion.jpg',
       alt: t('pillars.pilar3_alt'),
-      title: t('pillars.pilar3_title'),
-      text: t('pillars.pilar3_text'),
+      title: text('pilar_esterilizacion', 'titulo'),
+      text: text('pilar_esterilizacion'),
     },
   ];
 
   return (
     <div>
-      <SectionHeader title={t('pillars.title')} subtitle={t('pillars.subtitle')} />
+      <SectionHeader
+        title={text('pilares_intro', 'titulo')}
+        subtitle={text('pilares_intro')}
+      />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {pillars.map((pillar) => (
@@ -55,7 +60,7 @@ export function Pillars() {
 
       <div className="mx-auto mt-20 flex max-w-[880px] items-start gap-4">
         <FlameIcon className="mt-1 h-9 w-9 shrink-0" />
-        <p className="t-body-lg text-negro">{t('pillars.future_text')}</p>
+        <p className="t-body-lg text-negro">{text('pilares_futuro')}</p>
       </div>
     </div>
   );

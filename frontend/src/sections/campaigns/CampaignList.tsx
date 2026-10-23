@@ -5,11 +5,11 @@ import { cn } from '@/lib/cn';
 import { formatCampaignLabel, formatNumber } from '@/lib/format';
 import type { Campaign } from '@/types';
 
-const YEARS = [2025, 2024, 2023] as const;
 const PAGE_SIZE = 5;
 
 interface CampaignListProps {
   campaigns: Campaign[];
+  years: number[];
   year: number;
   selectedId: string | null;
   expanded: boolean;
@@ -20,6 +20,7 @@ interface CampaignListProps {
 
 export function CampaignList({
   campaigns,
+  years,
   year,
   selectedId,
   expanded,
@@ -42,7 +43,7 @@ export function CampaignList({
           role="group"
           aria-label={t('campaigns.years_label')}
         >
-          {YEARS.map((y) => {
+          {years.map((y) => {
             const active = y === year;
             return (
               <button
@@ -74,10 +75,9 @@ export function CampaignList({
         >
           {visible.map((campaign, index) => {
             const selected = campaign.id === selectedId;
-            const placeTitle = t('campaigns.place', {
-              place: campaign.place,
-              city: campaign.city,
-            });
+            const placeTitle = campaign.city
+              ? t('campaigns.place', { place: campaign.place, city: campaign.city })
+              : campaign.place;
             const order = String(index + 1).padStart(2, '0');
 
             return (

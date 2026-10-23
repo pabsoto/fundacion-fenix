@@ -2,9 +2,11 @@ import { useTranslation } from 'react-i18next';
 import { Photo } from '@/components/ui/Photo';
 import { Pill } from '@/components/ui/Pill';
 import { FlameIcon } from '@/components/ui/icons';
+import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
 
 export function About() {
   const { t } = useTranslation();
+  const { text } = useInstitutionalContent();
 
   return (
     <div className="flex flex-col gap-16 lg:gap-20">
@@ -19,15 +21,15 @@ export function About() {
             className="h-auto w-full"
           />
           <div className="absolute bottom-4 left-4">
-            <Pill>{t('about.founder_pill')}</Pill>
+            <Pill>{text('quienes_somos_fundadora', 'titulo')}</Pill>
           </div>
         </div>
 
         <div className="space-y-6">
-          <p className="t-eyebrow text-negro">{t('about.eyebrow')}</p>
-          <h2 className="t-section text-negro">{t('about.title')}</h2>
-          <p className="t-heading-md text-negro">{t('about.lead')}</p>
-          <p className="t-body-lg text-negro">{t('about.text')}</p>
+          <p className="t-eyebrow text-negro">{text('quienes_somos_encabezado')}</p>
+          <h2 className="t-section text-negro">{text('quienes_somos_encabezado', 'titulo')}</h2>
+          <p className="t-heading-md text-negro">{text('quienes_somos_intro', 'titulo')}</p>
+          <p className="t-body-lg text-negro">{text('quienes_somos_intro')}</p>
         </div>
       </div>
 
@@ -35,9 +37,9 @@ export function About() {
         <div className="space-y-6">
           <div className="flex items-center gap-3">
             <FlameIcon className="h-10 w-10" />
-            <p className="t-eyebrow text-negro">{t('about.phoenix_eyebrow')}</p>
+            <p className="t-eyebrow text-negro">{text('quienes_somos_fenix', 'titulo')}</p>
           </div>
-          <p className="t-heading-md text-negro">{t('about.phoenix_text')}</p>
+          <p className="t-heading-md text-negro">{text('quienes_somos_fenix')}</p>
         </div>
 
         <div className="lg:ml-auto">

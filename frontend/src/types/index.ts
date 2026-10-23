@@ -1,7 +1,7 @@
 export type Campaign = {
   id: string;
   place: string;
-  city: 'El Alto' | 'La Paz';
+  city?: string;
   year: number;
   months: number[];
   total: number;

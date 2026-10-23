@@ -95,6 +95,11 @@ export function Stories() {
           );
         })}
       </Carousel>
+      {stories.length === 0 && (
+        <p className="t-body text-center text-negro" role="status">
+          {t('stories.empty')}
+        </p>
+      )}
     </div>
   );
 }

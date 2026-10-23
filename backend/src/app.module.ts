@@ -11,6 +11,7 @@ import { ContenidoInstitucionalModule } from './modules/contenido-institucional/
 import { DonacionesModule } from './modules/donaciones/donaciones.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { StorageModule } from './modules/storage/storage.module.js';
+import { ImpactoPublicoModule } from './modules/impacto-publico/impacto-publico.module.js';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { StorageModule } from './modules/storage/storage.module.js';
     AuditoriaModule,
     CanalesContactoModule,
     StorageModule,
+    ImpactoPublicoModule,
   ],
 })
 export class AppModule {}

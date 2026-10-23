@@ -25,6 +25,10 @@
     "title": "Fundación Fénix LPB · Every life can be reborn",
     "description": "Nonprofit for free mass sterilization of dogs and cats in La Paz, Bolivia"
   },
+  "content": {
+    "loading": "Loading institutional content…",
+    "unavailable": "Institutional content is not available right now."
+  },
   "hero": {
     "chip": "Nonprofit foundation · La Paz, Bolivia",
     "title_line1": "We believe that",
@@ -124,6 +128,8 @@
     "years_label": "Filter by year",
     "list_label": "Drive list",
     "photo_alt": "{{place}} photo {{number}}"
+    ,"loading": "Loading recorded campaigns…",
+    "error": "Campaigns could not be loaded right now."
   },
   "results": {
     "title": "Results",
@@ -140,7 +146,10 @@
     "females": "Females",
     "donut_aria": "{{name}}: {{total}} sterilizations. Males {{males}} ({{malesPct}}), females {{females}} ({{femalesPct}}).",
     "close1": "Thanks to our “Por menos de ellos sufriendo” program, we have already changed the story of more than 1,000 dogs and cats, helping prevent abandonment and overpopulation.",
-    "close2": "This program is just beginning, but early results show that change is possible and that together we can make it real. We are grateful for the support of people who trust our work and share our conviction that sterilization is one of the most effective, responsible and compassionate tools for a future with fewer animals suffering and more lives protected."
+    "close2": "This program is just beginning, but early results show that change is possible and that together we can make it real. We are grateful for the support of people who trust our work and share our conviction that sterilization is one of the most effective, responsible and compassionate tools for a future with fewer animals suffering and more lives protected.",
+    "loading": "Loading official results…",
+    "error": "Results could not be loaded right now.",
+    "empty": "No official results have been published yet."
   },
   "stories": {
     "eyebrow": "Featured stories",
@@ -150,7 +159,8 @@
     "read_more": "Read the full story →",
     "photo_placeholder": "Photo · Pet",
     "prev": "Previous stories",
-    "next": "More stories"
+    "next": "More stories",
+    "empty": "No official stories have been published yet."
   },
   "collaborate": {
     "title": "How to help",
@@ -170,18 +180,25 @@
     "subtitle": "Your help makes change possible",
     "lead": "Every donation becomes free sterilizations, prevention and new chances for hundreds of animals.",
     "thanks": "Thank you for helping us build a future with fewer animals suffering.",
-    "whatsapp_info": "If you need more information, write to us on WhatsApp: <wa>76560084</wa>",
+    "whatsapp_info": "If you need more information, write to us on WhatsApp:",
+    "whatsapp_cta": "Message us",
     "account_eyebrow": "Account details",
     "holder": "Account holder",
     "bank": "Bank",
     "phone": "Phone",
+    "account": "Account number",
     "reference": "Reference",
     "copy": "Copy {{field}}",
     "copied": "Copied",
     "notice": "Please verify that the beneficiary details match Fundación Fénix LPB before confirming your transfer.",
     "qr_title": "Scan to donate",
     "qr_alt": "Yape donation QR code, backed by BCP",
-    "qr_caption": "Backed by BCP"
+    "qr_caption": "Official donation QR",
+    "loading": "Checking the official donation details…",
+    "error": "Donation details could not be loaded right now.",
+    "unavailable": "Official donation details are not available yet.",
+    "demo_unavailable": "TEST — DO NOT DONATE. The temporary configuration is not enabled for public donations.",
+    "qr_unavailable": "No official QR is available."
   },
   "facebook": {
     "eyebrow": "Facebook",

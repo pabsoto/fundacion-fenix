@@ -7,7 +7,7 @@ import {
 
 export function useWhatsAppContact() {
   return useQuery({
-    queryKey: ['public-contacts', 'whatsapp'],
+    queryKey: ['public-contacts'],
     queryFn: getPublicContacts,
     select: (contacts): PublicContactChannel | null => {
       const whatsapp = contacts.find((contact) => contact.tipo === 'whatsapp')

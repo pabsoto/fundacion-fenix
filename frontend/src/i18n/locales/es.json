@@ -15,7 +15,7 @@
     "es_label": "ES",
     "es_name": "Español",
     "en_label": "EN",
-    "en_name": "Inglés"
+    "en_name": "English"
   },
   "logo": {
     "name": "Fénix LPB",
@@ -24,6 +24,10 @@
   "meta": {
     "title": "Fundación Fénix LPB · Cada vida puede renacer",
     "description": "ONG de esterilización masiva y gratuita de perros y gatos en La Paz, Bolivia"
+  },
+  "content": {
+    "loading": "Cargando contenido institucional…",
+    "unavailable": "El contenido institucional no está disponible en este momento."
   },
   "hero": {
     "chip": "Fundación sin fines de lucro · La Paz, Bolivia",
@@ -124,6 +128,8 @@
     "years_label": "Filtrar por año",
     "list_label": "Lista de jornadas",
     "photo_alt": "{{place}} foto {{number}}"
+    ,"loading": "Consultando las campañas registradas…",
+    "error": "No fue posible consultar las campañas en este momento."
   },
   "results": {
     "title": "Resultados",
@@ -140,7 +146,10 @@
     "females": "Hembras",
     "donut_aria": "{{name}}: {{total}} esterilizaciones. Machos {{males}} ({{malesPct}}), hembras {{females}} ({{femalesPct}}).",
     "close1": "Gracias a nuestro programa “Por menos de ellos sufriendo”, ya hemos cambiado la historia de más de 1.000 perros y gatos, contribuyendo a prevenir el abandono y la sobrepoblación animal.",
-    "close2": "Este programa recién comienza, pero sus primeros resultados nos demuestran que el cambio es posible y que juntos podemos hacerlo realidad. Nos llena de alegría contar con el apoyo de personas que confían en nuestro trabajo y comparten nuestra convicción de que la esterilización es una de las herramientas más eficaces, responsables y compasivas para construir un futuro con menos animales sufriendo y más vidas protegidas."
+    "close2": "Este programa recién comienza, pero sus primeros resultados nos demuestran que el cambio es posible y que juntos podemos hacerlo realidad. Nos llena de alegría contar con el apoyo de personas que confían en nuestro trabajo y comparten nuestra convicción de que la esterilización es una de las herramientas más eficaces, responsables y compasivas para construir un futuro con menos animales sufriendo y más vidas protegidas.",
+    "loading": "Consultando los resultados oficiales…",
+    "error": "No fue posible consultar los resultados en este momento.",
+    "empty": "Aún no hay resultados oficiales publicados."
   },
   "stories": {
     "eyebrow": "Historias destacadas",
@@ -150,7 +159,8 @@
     "read_more": "Conocer historia completa →",
     "photo_placeholder": "Foto · Mascota",
     "prev": "Ver historias anteriores",
-    "next": "Ver más historias"
+    "next": "Ver más historias",
+    "empty": "Aún no hay historias oficiales publicadas."
   },
   "collaborate": {
     "title": "Cómo colaborar",
@@ -170,18 +180,25 @@
     "subtitle": "Tu ayuda hace posible el cambio",
     "lead": "Cada donación se transforma en esterilizaciones gratuitas, prevención y nuevas oportunidades para cientos de animales.",
     "thanks": "Gracias por ayudarnos a construir un futuro con menos animales sufriendo.",
-    "whatsapp_info": "Si necesitas más información, escríbenos al WhatsApp: <wa>76560084</wa>",
+    "whatsapp_info": "Si necesitas más información, escríbenos al WhatsApp:",
+    "whatsapp_cta": "Escríbenos",
     "account_eyebrow": "Datos de la cuenta",
     "holder": "Titular",
     "bank": "Banco",
     "phone": "Teléfono",
+    "account": "Número de cuenta",
     "reference": "Referencia",
     "copy": "Copiar {{field}}",
     "copied": "Copiado",
     "notice": "Verifique que los datos del beneficiario correspondan a Fundación Fénix LPB antes de confirmar su transferencia.",
     "qr_title": "Escanea para donar",
     "qr_alt": "Código QR de donación Yape, con el respaldo del BCP",
-    "qr_caption": "Con el respaldo del BCP"
+    "qr_caption": "QR oficial de donaciones",
+    "loading": "Consultando los datos oficiales de donación…",
+    "error": "No fue posible consultar los datos de donación en este momento.",
+    "unavailable": "Aún no hay datos oficiales de donación disponibles.",
+    "demo_unavailable": "PRUEBA — NO DONAR. La configuración temporal no está habilitada para donaciones públicas.",
+    "qr_unavailable": "No hay un QR oficial disponible."
   },
   "facebook": {
     "eyebrow": "Facebook",

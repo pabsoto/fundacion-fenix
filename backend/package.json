@@ -20,6 +20,7 @@
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "test:integration": "vitest run --config ./vitest.config.integration.ts",
+    "seed:institutional": "node scripts/seed-institutional-content.mjs",
     "db:migrate": "node dist/scripts/aplicar-migraciones.js",
     "auth:link": "node dist/scripts/vincular-identidad-google.js"
   },

@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { Trans, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { Check, Copy, Lock } from 'lucide-react';
 import { Photo } from '@/components/ui/Photo';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { BANK, WHATSAPP_URL } from '@/lib/constants';
+import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
+import { useWhatsAppContact } from '@/hooks/useWhatsAppContact';
+import { useDonation } from '@/hooks/useDonation';
+import { isDemoDonation } from '@/services/donations.service';
 
 function CopyRow({
   label,
@@ -47,61 +50,98 @@ function CopyRow({
 }
 
 export function Donate() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { text } = useInstitutionalContent();
+  const { data: whatsapp } = useWhatsAppContact();
+  const donationQuery = useDonation();
+  const donation = donationQuery.data ?? null;
+  const isDemo = donation ? isDemoDonation(donation) : false;
+  const canDonate = donation !== null && !isDemo;
+  const language = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'es';
 
-  const rows = [
-    { key: 'holder', label: t('donate.holder'), value: BANK.holder },
-    { key: 'bank', label: t('donate.bank'), value: BANK.bank },
-    { key: 'phone', label: t('donate.phone'), value: BANK.phone },
-    { key: 'reference', label: t('donate.reference'), value: BANK.reference },
-  ];
+  const rows = donation
+    ? [
+        { key: 'holder', label: t('donate.holder'), value: donation.titular },
+        { key: 'bank', label: t('donate.bank'), value: donation.banco },
+        { key: 'phone', label: t('donate.phone'), value: donation.telefono },
+        ...(donation.numeroCuenta
+          ? [{ key: 'account', label: t('donate.account'), value: donation.numeroCuenta }]
+          : []),
+        { key: 'reference', label: t('donate.reference'), value: donation.referencia },
+      ]
+    : [];
+
+  const unavailableMessage = donationQuery.isPending
+    ? t('donate.loading')
+    : donationQuery.isError
+      ? t('donate.error')
+      : isDemo
+        ? t('donate.demo_unavailable')
+        : t('donate.unavailable');
 
   return (
     <div className="flex flex-col gap-12">
-      <SectionHeader title={t('donate.title')} subtitle={t('donate.subtitle')} />
+      <SectionHeader
+        title={t('donate.title')}
+        subtitle={text('donaciones_intro', 'titulo')}
+      />
 
       <div className="grid items-start gap-10 lg:grid-cols-[1fr_440px] lg:gap-16">
         <div className="flex flex-col gap-6">
-          <p className="t-body-lg text-negro">{t('donate.lead')}</p>
-          <p className="t-heading-md text-negro">{t('donate.thanks')}</p>
-          <p className="t-body text-negro">
-            <Trans
-              i18nKey="donate.whatsapp_info"
-              components={{
-                wa: (
-                  <a
-                    href={WHATSAPP_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="t-body-strong underline underline-offset-2"
-                  />
-                ),
-              }}
-            />
-          </p>
+          <p className="t-body-lg text-negro">{text('donaciones_intro')}</p>
+          <p className="t-heading-md text-negro">{text('donaciones_agradecimiento')}</p>
+          {whatsapp && (
+            <p className="t-body text-negro">
+              {t('donate.whatsapp_info')}{' '}
+              <a
+                href={whatsapp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="t-body-strong underline underline-offset-2"
+              >
+                {whatsapp.texto[language] ?? t('donate.whatsapp_cta')}
+              </a>
+            </p>
+          )}
 
           <div className="flex flex-col gap-3.5 rounded-card border border-linea bg-blanco p-7">
             <p className="t-eyebrow text-negro">{t('donate.account_eyebrow')}</p>
-            {rows.map((row) => (
-              <CopyRow key={row.key} label={row.label} value={row.value} />
-            ))}
+            {canDonate ? (
+              rows.map((row) => (
+                <CopyRow key={row.key} label={row.label} value={row.value} />
+              ))
+            ) : (
+              <p className="t-body text-negro" role="status">{unavailableMessage}</p>
+            )}
           </div>
 
           <div className="flex items-start gap-3 rounded-card bg-amarillo px-5 py-4">
             <Lock className="mt-0.5 h-5 w-5 shrink-0 text-negro" aria-hidden />
-            <p className="t-small text-negro">{t('donate.notice')}</p>
+            <p className="t-small text-negro">
+              {canDonate
+                ? donation.aviso[language] ?? t('donate.notice')
+                : unavailableMessage}
+            </p>
           </div>
         </div>
 
         <div className="flex w-full flex-col items-center gap-5 rounded-panel border border-linea bg-blanco p-8 shadow-lift lg:w-[440px] lg:justify-self-end">
           <p className="t-heading-card text-negro">{t('donate.qr_title')}</p>
-          <Photo
-            src="/images/qr-donacion-yape-bcp.jpg"
-            alt={t('donate.qr_alt')}
-            radius="card"
-            className="aspect-square h-auto w-full"
-          />
-          <p className="t-small text-negro">{t('donate.qr_caption')}</p>
+          {canDonate && donation.qrUrl ? (
+            <Photo
+              src={donation.qrUrl}
+              alt={t('donate.qr_alt')}
+              radius="card"
+              className="aspect-square h-auto w-full"
+            />
+          ) : (
+            <div className="flex aspect-square h-auto w-full items-center justify-center rounded-card bg-linea p-8 text-center">
+              <p className="t-body text-negro">{unavailableMessage}</p>
+            </div>
+          )}
+          <p className="t-small text-negro">
+            {canDonate && donation.qrUrl ? t('donate.qr_caption') : t('donate.qr_unavailable')}
+          </p>
         </div>
       </div>
     </div>

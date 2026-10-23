@@ -64,16 +64,3 @@ export function scrollToSection(id: string) {
   }
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 }
-export const SOCIAL = {
-  facebook: 'https://www.facebook.com/fundacionfenixlpb',
-  instagram: 'https://www.instagram.com/fundacion.fenix.lpb',
-  tiktok: 'https://www.tiktok.com/@fundacin.fenix.lp',
-  email: 'fenixlpbfundacion@gmail.com',
-} as const;
-
-export const BANK = {
-  holder: 'FUNDACION FENIX',
-  bank: 'Banco de Crédito',
-  phone: '76560084',
-  reference: 'FUNDACION FENIX',
-} as const;

@@ -12,10 +12,9 @@ interface CampaignDetailProps {
 export function CampaignDetail({ campaign }: CampaignDetailProps) {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage;
-  const placeTitle = t('campaigns.place', {
-    place: campaign.place,
-    city: campaign.city,
-  });
+  const placeTitle = campaign.city
+    ? t('campaigns.place', { place: campaign.place, city: campaign.city })
+    : campaign.place;
   const photoSlots = [0, 1, 2];
 
   return (

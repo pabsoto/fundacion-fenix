@@ -7,68 +7,62 @@ import {
   TikTokIcon,
   WhatsAppIcon,
 } from '@/components/ui/icons';
-import { FOOTER_LINKS, SOCIAL, WHATSAPP_URL } from '@/lib/constants';
+import { FOOTER_LINKS } from '@/lib/constants';
+import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
+import { usePublicContacts } from '@/hooks/usePublicContacts';
+import type { ContactChannelType } from '@/services/contacts.service';
 
 const socialBtn =
   'flex h-14 w-14 items-center justify-center rounded-full border-[1.5px] border-negro bg-crema text-negro';
 
 export function ContactFooter() {
   const { t } = useTranslation();
+  const { text } = useInstitutionalContent();
+  const { contacts } = usePublicContacts();
+  const socialIcons: Partial<Record<ContactChannelType, typeof FacebookIcon>> = {
+    facebook: FacebookIcon,
+    instagram: InstagramIcon,
+    tiktok: TikTokIcon,
+    whatsapp: WhatsAppIcon,
+  };
+  const email = contacts.find((contact) => contact.tipo === 'email');
+  const socialContacts = contacts.filter((contact) => contact.tipo !== 'email');
 
   return (
     <footer className="bg-amarillo">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-14 px-6 pb-12 pt-24 lg:px-8">
         <div className="flex flex-col items-start gap-10 lg:flex-row lg:items-center lg:gap-20">
           <div className="flex min-w-0 flex-1 flex-col gap-7">
-            <h2 className="t-section text-negro">{t('footer.title')}</h2>
-            <p className="t-heading-md text-negro">{t('footer.text')}</p>
+            <h2 className="t-section text-negro">{text('contacto_footer', 'titulo')}</h2>
+            <p className="t-heading-md text-negro">{text('contacto_footer')}</p>
 
             <div className="flex gap-4">
-              <a
-                href={SOCIAL.facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t('footer.facebook')}
-                className={socialBtn}
-              >
-                <FacebookIcon className="h-[26px] w-[26px]" />
-              </a>
-              <a
-                href={SOCIAL.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t('footer.instagram')}
-                className={socialBtn}
-              >
-                <InstagramIcon className="h-[26px] w-[26px]" />
-              </a>
-              <a
-                href={SOCIAL.tiktok}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t('footer.tiktok')}
-                className={socialBtn}
-              >
-                <TikTokIcon className="h-[26px] w-[26px]" />
-              </a>
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t('footer.whatsapp')}
-                className={socialBtn}
-              >
-                <WhatsAppIcon className="h-[26px] w-[26px]" />
-              </a>
+              {socialContacts.map((contact) => {
+                const Icon = socialIcons[contact.tipo];
+                if (!Icon) return null;
+                return (
+                  <a
+                    key={contact.tipo}
+                    href={contact.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t(`footer.${contact.tipo}`)}
+                    className={socialBtn}
+                  >
+                    <Icon className="h-[26px] w-[26px]" />
+                  </a>
+                );
+              })}
             </div>
 
-            <a
-              href={`mailto:${SOCIAL.email}`}
-              className="inline-flex items-center gap-3 text-negro"
-            >
-              <Mail className="h-6 w-6 shrink-0" aria-hidden />
-              <span className="t-body-lg underline underline-offset-2">{SOCIAL.email}</span>
-            </a>
+            {email && (
+              <a href={email.url} className="inline-flex items-center gap-3 text-negro">
+                <Mail className="h-6 w-6 shrink-0" aria-hidden />
+                <span className="t-body-lg underline underline-offset-2">
+                  {email.url.replace(/^mailto:/, '')}
+                </span>
+              </a>
+            )}
           </div>
 
           {/* Provisional: sustituir por el logo oficial cuando esté listo. */}
