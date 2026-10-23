@@ -9,9 +9,6 @@ export const SECTION_IDS = {
   contact: 'contactos',
 } as const;
 
-export const WHATSAPP_URL =
-  import.meta.env.VITE_WHATSAPP_URL || 'https://wa.link/3nk27o';
-
 export const SOCIAL = {
   facebook: 'https://www.facebook.com/fundacionfenixlpb',
   instagram: 'https://www.instagram.com/fundacion.fenix.lpb',
