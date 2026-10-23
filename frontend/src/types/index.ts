@@ -1,12 +1,32 @@
-// TODO
 export type Campaign = {
   id: string;
-  [key: string]: unknown;
+  place: string;
+  city: 'El Alto' | 'La Paz';
+  year: number;
+  label: string;
+  total: number;
+  dogs: number;
+  cats: number;
+  males: number;
+  females: number;
+  photos: string[];
 };
+
+export type SpeciesStats = {
+  total: number;
+  males: number;
+  females: number;
+};
+
 export type Stats = {
-  [key: string]: unknown;
+  caninos: SpeciesStats;
+  felinos: SpeciesStats;
 };
+
 export type Story = {
   id: string;
-  [key: string]: unknown;
+  name: string;
+  status: 'adopted' | 'recovering';
+  text: string;
+  photo?: string;
 };

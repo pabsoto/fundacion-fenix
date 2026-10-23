@@ -1,4 +1,9 @@
-// TODO
+import { useQuery } from '@tanstack/react-query';
+import { getStories } from '@/services/stories.service';
+
 export function useStories() {
-  return { data: [], isLoading: false, error: null };
+  return useQuery({
+    queryKey: ['stories'],
+    queryFn: getStories,
+  });
 }

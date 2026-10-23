@@ -1,4 +1,4 @@
-// TODO
+/** Reservado: galería de jornadas descartada por pedido del cliente. */
 export function FieldGallery() {
-  return <div>FieldGallery</div>;
+  return null;
 }

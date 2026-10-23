@@ -2,6 +2,10 @@ import { Hero } from '@/sections/Hero';
 import { StatsStrip } from '@/sections/StatsStrip';
 import { About } from '@/sections/About';
 import { Pillars } from '@/sections/Pillars';
+import { Program } from '@/sections/Program';
+import { Financing } from '@/sections/Financing';
+import { Campaigns } from '@/sections/campaigns/Campaigns';
+import { Results } from '@/sections/results/Results';
 import { SectionBand } from '@/components/ui/SectionBand';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useTranslation } from 'react-i18next';
@@ -25,11 +29,15 @@ export function HomePage() {
       </SectionBand>
       
       <SectionBand id={SECTION_IDS.program} tone="crema">
-        <SectionHeader title={t('sections.nuestro_programa')} />
+        <div className="flex flex-col gap-24">
+          <Program />
+          <Financing />
+          <Campaigns />
+        </div>
       </SectionBand>
       
-      <SectionBand id={SECTION_IDS.results} tone="tono">
-        <SectionHeader title={t('sections.resultados')} />
+      <SectionBand id={SECTION_IDS.results} tone="tono" decor>
+        <Results />
       </SectionBand>
       
       <SectionBand id={SECTION_IDS.collaborate} tone="crema">
