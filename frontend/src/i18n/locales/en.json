@@ -139,5 +139,53 @@
     "photo_placeholder": "Photo · Pet",
     "prev": "Previous stories",
     "next": "More stories"
+  },
+  "collaborate": {
+    "title": "How to help",
+    "subtitle": "Your support can take many forms",
+    "donate_title": "Donating",
+    "donate_text": "Every donation helps us cover rehabilitation, sterilization and the wellbeing of the animals in our care.",
+    "donate_cta": "Go to donate",
+    "sponsor_title": "Sponsoring a sterilization",
+    "sponsor_text": "Your support sustains our “Por menos de ellos sufriendo” program and brings free sterilization drives to the communities that need them most.",
+    "sponsor_cta": "Go to donate",
+    "adopt_title": "Adopting",
+    "adopt_text": "When you adopt, you not only change one animal’s life; you also free a place in the shelter for another who needs it. If you are in La Paz, Bolivia, write to us on WhatsApp for more information.",
+    "adopt_cta": "Write on WhatsApp"
+  },
+  "donate": {
+    "title": "Donate",
+    "subtitle": "Your help makes change possible",
+    "lead": "Every donation becomes free sterilizations, prevention and new chances for hundreds of animals.",
+    "thanks": "Thank you for helping us build a future with fewer animals suffering.",
+    "whatsapp_info": "If you need more information, write to us on WhatsApp: <wa>76560084</wa>",
+    "account_eyebrow": "Account details",
+    "holder": "Account holder",
+    "bank": "Bank",
+    "phone": "Phone",
+    "reference": "Reference",
+    "copy": "Copy {{field}}",
+    "copied": "Copied",
+    "notice": "Please verify that the beneficiary details match Fundación Fénix LPB before confirming your transfer.",
+    "qr_title": "Scan to donate",
+    "qr_alt": "Yape donation QR code, backed by BCP",
+    "qr_caption": "Backed by BCP"
+  },
+  "facebook": {
+    "eyebrow": "Facebook",
+    "title": "Our community, live",
+    "placeholder": "Facebook feed goes here (embedded plugin)",
+    "note": "Facebook Page Plugin widget · final design is defined when we integrate it"
+  },
+  "footer": {
+    "title": "Contact",
+    "text": "Want to donate, adopt, support our sterilization program or learn more about our work? Write to us or visit our social networks.",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "whatsapp": "WhatsApp",
+    "brand": "FÉNIX · LPB",
+    "brand_sub": "Foundation",
+    "copyright": "© 2026 Fundación Fénix LPB · La Paz, Bolivia"
   }
 }
