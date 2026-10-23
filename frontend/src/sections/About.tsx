@@ -2,58 +2,57 @@ import { useTranslation } from 'react-i18next';
 import { Photo } from '@/components/ui/Photo';
 import { Pill } from '@/components/ui/Pill';
 import { FlameIcon } from '@/components/ui/icons';
+import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
 
 export function About() {
   const { t } = useTranslation();
+  const { text } = useInstitutionalContent();
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-      {/* Main content row */}
-      <div className="grid lg:grid-cols-2 gap-20 items-center mb-16">
-        {/* Left: Founder photo */}
+    <div className="flex flex-col gap-16 lg:gap-20">
+      <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-20">
         <div className="relative">
           <Photo
             src="/images/fundadora-con-perrito.jpg"
             alt={t('about.founder_alt')}
             radius="panel"
-            className="w-full h-auto"
+            width={520}
+            height={560}
+            className="h-auto w-full"
           />
           <div className="absolute bottom-4 left-4">
-            <Pill>{t('about.founder_pill')}</Pill>
+            <Pill>{text('quienes_somos_fundadora', 'titulo')}</Pill>
           </div>
         </div>
 
-        {/* Right: Text content */}
-        <div>
-          <p className="t-eyebrow text-negro mb-3">{t('about.eyebrow')}</p>
-          <h2 className="t-section text-negro mb-4">{t('about.title')}</h2>
-          <p className="t-heading-md text-negro mb-4">{t('about.lead')}</p>
-          <p className="t-body-lg text-negro">{t('about.text')}</p>
+        <div className="space-y-6">
+          <p className="t-eyebrow text-negro">{text('quienes_somos_encabezado')}</p>
+          <h2 className="t-section text-negro">{text('quienes_somos_encabezado', 'titulo')}</h2>
+          <p className="t-heading-md text-negro">{text('quienes_somos_intro', 'titulo')}</p>
+          <p className="t-body-lg text-negro">{text('quienes_somos_intro')}</p>
         </div>
       </div>
 
-      {/* Yellow panel */}
-      <div className="bg-amarillo rounded-panel p-14 grid lg:grid-cols-2 gap-12 items-center">
-        {/* Left: Flame icon + text */}
-        <div>
-          <div className="flex items-center gap-3 mb-4">
+      <div className="grid items-center gap-8 rounded-panel bg-amarillo p-6 lg:grid-cols-2 lg:gap-12 lg:p-14">
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
             <FlameIcon className="h-10 w-10" />
-            <p className="t-eyebrow text-negro">{t('about.phoenix_eyebrow')}</p>
+            <p className="t-eyebrow text-negro">{text('quienes_somos_fenix', 'titulo')}</p>
           </div>
-          <p className="t-heading-md text-negro">{t('about.phoenix_text')}</p>
+          <p className="t-heading-md text-negro">{text('quienes_somos_fenix')}</p>
         </div>
 
-        {/* Right: Kitten photo */}
         <div className="lg:ml-auto">
           <Photo
             src="/images/gatito-rescatado.jpg"
             alt={t('about.kitten_alt')}
             radius="panel"
-            className="w-full h-auto"
+            width={360}
+            height={440}
+            className="h-auto w-full"
           />
         </div>
       </div>
     </div>
   );
 }
-

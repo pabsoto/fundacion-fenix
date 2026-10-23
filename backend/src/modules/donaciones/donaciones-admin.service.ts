@@ -15,6 +15,7 @@ import { Auditoria } from '../auditoria/entities/auditoria.entity.js';
 import {
   DatoDonacionAdminDto,
   RespuestaDonacionAdminDto,
+  ResultadoDesactivarDonacionDto,
   ResultadoGuardarDonacionDto,
 } from './dto/dato-donacion-admin.dto.js';
 import { GuardarDatoDonacionDto } from './dto/guardar-dato-donacion.dto.js';
@@ -93,6 +94,57 @@ export class DonacionesAdminService {
       }
       throw new ServiceUnavailableException(
         'No fue posible guardar los datos de donación',
+      );
+    }
+  }
+
+  async desactivar(
+    administradorId: string,
+  ): Promise<ResultadoDesactivarDonacionDto> {
+    try {
+      return await this.dataSource.transaction(
+        'SERIALIZABLE',
+        async (manager) => {
+          const donaciones = manager.getRepository(DatoDonacion);
+          const auditorias = manager.getRepository(Auditoria);
+          const activas = await donaciones.find({
+            where: { activo: true },
+            take: 2,
+            lock: { mode: 'pessimistic_write' },
+          });
+
+          if (activas.length > 1) {
+            throw new ConflictException(
+              'Existe mÃ¡s de una configuraciÃ³n activa de donaciones',
+            );
+          }
+          if (activas.length === 0) return { desactivada: false };
+
+          const donacion = activas[0];
+          const datosAntes = this.aSnapshot(donacion);
+          donacion.activo = false;
+          donacion.actualizadoPorId = administradorId;
+          donacion.actualizadoEn = new Date();
+          const guardada = await donaciones.save(donacion);
+
+          await auditorias.save(
+            auditorias.create({
+              administradorId,
+              tabla: 'datos_donacion',
+              registroId: guardada.id,
+              accion: 'UPDATE',
+              camposModificados: ['activo', 'actualizado_por', 'actualizado_en'],
+              datosAntes,
+              datosDespues: this.aSnapshot(guardada),
+            }),
+          );
+          return { desactivada: true };
+        },
+      );
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new ServiceUnavailableException(
+        'No fue posible desactivar los datos de donaciÃ³n',
       );
     }
   }

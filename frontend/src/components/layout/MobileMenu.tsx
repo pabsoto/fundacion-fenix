@@ -4,14 +4,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
-import { SECTION_IDS } from '@/lib/constants';
+import { NAV_ITEMS, SECTION_IDS, scrollToSection } from '@/lib/constants';
 
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// HU-19 / RNF-02: diálogo accesible con foco atrapado y devuelto al cerrar.
 export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -70,9 +69,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
       navigate(`/#${id}`);
       return;
     }
-    setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    setTimeout(() => scrollToSection(id), 100);
   };
 
   if (!isOpen) return null;
@@ -83,35 +80,32 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
       ref={menuRef}
       role="dialog"
       aria-modal="true"
-      aria-label={t('nav.label', { defaultValue: 'Principal' })}
+      aria-label={t('nav.label')}
       className="fixed inset-0 z-50 bg-crema"
     >
       <div className="flex h-full flex-col p-6">
-        <div className="flex justify-between items-center mb-8">
+        <div className="mb-8 flex items-center justify-between">
           <button
             type="button"
             ref={closeRef}
             onClick={onClose}
-            className="p-2.5 rounded-full hover:bg-crema-tono transition-colors"
-            aria-label={t('nav.closeMenu', { defaultValue: 'Cerrar menú' })}
+            className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-crema-tono"
+            aria-label={t('nav.closeMenu')}
           >
             <X className="h-6 w-6 text-negro" aria-hidden="true" />
           </button>
           <LanguageToggle />
         </div>
 
-        <nav
-          aria-label={t('nav.label', { defaultValue: 'Principal' })}
-          className="flex-1 flex flex-col gap-6 overflow-y-auto"
-        >
-          {Object.entries(SECTION_IDS).map(([key, id]) => (
+        <nav aria-label={t('nav.label')} className="flex flex-1 flex-col gap-2 overflow-y-auto">
+          {NAV_ITEMS.map((item) => (
             <button
               type="button"
-              key={key}
-              onClick={() => handleNavClick(id)}
-              className="text-left t-heading-lg text-negro hover:text-naranja transition-colors"
+              key={item.labelKey}
+              onClick={() => handleNavClick(item.targetId)}
+              className="min-h-11 rounded-card px-3 py-3 text-left t-heading-lg text-negro hover:bg-crema-tono"
             >
-              {t(`nav.${key}`)}
+              {t(item.labelKey)}
             </button>
           ))}
         </nav>

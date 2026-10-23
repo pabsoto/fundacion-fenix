@@ -43,6 +43,7 @@ import {
 } from '../donaciones/donaciones-qr.service.js';
 import {
   RespuestaDonacionAdminDto,
+  ResultadoDesactivarDonacionDto,
   ResultadoGuardarDonacionDto,
 } from '../donaciones/dto/dato-donacion-admin.dto.js';
 import { GuardarDatoDonacionDto } from '../donaciones/dto/guardar-dato-donacion.dto.js';
@@ -217,6 +218,43 @@ export class AdminController {
     }
 
     return this.donaciones.guardar(entrada, administradorId);
+  }
+
+  @Delete('donaciones')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiTags('Donaciones administrativas')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Desactivar la configuraciÃ³n de donaciones',
+    description:
+      'Retira la configuraciÃ³n activa de la API pÃºblica sin borrar su historial y registra la operaciÃ³n en auditorÃ­a.',
+  })
+  @ApiOkResponse({
+    description: 'ConfiguraciÃ³n desactivada o ya ausente.',
+    type: ResultadoDesactivarDonacionDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'No existe una sesiÃ³n vÃ¡lida.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta estÃ¡ desactivada o el token CSRF es invÃ¡lido.',
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'Existe mÃ¡s de una configuraciÃ³n activa.',
+    type: ErrorResponseDto,
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'FallÃ³ PostgreSQL o la escritura de auditorÃ­a.',
+    type: ErrorResponseDto,
+  })
+  desactivarDonacion(
+    @Req() request: PeticionConSesion,
+  ): Promise<ResultadoDesactivarDonacionDto> {
+    return this.donaciones.desactivar(this.obtenerAdministradorId(request));
   }
 
   @Post('donaciones/qr')

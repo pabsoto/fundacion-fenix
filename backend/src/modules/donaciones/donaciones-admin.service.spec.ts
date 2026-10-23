@@ -187,6 +187,34 @@ describe('DonacionesAdminService', () => {
     );
   });
 
+  it('desactiva la configuracion activa y conserva una auditoria reversible', async () => {
+    const existente = crearDonacion({ qrRuta: null, qrVenceEl: null });
+    findTransaccion.mockResolvedValue([existente]);
+
+    await expect(servicio.desactivar(ADMIN_ID)).resolves.toEqual({
+      desactivada: true,
+    });
+    expect(existente.activo).toBe(false);
+    expect(existente.actualizadoPorId).toBe(ADMIN_ID);
+    expect(crearAuditoria).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accion: 'UPDATE',
+        administradorId: ADMIN_ID,
+        camposModificados: ['activo', 'actualizado_por', 'actualizado_en'],
+        datosAntes: expect.objectContaining({ activo: true }),
+        datosDespues: expect.objectContaining({ activo: false }),
+      }),
+    );
+  });
+
+  it('no crea auditoria cuando no existe configuracion activa', async () => {
+    await expect(servicio.desactivar(ADMIN_ID)).resolves.toEqual({
+      desactivada: false,
+    });
+    expect(guardarDonacion).not.toHaveBeenCalled();
+    expect(guardarAuditoria).not.toHaveBeenCalled();
+  });
+
   it('responde 503 cuando falla PostgreSQL al consultar', async () => {
     findPublicoAdmin.mockRejectedValue(new Error('conexión rechazada'));
     await expect(servicio.obtenerActiva()).rejects.toBeInstanceOf(

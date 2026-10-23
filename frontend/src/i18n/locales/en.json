@@ -1,93 +1,108 @@
 {
   "nav": {
-    "inicio": "Inicio",
-    "quienes_somos": "Quiénes somos",
-    "lo_que_hacemos": "Lo que hacemos",
-    "nuestro_programa": "Nuestro programa",
-    "resultados": "Resultados",
-    "como_colaborar": "Cómo colaborar",
-    "contactos": "Contactos",
-    "donar": "Donar",
+    "goHome": "Go to the top of the page",
+    "nosotros": "About us",
+    "nuestro_programa": "Our program",
+    "resultados": "Results",
+    "como_colaborar": "How to help",
+    "contactos": "Contact",
+    "donar": "Donate",
     "skip": "Skip to content",
     "label": "Main",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "language": "Language"
+    "language": "Language",
+    "es_label": "ES",
+    "es_name": "Spanish",
+    "en_label": "EN",
+    "en_name": "English"
+  },
+  "logo": {
+    "name": "Fénix LPB",
+    "sub": "Foundation"
+  },
+  "meta": {
+    "title": "Fundación Fénix LPB · Every life can be reborn",
+    "description": "Nonprofit for free mass sterilization of dogs and cats in La Paz, Bolivia"
+  },
+  "content": {
+    "loading": "Loading institutional content…",
+    "unavailable": "Institutional content is not available right now."
   },
   "hero": {
-    "chip": "Fundación sin fines de lucro · La Paz, Bolivia",
-    "title_line1": "Creemos que",
-    "title_line2": "cada vida puede",
-    "title_line3": "renacer…",
-    "subtitle": "y nuestra labor consiste en hacerlo realidad.",
-    "donar": "Donar",
-    "como_ayudar": "Cómo ayudar",
-    "pill_1": "Jornadas 100% gratuitas",
-    "pill_2": "La Paz, Bolivia · desde 2020",
-    "alt": "Perros del albergue de la Fundación Fénix LPB mirando a la cámara"
+    "chip": "Nonprofit foundation · La Paz, Bolivia",
+    "title_line1": "We believe that",
+    "title_line2": "every life can",
+    "title_line3": "be reborn…",
+    "subtitle": "and our work is to make it happen.",
+    "donar": "Donate",
+    "como_ayudar": "How to help",
+    "pill_1": "100% free drives",
+    "pill_2": "La Paz, Bolivia · since 2020",
+    "alt": "Dogs from the Fundación Fénix LPB shelter looking at the camera"
   },
   "stats": {
-    "stat1": "+1.000",
-    "label1": "perros y gatos con una nueva historia",
+    "stat1": "+1,000",
+    "label1": "dogs and cats with a new story",
     "stat2": "100%",
-    "label2": "gratuito y sin ninguna excepción",
+    "label2": "free and without exception",
     "stat3": "2020",
-    "label3": "año en que nació la fundación en La Paz",
+    "label3": "year the foundation was born in La Paz",
     "stat4": "3",
-    "label4": "pilares: rehabilitación, educación y esterilización"
+    "label4": "pillars: rehabilitation, education and sterilization"
   },
   "sections": {
-    "quienes_somos": "Quiénes somos",
-    "lo_que_hacemos": "Lo que hacemos",
-    "nuestro_programa": "Nuestro programa",
-    "resultados": "Resultados",
-    "como_colaborar": "Cómo colaborar",
-    "donar": "Donar"
+    "quienes_somos": "About us",
+    "lo_que_hacemos": "What we do",
+    "nuestro_programa": "Our program",
+    "resultados": "Results",
+    "como_colaborar": "How to help",
+    "donar": "Donate"
   },
   "about": {
     "eyebrow": "Fundación Fénix LPB",
-    "title": "Quiénes somos",
-    "lead": "Fundación Fénix LPB nace del deseo de transformar la vida de los animales en estado de vulnerabilidad.",
-    "text": "Somos una fundación sin fines de lucro, legalmente constituida, creada en la ciudad de La Paz, Bolivia, el 28 de julio de 2020, dirigida por su fundadora Ariana Castillo Illanes.",
-    "founder_pill": "Ariana Castillo Illanes · Fundadora",
-    "founder_alt": "Ariana Castillo Illanes, fundadora, abrazando a un perro",
-    "phoenix_eyebrow": "El Ave Fénix",
-    "phoenix_text": "Así como el Ave Fénix simboliza el renacer, nosotros trabajamos para ofrecer nuevas oportunidades a aquellos perros y gatos que han sido maltratados, abandonados o que viven en situación de vulnerabilidad. Queremos verlos levantarse nuevamente, encontrar un hogar donde puedan sanar, sentirse amados y vivir la felicidad que siempre merecieron.",
-    "kitten_alt": "Gatito rescatado en brazos"
+    "title": "About us",
+    "lead": "Fundación Fénix LPB was born from the desire to transform the lives of animals in vulnerability.",
+    "text": "We are a legally constituted nonprofit foundation, created in the city of La Paz, Bolivia, on July 28, 2020, led by its founder Ariana Castillo Illanes.",
+    "founder_pill": "Ariana Castillo Illanes · Founder",
+    "founder_alt": "Ariana Castillo Illanes, founder, hugging a dog",
+    "phoenix_eyebrow": "The Phoenix",
+    "phoenix_text": "Just as the Phoenix symbolizes rebirth, we work to offer new opportunities to those dogs and cats who have been mistreated, abandoned or who live in vulnerability. We want to see them rise again, find a home where they can heal, feel loved and live the happiness they have always deserved.",
+    "kitten_alt": "Rescued kitten in arms"
   },
   "pillars": {
-    "title": "Lo que hacemos",
-    "subtitle": "Nuestro trabajo se sustenta en tres pilares fundamentales",
-    "pilar1_title": "Rehabilitación integral",
-    "pilar1_text": "Velamos por la salud física y emocional de los animales bajo nuestro cuidado, priorizando su esterilización y el bienestar general como base para una adopción responsable.",
-    "pilar1_alt": "Rehabilitación integral",
-    "pilar2_title": "Educación y sensibilización",
-    "pilar2_text": "Mediante programas educativos que promueven la tenencia responsable y fomentan el respeto y la empatía hacia los animales.",
-    "pilar2_alt": "Educación y sensibilización",
-    "pilar3_title": "Esterilización masiva y gratuita",
-    "pilar3_text": "A través de nuestro programa “Por menos de ellos sufriendo” dirigidas a zonas o comunidades con escaso acceso a servicios veterinarios, contribuyendo a reducir el abandono y la sobrepoblación animal.",
-    "pilar3_alt": "Esterilización masiva y gratuita",
-    "future_text": "De cara al futuro, aspiramos a fortalecer y ampliar esta labor, consolidando el programa de esterilización masiva y gratuita como una respuesta real y sostenible frente a la problemática de los animales en situación de calle, y como el camino más efectivo hacia un cambio social duradero."
+    "title": "What we do",
+    "subtitle": "Our work is based on three fundamental pillars",
+    "pilar1_title": "Comprehensive rehabilitation",
+    "pilar1_text": "We watch over the physical and emotional health of the animals in our care, prioritizing their sterilization and general well-being as the basis for responsible adoption.",
+    "pilar1_alt": "Comprehensive rehabilitation",
+    "pilar2_title": "Education and awareness",
+    "pilar2_text": "Through educational programs that promote responsible ownership and foster respect and empathy towards animals.",
+    "pilar2_alt": "Education and awareness",
+    "pilar3_title": "Mass and free sterilization",
+    "pilar3_text": "Through our “Por menos de ellos sufriendo” program directed to areas or communities with scarce access to veterinary services, contributing to reducing abandonment and animal overpopulation.",
+    "pilar3_alt": "Mass and free sterilization",
+    "future_text": "Looking to the future, we aspire to strengthen and expand this work, consolidating the mass and free sterilization program as a real and sustainable response to the problem of animals on the streets, and as the most effective path towards lasting social change."
   },
   "program": {
-    "chip": "Programa principal",
-    "title": "Nuestro programa",
+    "chip": "Main program",
+    "title": "Our program",
     "motto": "Por menos de ellos sufriendo",
-    "paragraph1": "Nuestro principal programa, llamado “Por menos de ellos sufriendo”, es uno de los pilares más fuertes de nuestra labor. Surgió con el objetivo de romper el ciclo de maltrato, abandono y la sobrepoblación animal.",
-    "paragraph2": "Consiste en realizar <strong>jornadas de esterilización masivas, totalmente gratuitas y sin ninguna excepción</strong>: perros y gatos, machos y hembras, de raza o mestizos.",
-    "highlight_box": "Porque creemos que todos merecen la misma oportunidad.",
-    "paragraph3": "Llevamos estas jornadas especialmente a zonas o comunidades donde el acceso a servicios veterinarios es escaso o inexistente.",
-    "photo_alt": "Mujer sostiene su certificado de esterilización con su perro en el aguayo",
-    "card_title": "100% gratuito",
-    "card_subtitle": "sin ninguna excepción"
+    "paragraph1": "Our main program, called “Por menos de ellos sufriendo”, is one of the strongest pillars of our work. It emerged with the objective of breaking the cycle of mistreatment, abandonment and animal overpopulation.",
+    "paragraph2": "It consists of carrying out <strong>mass sterilization drives, totally free and without any exception</strong>: dogs and cats, males and females, purebred or mixed.",
+    "highlight_box": "Because we believe that everyone deserves the same opportunity.",
+    "paragraph3": "We take these drives especially to areas or communities where access to veterinary services is scarce or non-existent.",
+    "photo_alt": "Woman holding her sterilization certificate with her dog in the aguayo",
+    "card_title": "100% free",
+    "card_subtitle": "without any exception"
   },
   "financing": {
-    "title": "¿Cómo financiamos este programa?",
-    "paragraph1": "Nuestras jornadas de esterilización masiva son posibles gracias a las <strong>donaciones solidarias</strong> de nuestros seguidores y de personas comprometidas que creen en nuestra labor. Su apoyo constante es la base que nos permite mantener este servicio <strong>100% gratuito</strong> para los animales que más lo necesitan.",
-    "paragraph2": "Cada aporte, por pequeño que parezca, significa más animales esterilizados, más sufrimiento evitado y más esperanza para la población beneficiada.",
-    "paragraph3": "Por eso, <strong>tu ayuda realmente importa.</strong>",
+    "title": "How do we finance this program?",
+    "paragraph1": "Our mass sterilization drives are possible thanks to <strong>solidarity donations</strong> from our followers and from committed people who believe in our work. Their constant support is the basis that allows us to maintain this service <strong>100% free</strong> for the animals who need it most.",
+    "paragraph2": "Each contribution, however small it may seem, means more sterilized animals, more suffering avoided and more hope for the benefited population.",
+    "paragraph3": "That is why <strong>your help really matters.</strong>",
     "donar_ahora": "Donate now",
-    "photo_alt": "People waiting at a sterilization clinic"
+    "photo_alt": "People waiting at a sterilization drive"
   },
   "campaigns": {
     "title": "Campaigns",
@@ -111,7 +126,10 @@
     "go_donate": "Go to Donate",
     "place": "{{place}}, {{city}}",
     "years_label": "Filter by year",
-    "list_label": "Drive list"
+    "list_label": "Drive list",
+    "photo_alt": "{{place}} photo {{number}}"
+    ,"loading": "Loading recorded campaigns…",
+    "error": "Campaigns could not be loaded right now."
   },
   "results": {
     "title": "Results",
@@ -128,7 +146,10 @@
     "females": "Females",
     "donut_aria": "{{name}}: {{total}} sterilizations. Males {{males}} ({{malesPct}}), females {{females}} ({{femalesPct}}).",
     "close1": "Thanks to our “Por menos de ellos sufriendo” program, we have already changed the story of more than 1,000 dogs and cats, helping prevent abandonment and overpopulation.",
-    "close2": "This program is just beginning, but early results show that change is possible and that together we can make it real. We are grateful for the support of people who trust our work and share our conviction that sterilization is one of the most effective, responsible and compassionate tools for a future with fewer animals suffering and more lives protected."
+    "close2": "This program is just beginning, but early results show that change is possible and that together we can make it real. We are grateful for the support of people who trust our work and share our conviction that sterilization is one of the most effective, responsible and compassionate tools for a future with fewer animals suffering and more lives protected.",
+    "loading": "Loading official results…",
+    "error": "Results could not be loaded right now.",
+    "empty": "No official results have been published yet."
   },
   "stories": {
     "eyebrow": "Featured stories",
@@ -138,6 +159,62 @@
     "read_more": "Read the full story →",
     "photo_placeholder": "Photo · Pet",
     "prev": "Previous stories",
-    "next": "More stories"
+    "next": "More stories",
+    "empty": "No official stories have been published yet."
+  },
+  "collaborate": {
+    "title": "How to help",
+    "subtitle": "Your support can take many forms",
+    "donate_title": "Donating",
+    "donate_text": "Every donation helps us cover rehabilitation, sterilization and the wellbeing of the animals in our care.",
+    "donate_cta": "Go to donate",
+    "sponsor_title": "Sponsoring a sterilization",
+    "sponsor_text": "Your support sustains our “Por menos de ellos sufriendo” program and brings free sterilization drives to the communities that need them most.",
+    "sponsor_cta": "Go to donate",
+    "adopt_title": "Adopting",
+    "adopt_text": "When you adopt, you not only change one animal's life; you also free a place in the shelter for another who needs it. If you are in La Paz, Bolivia, write to us on WhatsApp for more information.",
+    "adopt_cta": "Write on WhatsApp"
+  },
+  "donate": {
+    "title": "Donate",
+    "subtitle": "Your help makes change possible",
+    "lead": "Every donation becomes free sterilizations, prevention and new chances for hundreds of animals.",
+    "thanks": "Thank you for helping us build a future with fewer animals suffering.",
+    "whatsapp_info": "If you need more information, write to us on WhatsApp:",
+    "whatsapp_cta": "Message us",
+    "account_eyebrow": "Account details",
+    "holder": "Account holder",
+    "bank": "Bank",
+    "phone": "Phone",
+    "account": "Account number",
+    "reference": "Reference",
+    "copy": "Copy {{field}}",
+    "copied": "Copied",
+    "notice": "Please verify that the beneficiary details match Fundación Fénix LPB before confirming your transfer.",
+    "qr_title": "Scan to donate",
+    "qr_alt": "Yape donation QR code, backed by BCP",
+    "qr_caption": "Official donation QR",
+    "loading": "Checking the official donation details…",
+    "error": "Donation details could not be loaded right now.",
+    "unavailable": "Official donation details are not available yet.",
+    "demo_unavailable": "TEST — DO NOT DONATE. The temporary configuration is not enabled for public donations.",
+    "qr_unavailable": "No official QR is available."
+  },
+  "facebook": {
+    "eyebrow": "Facebook",
+    "title": "Our community, live",
+    "placeholder": "Facebook feed goes here (embedded plugin)",
+    "note": "Facebook Page Plugin widget · final design is defined when we integrate it"
+  },
+  "footer": {
+    "title": "Contact",
+    "text": "Want to donate, adopt, support our sterilization program or learn more about our work? Write to us or visit our social networks.",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "whatsapp": "WhatsApp",
+    "brand": "FÉNIX · LPB",
+    "brand_sub": "Foundation",
+    "copyright": "© 2026 Fundación Fénix LPB · La Paz, Bolivia"
   }
 }

@@ -48,3 +48,8 @@ export class ResultadoGuardarDonacionDto {
   @ApiProperty({ type: () => DatoDonacionAdminDto })
   readonly donacion: DatoDonacionAdminDto;
 }
+
+export class ResultadoDesactivarDonacionDto {
+  @ApiProperty({ example: true })
+  readonly desactivada: boolean;
+}

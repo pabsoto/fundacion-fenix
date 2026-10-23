@@ -1,0 +1,258 @@
+[
+  {
+    "clave": "hero_principal",
+    "tituloEs": "Creemos que\ncada vida puede\nrenacer…",
+    "tituloEn": "We believe that\nevery life can\nbe reborn…",
+    "textoEs": "y nuestra labor consiste en hacerlo realidad.",
+    "textoEn": "and our work is to make it happen.",
+    "orden": 10
+  },
+  {
+    "clave": "hero_contexto",
+    "tituloEs": "Fundación sin fines de lucro · La Paz, Bolivia",
+    "tituloEn": "Nonprofit foundation · La Paz, Bolivia",
+    "textoEs": "Jornadas 100% gratuitas\nLa Paz, Bolivia · desde 2020",
+    "textoEn": "100% free drives\nLa Paz, Bolivia · since 2020",
+    "orden": 20
+  },
+  {
+    "clave": "estadistica_total_etiqueta",
+    "tituloEs": null,
+    "tituloEn": null,
+    "textoEs": "perros y gatos con una nueva historia",
+    "textoEn": "dogs and cats with a new story",
+    "orden": 30
+  },
+  {
+    "clave": "estadistica_gratuidad",
+    "tituloEs": "100%",
+    "tituloEn": "100%",
+    "textoEs": "gratuito y sin ninguna excepción",
+    "textoEn": "free and without exception",
+    "orden": 40
+  },
+  {
+    "clave": "estadistica_fundacion",
+    "tituloEs": "2020",
+    "tituloEn": "2020",
+    "textoEs": "año en que nació la fundación en La Paz",
+    "textoEn": "year the foundation was born in La Paz",
+    "orden": 50
+  },
+  {
+    "clave": "estadistica_pilares",
+    "tituloEs": "3",
+    "tituloEn": "3",
+    "textoEs": "pilares: rehabilitación, educación y esterilización",
+    "textoEn": "pillars: rehabilitation, education and sterilization",
+    "orden": 60
+  },
+  {
+    "clave": "quienes_somos_encabezado",
+    "tituloEs": "Quiénes somos",
+    "tituloEn": "About us",
+    "textoEs": "Fundación Fénix LPB",
+    "textoEn": "Fundación Fénix LPB",
+    "orden": 90
+  },
+  {
+    "clave": "quienes_somos_fundadora",
+    "tituloEs": "Ariana Castillo Illanes · Fundadora",
+    "tituloEn": "Ariana Castillo Illanes · Founder",
+    "textoEs": null,
+    "textoEn": null,
+    "orden": 95
+  },
+  {
+    "clave": "quienes_somos_intro",
+    "tituloEs": "Fundación Fénix LPB nace del deseo de transformar la vida de los animales en estado de vulnerabilidad.",
+    "tituloEn": "Fundación Fénix LPB was born from the desire to transform the lives of animals in vulnerability.",
+    "textoEs": "Somos una fundación sin fines de lucro, legalmente constituida, creada en la ciudad de La Paz, Bolivia, el 28 de julio de 2020, dirigida por su fundadora Ariana Castillo Illanes.",
+    "textoEn": "We are a legally constituted nonprofit foundation, created in the city of La Paz, Bolivia, on July 28, 2020, led by its founder Ariana Castillo Illanes.",
+    "orden": 100
+  },
+  {
+    "clave": "quienes_somos_fenix",
+    "tituloEs": "El Ave Fénix",
+    "tituloEn": "The Phoenix",
+    "textoEs": "Así como el Ave Fénix simboliza el renacer, nosotros trabajamos para ofrecer nuevas oportunidades a aquellos perros y gatos que han sido maltratados, abandonados o que viven en situación de vulnerabilidad. Queremos verlos levantarse nuevamente, encontrar un hogar donde puedan sanar, sentirse amados y vivir la felicidad que siempre merecieron.",
+    "textoEn": "Just as the Phoenix symbolizes rebirth, we work to offer new opportunities to those dogs and cats who have been mistreated, abandoned or who live in vulnerability. We want to see them rise again, find a home where they can heal, feel loved and live the happiness they have always deserved.",
+    "orden": 110
+  },
+  {
+    "clave": "pilares_intro",
+    "tituloEs": "Lo que hacemos",
+    "tituloEn": "What we do",
+    "textoEs": "Nuestro trabajo se sustenta en tres pilares fundamentales",
+    "textoEn": "Our work is based on three fundamental pillars",
+    "orden": 200
+  },
+  {
+    "clave": "pilar_rehabilitacion",
+    "tituloEs": "Rehabilitación integral",
+    "tituloEn": "Comprehensive rehabilitation",
+    "textoEs": "Velamos por la salud física y emocional de los animales bajo nuestro cuidado, priorizando su esterilización y el bienestar general como base para una adopción responsable.",
+    "textoEn": "We watch over the physical and emotional health of the animals in our care, prioritizing their sterilization and general well-being as the basis for responsible adoption.",
+    "orden": 210
+  },
+  {
+    "clave": "pilar_educacion",
+    "tituloEs": "Educación y sensibilización",
+    "tituloEn": "Education and awareness",
+    "textoEs": "Mediante programas educativos que promueven la tenencia responsable y fomentan el respeto y la empatía hacia los animales.",
+    "textoEn": "Through educational programs that promote responsible ownership and foster respect and empathy towards animals.",
+    "orden": 220
+  },
+  {
+    "clave": "pilar_esterilizacion",
+    "tituloEs": "Esterilización masiva y gratuita",
+    "tituloEn": "Mass and free sterilization",
+    "textoEs": "A través de nuestro programa “Por menos de ellos sufriendo” dirigidas a zonas o comunidades con escaso acceso a servicios veterinarios, contribuyendo a reducir el abandono y la sobrepoblación animal.",
+    "textoEn": "Through our “Por menos de ellos sufriendo” program directed to areas or communities with scarce access to veterinary services, contributing to reducing abandonment and animal overpopulation.",
+    "orden": 230
+  },
+  {
+    "clave": "pilares_futuro",
+    "tituloEs": null,
+    "tituloEn": null,
+    "textoEs": "De cara al futuro, aspiramos a fortalecer y ampliar esta labor, consolidando el programa de esterilización masiva y gratuita como una respuesta real y sostenible frente a la problemática de los animales en situación de calle, y como el camino más efectivo hacia un cambio social duradero.",
+    "textoEn": "Looking to the future, we aspire to strengthen and expand this work, consolidating the mass and free sterilization program as a real and sustainable response to the problem of animals on the streets, and as the most effective path towards lasting social change.",
+    "orden": 240
+  },
+  {
+    "clave": "programa_encabezado",
+    "tituloEs": "Nuestro programa",
+    "tituloEn": "Our program",
+    "textoEs": "Por menos de ellos sufriendo",
+    "textoEn": "Por menos de ellos sufriendo",
+    "orden": 290
+  },
+  {
+    "clave": "programa_intro",
+    "tituloEs": null,
+    "tituloEn": null,
+    "textoEs": "Nuestro principal programa, llamado “Por menos de ellos sufriendo”, es uno de los pilares más fuertes de nuestra labor. Surgió con el objetivo de romper el ciclo de maltrato, abandono y la sobrepoblación animal.",
+    "textoEn": "Our main program, called “Por menos de ellos sufriendo”, is one of the strongest pillars of our work. It emerged with the objective of breaking the cycle of mistreatment, abandonment and animal overpopulation.",
+    "orden": 300
+  },
+  {
+    "clave": "programa_alcance",
+    "tituloEs": null,
+    "tituloEn": null,
+    "textoEs": "Consiste en realizar <strong>jornadas de esterilización masivas, totalmente gratuitas y sin ninguna excepción</strong>: perros y gatos, machos y hembras, de raza o mestizos.",
+    "textoEn": "It consists of carrying out <strong>mass sterilization drives, totally free and without any exception</strong>: dogs and cats, males and females, purebred or mixed.",
+    "orden": 310
+  },
+  {
+    "clave": "programa_igualdad",
+    "tituloEs": null,
+    "tituloEn": null,
+    "textoEs": "Porque creemos que todos merecen la misma oportunidad.",
+    "textoEn": "Because we believe that everyone deserves the same opportunity.",
+    "orden": 320
+  },
+  {
+    "clave": "programa_gratuidad",
+    "tituloEs": "100% gratuito",
+    "tituloEn": "100% free",
+    "textoEs": "sin ninguna excepción",
+    "textoEn": "without any exception",
+    "orden": 325
+  },
+  {
+    "clave": "programa_comunidades",
+    "tituloEs": null,
+    "tituloEn": null,
+    "textoEs": "Llevamos estas jornadas especialmente a zonas o comunidades donde el acceso a servicios veterinarios es escaso o inexistente.",
+    "textoEn": "We take these drives especially to areas or communities where access to veterinary services is scarce or non-existent.",
+    "orden": 330
+  },
+  {
+    "clave": "financiamiento_intro",
+    "tituloEs": "¿Cómo financiamos este programa?",
+    "tituloEn": "How do we finance this program?",
+    "textoEs": "Nuestras jornadas de esterilización masiva son posibles gracias a las <strong>donaciones solidarias</strong> de nuestros seguidores y de personas comprometidas que creen en nuestra labor. Su apoyo constante es la base que nos permite mantener este servicio <strong>100% gratuito</strong> para los animales que más lo necesitan.",
+    "textoEn": "Our mass sterilization drives are possible thanks to <strong>solidarity donations</strong> from our followers and from committed people who believe in our work. Their constant support is the basis that allows us to maintain this service <strong>100% free</strong> for the animals who need it most.",
+    "orden": 400
+  },
+  {
+    "clave": "financiamiento_impacto",
+    "tituloEs": null,
+    "tituloEn": null,
+    "textoEs": "Cada aporte, por pequeño que parezca, significa más animales esterilizados, más sufrimiento evitado y más esperanza para la población beneficiada.",
+    "textoEn": "Each contribution, however small it may seem, means more sterilized animals, more suffering avoided and more hope for the benefited population.",
+    "orden": 410
+  },
+  {
+    "clave": "financiamiento_llamado",
+    "tituloEs": null,
+    "tituloEn": null,
+    "textoEs": "Por eso, <strong>tu ayuda realmente importa.</strong>",
+    "textoEn": "That is why <strong>your help really matters.</strong>",
+    "orden": 420
+  },
+  {
+    "clave": "resultados_intro",
+    "tituloEs": "Resultados",
+    "tituloEn": "Results",
+    "textoEs": "Cada esterilización representa una vida con menos sufrimiento y un futuro con más esperanza.",
+    "textoEn": "Every sterilization means a life with less suffering and a future with more hope.",
+    "orden": 450
+  },
+  {
+    "clave": "colaborar_intro",
+    "tituloEs": "Cómo colaborar",
+    "tituloEn": "How to help",
+    "textoEs": "Tu ayuda puede llegar de muchas maneras",
+    "textoEn": "Your support can take many forms",
+    "orden": 500
+  },
+  {
+    "clave": "colaborar_donar",
+    "tituloEs": "Donando",
+    "tituloEn": "Donating",
+    "textoEs": "Cada donación nos ayuda a cubrir los gastos en la rehabilitación, esterilización y el bienestar de los animales que están a nuestro cuidado.",
+    "textoEn": "Every donation helps us cover rehabilitation, sterilization and the wellbeing of the animals in our care.",
+    "orden": 510
+  },
+  {
+    "clave": "colaborar_apadrinar",
+    "tituloEs": "Apadrinando una esterilización",
+    "tituloEn": "Sponsoring a sterilization",
+    "textoEs": "Tu aporte nos permite sostener nuestro programa “Por menos de ellos sufriendo” y llevar jornadas de esterilización gratuita a las comunidades que más las necesitan.",
+    "textoEn": "Your support sustains our “Por menos de ellos sufriendo” program and brings free sterilization drives to the communities that need them most.",
+    "orden": 520
+  },
+  {
+    "clave": "colaborar_adoptar",
+    "tituloEs": "Adoptando",
+    "tituloEn": "Adopting",
+    "textoEs": "Al adoptar, no solo transformas la vida de un animalito; también liberas un espacio en el albergue para que otro ser necesitado pueda ocuparlo. Si estás en La Paz, Bolivia, escríbenos a nuestro WhatsApp para más información.",
+    "textoEn": "When you adopt, you not only change one animal's life; you also free a place in the shelter for another who needs it. If you are in La Paz, Bolivia, write to us on WhatsApp for more information.",
+    "orden": 530
+  },
+  {
+    "clave": "donaciones_intro",
+    "tituloEs": "Tu ayuda hace posible el cambio",
+    "tituloEn": "Your help makes change possible",
+    "textoEs": "Cada donación se transforma en esterilizaciones gratuitas, prevención y nuevas oportunidades para cientos de animales.",
+    "textoEn": "Every donation becomes free sterilizations, prevention and new chances for hundreds of animals.",
+    "orden": 600
+  },
+  {
+    "clave": "donaciones_agradecimiento",
+    "tituloEs": null,
+    "tituloEn": null,
+    "textoEs": "Gracias por ayudarnos a construir un futuro con menos animales sufriendo.",
+    "textoEn": "Thank you for helping us build a future with fewer animals suffering.",
+    "orden": 610
+  },
+  {
+    "clave": "contacto_footer",
+    "tituloEs": "Contactos",
+    "tituloEn": "Contact",
+    "textoEs": "¿Quieres donar, adoptar, apoyar nuestro programa de esterilizaciones o conocer más de nuestra labor? Escríbenos o visítanos en nuestras redes sociales.",
+    "textoEn": "Want to donate, adopt, support our sterilization program or learn more about our work? Write to us or visit our social networks.",
+    "orden": 700
+  }
+]

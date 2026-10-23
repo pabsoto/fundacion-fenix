@@ -2,14 +2,14 @@ import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
-import { formatNumber } from '@/lib/format';
+import { formatCampaignLabel, formatNumber } from '@/lib/format';
 import type { Campaign } from '@/types';
 
-const YEARS = [2025, 2024, 2023] as const;
 const PAGE_SIZE = 5;
 
 interface CampaignListProps {
   campaigns: Campaign[];
+  years: number[];
   year: number;
   selectedId: string | null;
   expanded: boolean;
@@ -20,6 +20,7 @@ interface CampaignListProps {
 
 export function CampaignList({
   campaigns,
+  years,
   year,
   selectedId,
   expanded,
@@ -27,7 +28,8 @@ export function CampaignList({
   onSelect,
   onExpand,
 }: CampaignListProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage;
   const visible = expanded ? campaigns : campaigns.slice(0, PAGE_SIZE);
   const remaining = Math.max(0, campaigns.length - PAGE_SIZE);
 
@@ -41,7 +43,7 @@ export function CampaignList({
           role="group"
           aria-label={t('campaigns.years_label')}
         >
-          {YEARS.map((y) => {
+          {years.map((y) => {
             const active = y === year;
             return (
               <button
@@ -50,7 +52,7 @@ export function CampaignList({
                 aria-pressed={active}
                 onClick={() => onYearChange(y)}
                 className={cn(
-                  'rounded-btn border px-5 py-2 t-nav transition-colors',
+                  'min-h-11 rounded-btn border px-5 py-2 t-nav transition-colors',
                   active
                     ? 'border-negro bg-negro text-crema'
                     : 'border-linea bg-blanco text-negro'
@@ -73,10 +75,9 @@ export function CampaignList({
         >
           {visible.map((campaign, index) => {
             const selected = campaign.id === selectedId;
-            const placeTitle = t('campaigns.place', {
-              place: campaign.place,
-              city: campaign.city,
-            });
+            const placeTitle = campaign.city
+              ? t('campaigns.place', { place: campaign.place, city: campaign.city })
+              : campaign.place;
             const order = String(index + 1).padStart(2, '0');
 
             return (
@@ -87,7 +88,7 @@ export function CampaignList({
                   aria-selected={selected}
                   onClick={() => onSelect(campaign.id)}
                   className={cn(
-                    'flex w-full items-center gap-3.5 rounded-card py-3 pl-4 pr-5 text-left text-negro transition-colors',
+                    'flex min-h-11 w-full items-center gap-3.5 rounded-card py-3 pl-4 pr-5 text-left text-negro transition-colors',
                     selected
                       ? 'border-[1.5px] border-negro bg-naranja'
                       : 'bg-blanco shadow-soft'
@@ -96,13 +97,15 @@ export function CampaignList({
                   <span className="t-small w-6 shrink-0">{order}</span>
                   <span className="min-w-0 flex-1">
                     <span className="t-body-strong block truncate">{placeTitle}</span>
-                    <span className="t-small block">{campaign.label}</span>
+                    <span className="t-small block">
+                      {formatCampaignLabel(campaign.year, campaign.months, lang)}
+                    </span>
                   </span>
                   {selected ? (
                     <ArrowRight className="h-5 w-5 shrink-0" aria-hidden />
                   ) : (
                     <span className="t-body-strong shrink-0">
-                      {formatNumber(campaign.total)}
+                      {formatNumber(campaign.total, lang)}
                     </span>
                   )}
                 </button>

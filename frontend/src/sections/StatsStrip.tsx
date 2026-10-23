@@ -1,25 +1,50 @@
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/Card';
+import { useStats } from '@/hooks/useStats';
+import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
+import { formatNumber } from '@/lib/format';
 
 export function StatsStrip() {
-  const { t } = useTranslation();
+  const { i18n } = useTranslation();
+  const { data } = useStats();
+  const { text } = useInstitutionalContent();
+  const total = (data?.caninos.total ?? 0) + (data?.felinos.total ?? 0);
 
   const stats = [
-    { stat: 'stats.stat1', label: 'stats.label1' },
-    { stat: 'stats.stat2', label: 'stats.label2' },
-    { stat: 'stats.stat3', label: 'stats.label3' },
-    { stat: 'stats.stat4', label: 'stats.label4' },
+    {
+      key: 'official-total',
+      stat: formatNumber(total, i18n.resolvedLanguage),
+      label: text('estadistica_total_etiqueta'),
+    },
+    {
+      key: 'free-program',
+      stat: text('estadistica_gratuidad', 'titulo'),
+      label: text('estadistica_gratuidad'),
+    },
+    {
+      key: 'foundation-year',
+      stat: text('estadistica_fundacion', 'titulo'),
+      label: text('estadistica_fundacion'),
+    },
+    {
+      key: 'pillars',
+      stat: text('estadistica_pilares', 'titulo'),
+      label: text('estadistica_pilares'),
+    },
   ];
 
   return (
-    <section className="bg-crema pb-18">
-      <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-        <Card radius="panel" className="px-10 py-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-linea">
-            {stats.map((item,_index) => (
-              <div key={_index} className="flex flex-col items-center justify-center px-6 py-4 lg:py-0">
-                <p className="t-stat text-naranja">{t(item.stat)}</p>
-                <p className="mt-2 t-body text-negro text-center">{t(item.label)}</p>
+    <section className="bg-crema pb-16">
+      <div className="mx-auto w-full max-w-[1264px] px-6 lg:px-8">
+        <Card radius="panel" className="px-6 py-8 lg:px-10">
+          <div className="grid grid-cols-2 divide-x divide-y divide-linea lg:grid-cols-4 lg:divide-y-0">
+            {stats.map((item) => (
+              <div
+                key={item.key}
+                className="flex flex-col items-center justify-center px-6 py-6 lg:py-2"
+              >
+                <p className="t-stat text-naranja">{item.stat}</p>
+                <p className="mt-2 t-body text-center text-negro">{item.label}</p>
               </div>
             ))}
           </div>
@@ -28,4 +53,3 @@ export function StatsStrip() {
     </section>
   );
 }
-

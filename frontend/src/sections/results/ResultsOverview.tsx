@@ -16,9 +16,10 @@ function SpeciesCard({
   centerLabel: string;
   iconBg: string;
 }) {
-  const { t } = useTranslation();
-  const malesPct = speciesShare(stats.males, stats.total);
-  const femalesPct = speciesShare(stats.females, stats.total);
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage;
+  const malesPct = speciesShare(stats.males, stats.total, lang);
+  const femalesPct = speciesShare(stats.females, stats.total, lang);
 
   return (
     <div className="flex h-full flex-col items-center gap-6 rounded-panel border border-linea bg-blanco p-8">
@@ -32,7 +33,7 @@ function SpeciesCard({
           <p className="t-heading-card text-negro">{name}</p>
         </div>
         <p className="t-body-strong shrink-0 text-negro">
-          {t('results.total_prefix', { count: formatNumber(stats.total) })}
+          {t('results.total_prefix', { count: formatNumber(stats.total, lang) })}
         </p>
       </div>
 
@@ -43,9 +44,9 @@ function SpeciesCard({
         centerLabel={centerLabel}
         ariaLabel={t('results.donut_aria', {
           name,
-          total: formatNumber(stats.total),
-          males: formatNumber(stats.males),
-          females: formatNumber(stats.females),
+          total: formatNumber(stats.total, lang),
+          males: formatNumber(stats.males, lang),
+          females: formatNumber(stats.females, lang),
           malesPct,
           femalesPct,
         })}
@@ -58,7 +59,7 @@ function SpeciesCard({
             <span className="t-body-strong text-negro">{t('results.males')}</span>
           </div>
           <span className="t-body text-negro">
-            {formatNumber(stats.males)} ({malesPct})
+            {formatNumber(stats.males, lang)} ({malesPct})
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
@@ -67,7 +68,7 @@ function SpeciesCard({
             <span className="t-body-strong text-negro">{t('results.females')}</span>
           </div>
           <span className="t-body text-negro">
-            {formatNumber(stats.females)} ({femalesPct})
+            {formatNumber(stats.females, lang)} ({femalesPct})
           </span>
         </div>
       </div>
@@ -76,24 +77,31 @@ function SpeciesCard({
 }
 
 export function ResultsOverview() {
-  const { t } = useTranslation();
-  const { data: stats } = useStats();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage;
+  const { data: stats, isPending, isError } = useStats();
 
-  if (!stats) return null;
+  if (!stats) {
+    return (
+      <p className="t-body text-center text-negro" role="status">
+        {isPending ? t('results.loading') : isError ? t('results.error') : t('results.empty')}
+      </p>
+    );
+  }
 
   const grandTotal = stats.caninos.total + stats.felinos.total;
 
   return (
     <div className="flex flex-col gap-12">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:items-stretch">
-        <div className="flex flex-col justify-center gap-3 rounded-panel border border-linea bg-blanco p-8 md:col-span-2 lg:col-span-1">
+        <div className="flex flex-col justify-center gap-3 rounded-panel border border-linea bg-blanco p-6 lg:p-8 md:col-span-2 lg:col-span-1">
           <p className="t-eyebrow text-negro">{t('results.total_eyebrow')}</p>
-          <p className="t-stat-xl text-naranja">{formatNumber(grandTotal)}</p>
+          <p className="t-stat-xl text-naranja">{formatNumber(grandTotal, lang)}</p>
           <p className="t-heading-md text-negro">{t('results.surgeries')}</p>
           <p className="t-body text-negro">
             {t('results.species_breakdown', {
-              dogs: formatNumber(stats.caninos.total),
-              cats: formatNumber(stats.felinos.total),
+              dogs: formatNumber(stats.caninos.total, lang),
+              cats: formatNumber(stats.felinos.total, lang),
             })}
           </p>
         </div>
@@ -112,10 +120,11 @@ export function ResultsOverview() {
         />
       </div>
 
-      <div className="grid gap-12 md:grid-cols-2">
-        <p className="t-body text-negro">{t('results.close1')}</p>
-        <p className="t-body text-negro">{t('results.close2')}</p>
-      </div>
+      {grandTotal === 0 && (
+        <p className="t-body text-center text-negro" role="status">
+          {t('results.empty')}
+        </p>
+      )}
     </div>
   );
 }

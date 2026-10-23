@@ -8,6 +8,7 @@ import {
   type EstadoAdministrativo,
   type SesionActual,
 } from '@/services/auth.service';
+import { AdminDonationPanel } from '@/components/admin/AdminDonationPanel';
 
 function mensajeError(cause: unknown): string {
   if (cause instanceof AuthApiError) {
@@ -128,6 +129,8 @@ export function AdminDashboardPage() {
             </dd>
           </div>
         </dl>
+
+        <AdminDonationPanel csrfToken={sesion.csrfToken} />
 
         {error && (
           <p className="t-small mt-6 text-red-700" role="alert">

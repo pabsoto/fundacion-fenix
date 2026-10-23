@@ -2,10 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
-const LANGS = [
-  { code: 'es', label: 'ES', name: 'Español' },
-  { code: 'en', label: 'EN', name: 'English' },
-] as const;
+const LANGS = ['es', 'en'] as const;
 
 // HU-19 / RNF-02 / RNF-03
 export function LanguageToggle() {
@@ -15,17 +12,17 @@ export function LanguageToggle() {
   return (
     <div
       role="group"
-      aria-label={t('nav.language', { defaultValue: 'Idioma' })}
+      aria-label={t('nav.language')}
       className="inline-flex items-center gap-2 rounded-full border border-linea px-1 py-1"
     >
       <Globe className="h-4 w-4 ml-2 text-negro" aria-hidden="true" />
       <div className="flex gap-1">
-        {LANGS.map(({ code, label, name }) => (
+        {LANGS.map((code) => (
           <button
             type="button"
             key={code}
             lang={code}
-            aria-label={name}
+            aria-label={t(`nav.${code}_name`)}
             aria-pressed={currentLang === code}
             onClick={() => i18n.changeLanguage(code)}
             className={cn(
@@ -33,7 +30,7 @@ export function LanguageToggle() {
               currentLang === code ? 'bg-negro text-crema' : 'text-negro hover:bg-crema-tono',
             )}
           >
-            {label}
+            {t(`nav.${code}_label`)}
           </button>
         ))}
       </div>

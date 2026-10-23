@@ -13,23 +13,16 @@ export function SectionBand({ id, tone, decor = false, children, className }: Se
   const bgClass = tone === 'crema' ? 'bg-crema' : 'bg-crema-tono';
 
   return (
-    <section id={id} className={cn('w-full', bgClass, className)}>
-      <div className="relative mx-auto max-w-[1200px] px-6 py-[72px] lg:px-8 lg:py-[96px]">
-        {decor && tone === 'tono' && (
-          <>
-            <PawIcon
-              className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 opacity-[0.14]"
-              style={{ width: '120px', height: '120px' }}
-            />
-            <PawIcon
-              className="absolute right-0 bottom-0 translate-x-1/2 translate-y-1/2 opacity-[0.14]"
-              style={{ width: '120px', height: '120px' }}
-            />
-          </>
-        )}
+    <section id={id} className={cn('relative w-full overflow-x-clip', bgClass, className)}>
+      {decor && (
+        <>
+          <PawIcon className="pointer-events-none absolute top-8 right-8 -z-10 hidden size-[140px] rotate-[18deg] text-negro opacity-[0.10] md:block" />
+          <PawIcon className="pointer-events-none absolute bottom-8 left-8 -z-10 hidden size-[150px] -rotate-[16deg] text-negro opacity-[0.10] md:block" />
+        </>
+      )}
+      <div className="relative z-0 mx-auto w-full max-w-[1264px] px-6 py-[72px] lg:px-8 lg:py-[96px]">
         {children}
       </div>
     </section>
   );
 }
-
