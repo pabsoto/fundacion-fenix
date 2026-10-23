@@ -29,6 +29,9 @@
     "loading": "Loading institutional content…",
     "unavailable": "Institutional content is not available right now."
   },
+  "demo": {
+    "label": "Demo data"
+  },
   "hero": {
     "chip": "Nonprofit foundation · La Paz, Bolivia",
     "title_line1": "We believe that",
@@ -160,6 +163,9 @@
     "photo_placeholder": "Photo · Pet",
     "prev": "Previous stories",
     "next": "More stories",
+    "demo_apolo": "Fictional demo story: Apolo found a home and is now enjoying a new chapter.",
+    "demo_luna": "Fictional demo story: Luna continues recovering with care and patience.",
+    "demo_max": "Fictional demo story: Max is making progress while waiting for a home.",
     "empty": "No official stories have been published yet."
   },
   "collaborate": {
@@ -198,6 +204,9 @@
     "error": "Donation details could not be loaded right now.",
     "unavailable": "Official donation details are not available yet.",
     "demo_unavailable": "TEST — DO NOT DONATE. The temporary configuration is not enabled for public donations.",
+    "demo_qr_warning": "TEST QR — DO NOT MAKE PAYMENTS",
+    "demo_qr_alt": "Test QR code that is not valid for payments",
+    "demo_qr_caption": "Supabase Storage integration demo. This is not a valid payment method.",
     "qr_unavailable": "No official QR is available."
   },
   "facebook": {

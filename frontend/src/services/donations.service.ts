@@ -28,3 +28,21 @@ export function isDemoDonation(donation: PublicDonation): boolean {
   ].join(' ');
   return /\b(DEMO|PRUEBA|TEST|FICTICI[OA])\b/i.test(content);
 }
+
+export function getDonationAvailability(
+  donation: PublicDonation | null,
+  demoShowcase: boolean,
+) {
+  const isDemo = donation ? isDemoDonation(donation) : false;
+  const canDonate = donation !== null && !isDemo;
+  const showDemoQr = Boolean(demoShowcase && isDemo && donation?.qrUrl);
+  const showOfficialQr = Boolean(canDonate && donation?.qrUrl);
+
+  return {
+    isDemo,
+    canDonate,
+    showDemoQr,
+    showOfficialQr,
+    showQr: showDemoQr || showOfficialQr,
+  };
+}

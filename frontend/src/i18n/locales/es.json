@@ -29,6 +29,9 @@
     "loading": "Cargando contenido institucional…",
     "unavailable": "El contenido institucional no está disponible en este momento."
   },
+  "demo": {
+    "label": "Datos de demostración"
+  },
   "hero": {
     "chip": "Fundación sin fines de lucro · La Paz, Bolivia",
     "title_line1": "Creemos que",
@@ -160,6 +163,9 @@
     "photo_placeholder": "Foto · Mascota",
     "prev": "Ver historias anteriores",
     "next": "Ver más historias",
+    "demo_apolo": "Historia ficticia de demostración: Apolo encontró un hogar y hoy disfruta una nueva etapa.",
+    "demo_luna": "Historia ficticia de demostración: Luna continúa recuperándose con cuidados y paciencia.",
+    "demo_max": "Historia ficticia de demostración: Max avanza en su recuperación mientras espera un hogar.",
     "empty": "Aún no hay historias oficiales publicadas."
   },
   "collaborate": {
@@ -198,6 +204,9 @@
     "error": "No fue posible consultar los datos de donación en este momento.",
     "unavailable": "Aún no hay datos oficiales de donación disponibles.",
     "demo_unavailable": "PRUEBA — NO DONAR. La configuración temporal no está habilitada para donaciones públicas.",
+    "demo_qr_warning": "QR DE PRUEBA — NO REALIZAR PAGOS",
+    "demo_qr_alt": "Código QR de prueba no válido para realizar pagos",
+    "demo_qr_caption": "Demostración de la integración con Supabase Storage. No es un medio de pago válido.",
     "qr_unavailable": "No hay un QR oficial disponible."
   },
   "facebook": {

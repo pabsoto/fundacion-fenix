@@ -5,6 +5,8 @@ import { CampaignList } from './CampaignList';
 import { CampaignDetail } from './CampaignDetail';
 import { useStats } from '@/hooks/useStats';
 import { formatNumber } from '@/lib/format';
+import { DEMO_SHOWCASE } from '@/lib/demo';
+import { DemoBadge } from '@/components/ui/DemoBadge';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -44,6 +46,7 @@ export function Campaigns() {
     <div className="flex flex-col gap-12">
       <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-start">
         <div className="flex flex-col gap-3">
+          {DEMO_SHOWCASE && <DemoBadge />}
           <h2 className="t-section text-negro">{t('campaigns.title')}</h2>
           <p className="t-body-lg text-negro">{t('campaigns.subtitle')}</p>
         </div>
