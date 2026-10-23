@@ -28,3 +28,4 @@ dist-ssr
 # Reglas locales de Windsurf
 .windsurf/
 .windsurfrules
+.cursor/

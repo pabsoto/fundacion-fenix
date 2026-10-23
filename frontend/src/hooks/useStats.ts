@@ -1,4 +1,9 @@
-// TODO
+import { useQuery } from '@tanstack/react-query';
+import { getStats } from '@/services/stats.service';
+
 export function useStats() {
-  return { data: null, isLoading: false, error: null };
+  return useQuery({
+    queryKey: ['stats'],
+    queryFn: getStats,
+  });
 }
