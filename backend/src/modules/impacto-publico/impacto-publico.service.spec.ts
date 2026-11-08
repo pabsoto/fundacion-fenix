@@ -18,7 +18,9 @@ describe('ImpactoPublicoService', () => {
         fotos: ['/images/campana.webp'],
       },
     ]);
-    const service = new ImpactoPublicoService({ query } as unknown as DataSource);
+    const service = new ImpactoPublicoService({
+      query,
+    } as unknown as DataSource);
 
     await expect(service.listarCampanas(2026)).resolves.toEqual([
       {
@@ -34,6 +36,19 @@ describe('ImpactoPublicoService', () => {
       },
     ]);
     expect(query.mock.calls[0][1]).toEqual([2026]);
+  });
+
+  it('muestra solo campañas publicadas o cerradas, nunca borradores', async () => {
+    const query = vi.fn().mockResolvedValue([]);
+    const service = new ImpactoPublicoService({
+      query,
+    } as unknown as DataSource);
+
+    await service.listarCampanas();
+
+    const sql = String(query.mock.calls[0][0]);
+    expect(sql).toContain("resumen.estado in ('publicada', 'cerrada')");
+    expect(sql).not.toContain('realizada');
   });
 
   it('devuelve estadísticas en cero cuando la vista no contiene una fila', async () => {

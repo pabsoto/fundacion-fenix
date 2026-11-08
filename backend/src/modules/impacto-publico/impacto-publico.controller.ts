@@ -17,7 +17,9 @@ export class ImpactoPublicoController {
   constructor(private readonly servicio: ImpactoPublicoService) {}
 
   @Get('campanas')
-  @ApiOperation({ summary: 'Listar campañas realizadas con cifras oficiales' })
+  @ApiOperation({
+    summary: 'Listar campañas publicadas o cerradas con cifras oficiales',
+  })
   @ApiQuery({ name: 'anio', required: false, type: Number })
   @ApiOkResponse({ type: CampanaPublicaDto, isArray: true })
   @ApiServiceUnavailableResponse({ type: ErrorResponseDto })

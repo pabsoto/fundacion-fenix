@@ -114,6 +114,8 @@ describe('application bootstrap (e2e)', () => {
     expect(document.openapi).toMatch(/^3\./);
     expect(Object.keys(document.paths).sort()).toEqual(
       [
+        '/api/admin/campanas',
+        '/api/admin/campanas/{id}',
         '/api/admin/donaciones',
         '/api/admin/donaciones/qr',
         '/api/admin/health',
@@ -129,6 +131,10 @@ describe('application bootstrap (e2e)', () => {
         '/api/public/institucional',
       ].sort(),
     );
+    expect(document.paths['/api/admin/campanas']).toHaveProperty('get');
+    expect(document.paths['/api/admin/campanas']).toHaveProperty('post');
+    expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('get');
+    expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('put');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('get');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('put');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('delete');
