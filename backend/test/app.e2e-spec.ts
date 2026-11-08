@@ -125,6 +125,7 @@ describe('application bootstrap (e2e)', () => {
         '/api/auth/me',
         '/api/health',
         '/api/public/campanas',
+        '/api/public/campanas/{id}',
         '/api/public/contactos',
         '/api/public/donaciones',
         '/api/public/estadisticas',
@@ -135,6 +136,7 @@ describe('application bootstrap (e2e)', () => {
     expect(document.paths['/api/admin/campanas']).toHaveProperty('post');
     expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('get');
     expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('put');
+    expect(document.paths['/api/public/campanas/{id}']).toHaveProperty('get');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('get');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('put');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('delete');

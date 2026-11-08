@@ -93,4 +93,5 @@ Todas las respuestas de error usan el formato común
 ## Visibilidad pública
 
 `GET /api/public/campanas` muestra solo las campañas `publicada` o `cerrada`
-con fecha. Los borradores nunca se exponen.
+con fecha. Los borradores nunca se exponen. Detalle en
+[contrato-campanas-publicas.md](contrato-campanas-publicas.md).

@@ -1,11 +1,29 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import type { EstadoCampana } from '../campanas/entities/campana.entity.js';
 import { CampanaPublicaDto } from './dto/campana-publica.dto.js';
 import { EstadisticasPublicasDto } from './dto/estadisticas-publicas.dto.js';
 
+export const ESTADOS_CAMPANA_PUBLICOS = [
+  'publicada',
+  'cerrada',
+] as const satisfies readonly EstadoCampana[];
+
+const ESTADOS_PUBLICOS_SQL = ESTADOS_CAMPANA_PUBLICOS.map(
+  (estado) => `'${estado}'`,
+).join(', ');
+
 interface CampanaFila {
   id: string;
+  titulo_es: string;
+  titulo_en: string | null;
+  descripcion_es: string | null;
+  descripcion_en: string | null;
   lugar: string | null;
   fecha: string;
   total_perros: number;
@@ -30,53 +48,78 @@ export class ImpactoPublicoService {
   constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
 
   async listarCampanas(anio?: number): Promise<CampanaPublicaDto[]> {
+    const parametros: unknown[] = [];
+    const filtro =
+      anio === undefined
+        ? ''
+        : `and extract(year from campana.fecha)::int = $${parametros.push(anio)}`;
+    const filas = await this.consultarCampanas(filtro, parametros);
+    return filas.map((fila) => this.aDto(fila));
+  }
+
+  
+  async obtenerCampana(id: string): Promise<CampanaPublicaDto> {
+    const filas = await this.consultarCampanas('and campana.id = $1', [id]);
+    const fila = filas[0];
+    if (!fila) throw new NotFoundException('La campaña no existe');
+    return this.aDto(fila);
+  }
+
+  private async consultarCampanas(
+    filtroAdicional: string,
+    parametros: unknown[],
+  ): Promise<CampanaFila[]> {
     try {
-      const parametros: unknown[] = [];
-      const filtroAnio = anio
-        ? `and extract(year from resumen.fecha)::int = $${parametros.push(anio)}`
-        : '';
-      const filas = await this.dataSource.query<CampanaFila[]>(
-        `select resumen.id,
-                coalesce(resumen.lugar, resumen.titulo_es) as lugar,
-                resumen.fecha::text as fecha,
+      return await this.dataSource.query<CampanaFila[]>(
+        `select campana.id,
+                campana.titulo_es,
+                campana.titulo_en,
+                campana.descripcion_es,
+                campana.descripcion_en,
+                coalesce(campana.lugar, campana.titulo_es) as lugar,
+                campana.fecha::text as fecha,
                 resumen.total_perros,
                 resumen.total_gatos,
                 resumen.total_machos,
                 resumen.total_hembras,
                 resumen.total_esterilizaciones,
                 coalesce(
-                  array_agg(foto.ruta_archivo order by foto.orden)
-                    filter (where foto.id is not null),
+                  (select array_agg(foto.ruta_archivo order by foto.orden)
+                     from public.campana_fotos foto
+                    where foto.campana_id = campana.id),
                   array[]::text[]
                 ) as fotos
-           from public.v_campanas_resumen resumen
-           left join public.campana_fotos foto on foto.campana_id = resumen.id
-          where resumen.estado in ('publicada', 'cerrada')
-            and resumen.fecha is not null
-            ${filtroAnio}
-          group by resumen.id, resumen.lugar, resumen.titulo_es, resumen.fecha,
-                   resumen.total_perros, resumen.total_gatos, resumen.total_machos,
-                   resumen.total_hembras, resumen.total_esterilizaciones
-          order by resumen.fecha desc, resumen.id`,
+           from public.campanas campana
+           join public.v_campanas_resumen resumen on resumen.id = campana.id
+          where campana.estado in (${ESTADOS_PUBLICOS_SQL})
+            and campana.fecha is not null
+            ${filtroAdicional}
+          order by campana.fecha desc, campana.id`,
         parametros,
       );
-
-      return filas.map((fila) => ({
-        id: fila.id,
-        lugar: fila.lugar ?? '',
-        fecha: fila.fecha,
-        perros: Number(fila.total_perros),
-        gatos: Number(fila.total_gatos),
-        machos: Number(fila.total_machos),
-        hembras: Number(fila.total_hembras),
-        total: Number(fila.total_esterilizaciones),
-        fotos: fila.fotos ?? [],
-      }));
     } catch {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
       );
     }
+  }
+
+  private aDto(fila: CampanaFila): CampanaPublicaDto {
+    return {
+      id: fila.id,
+      tituloEs: fila.titulo_es,
+      tituloEn: fila.titulo_en,
+      descripcionEs: fila.descripcion_es,
+      descripcionEn: fila.descripcion_en,
+      lugar: fila.lugar ?? '',
+      fecha: fila.fecha,
+      perros: Number(fila.total_perros),
+      gatos: Number(fila.total_gatos),
+      machos: Number(fila.total_machos),
+      hembras: Number(fila.total_hembras),
+      total: Number(fila.total_esterilizaciones),
+      fotos: fila.fotos ?? [],
+    };
   }
 
   async obtenerEstadisticas(): Promise<EstadisticasPublicasDto> {
