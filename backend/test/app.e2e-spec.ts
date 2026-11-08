@@ -115,6 +115,7 @@ describe('application bootstrap (e2e)', () => {
     expect(Object.keys(document.paths).sort()).toEqual(
       [
         '/api/admin/campanas',
+        '/api/admin/campanas/cifras',
         '/api/admin/campanas/{id}',
         '/api/admin/donaciones',
         '/api/admin/donaciones/qr',

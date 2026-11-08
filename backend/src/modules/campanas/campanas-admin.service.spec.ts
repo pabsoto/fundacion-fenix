@@ -5,6 +5,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import {
+  Between,
   DataSource,
   EntityManager,
   QueryFailedError,
@@ -257,6 +258,93 @@ describe('CampanasAdminService', () => {
       hembras: 0,
       total: 0,
     });
+  });
+
+  it('suma las cifras de un mes y consulta el rango completo del mes', async () => {
+    find.mockResolvedValue([
+      crearCampana({
+        perrosMachos: 1,
+        perrosHembras: 2,
+        gatosMachos: 3,
+        gatosHembras: 4,
+      }),
+      crearCampana({
+        perrosMachos: 10,
+        perrosHembras: 0,
+        gatosMachos: 0,
+        gatosHembras: 5,
+      }),
+    ]);
+
+    const resultado = await servicio.consultarCifras({ anio: 2026, mes: 2 });
+
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { fecha: Between('2026-02-01', '2026-02-28') },
+      }),
+    );
+    expect(resultado.periodo).toEqual({ anio: 2026, mes: 2 });
+    expect(resultado.totales).toEqual({
+      perros: 13,
+      gatos: 12,
+      machos: 14,
+      hembras: 11,
+      total: 25,
+    });
+    expect(resultado.campanas).toHaveLength(2);
+  });
+
+  it('consulta el año completo y filtra por estado cuando se indica', async () => {
+    find.mockResolvedValue([]);
+
+    const resultado = await servicio.consultarCifras({
+      anio: 2028,
+      estado: 'cerrada',
+    });
+
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          fecha: Between('2028-01-01', '2028-12-31'),
+          estado: 'cerrada',
+        },
+      }),
+    );
+    expect(resultado.periodo).toEqual({ anio: 2028, mes: null });
+    expect(resultado.totales.total).toBe(0);
+    expect(resultado.campanas).toEqual([]);
+  });
+
+  it('usa 29 días en febrero de un año bisiesto', async () => {
+    find.mockResolvedValue([]);
+    await servicio.consultarCifras({ anio: 2028, mes: 2 });
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { fecha: Between('2028-02-01', '2028-02-29') },
+      }),
+    );
+  });
+
+  it('no expone detalles de PostgreSQL al consultar cifras', async () => {
+    find.mockRejectedValue(new Error('conexión rechazada'));
+    await expect(
+      servicio.consultarCifras({ anio: 2026 }),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+  });
+
+  it('los totales por especie y por sexo suman lo mismo en el límite máximo', async () => {
+    findOne.mockResolvedValue(
+      crearCampana({
+        perrosMachos: 100000,
+        perrosHembras: 100000,
+        gatosMachos: 100000,
+        gatosHembras: 100000,
+      }),
+    );
+    const { totales } = await servicio.obtener(CAMPANA_ID);
+    expect(totales.perros + totales.gatos).toBe(totales.total);
+    expect(totales.machos + totales.hembras).toBe(totales.total);
+    expect(totales.total).toBe(400000);
   });
 
   it('responde 404 al obtener una campaña inexistente', async () => {

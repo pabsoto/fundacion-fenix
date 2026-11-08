@@ -295,6 +295,116 @@ describe('administración de campañas (e2e)', () => {
     });
   });
 
+  describe('actualizar contadores', () => {
+    it('actualiza los contadores enviados y conserva los omitidos', async () => {
+      const existente = crearCampana({ perrosMachos: 7, gatosHembras: 9 });
+      campanas = [existente];
+
+      const respuesta = await servidor()
+        .put(`${URL_BASE}/${existente.id}`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .send({ ...publicada, perrosHembras: 4, gatosMachos: 2 })
+        .expect(200);
+
+      expect(respuesta.body).toMatchObject({
+        perrosMachos: 7,
+        perrosHembras: 4,
+        gatosMachos: 2,
+        gatosHembras: 9,
+        totales: { perros: 11, gatos: 11, machos: 9, hembras: 13, total: 22 },
+      });
+    });
+
+    it('rechaza contadores negativos al actualizar sin modificar la campaña', async () => {
+      const existente = crearCampana({ perrosMachos: 7 });
+      campanas = [existente];
+
+      await servidor()
+        .put(`${URL_BASE}/${existente.id}`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .send({ ...publicada, perrosMachos: -1 })
+        .expect(400);
+
+      expect(campanas[0].perrosMachos).toBe(7);
+      expect(auditorias).toHaveLength(0);
+    });
+  });
+
+  describe('consulta de cifras por periodo', () => {
+    const URL_CIFRAS = `${URL_BASE}/cifras`;
+
+    it('rechaza consultar sin sesión (401)', async () => {
+      await servidor().get(URL_CIFRAS).query({ anio: 2026 }).expect(401);
+    });
+
+    it('rechaza un administrador desactivado (403)', async () => {
+      administradorActivo = false;
+      await servidor()
+        .get(URL_CIFRAS)
+        .query({ anio: 2026 })
+        .set('Cookie', COOKIE)
+        .expect(403);
+    });
+
+    it('devuelve periodo, totales y campañas', async () => {
+      campanas = [
+        crearCampana({ fecha: '2026-11-21', perrosMachos: 3, gatosHembras: 2 }),
+        crearCampana({ fecha: '2026-11-05', perrosHembras: 5 }),
+      ];
+
+      const respuesta = await servidor()
+        .get(URL_CIFRAS)
+        .query({ anio: 2026, mes: 11 })
+        .set('Cookie', COOKIE)
+        .expect(200);
+
+      expect(respuesta.headers['cache-control']).toBe('no-store');
+      expect(respuesta.body.periodo).toEqual({ anio: 2026, mes: 11 });
+      expect(respuesta.body.totales).toEqual({
+        perros: 8,
+        gatos: 2,
+        machos: 3,
+        hembras: 7,
+        total: 10,
+      });
+      expect(respuesta.body.campanas).toHaveLength(2);
+    });
+
+    it('devuelve totales en cero cuando el periodo no tiene campañas', async () => {
+      const respuesta = await servidor()
+        .get(URL_CIFRAS)
+        .query({ anio: 2026 })
+        .set('Cookie', COOKIE)
+        .expect(200);
+
+      expect(respuesta.body).toEqual({
+        periodo: { anio: 2026, mes: null },
+        totales: { perros: 0, gatos: 0, machos: 0, hembras: 0, total: 0 },
+        campanas: [],
+      });
+    });
+
+    it.each([
+      ['sin año', {}],
+      ['año de texto', { anio: 'abc' }],
+      ['año fuera de rango', { anio: 1999 }],
+      ['mes sin año', { mes: 5 }],
+      ['mes cero', { anio: 2026, mes: 0 }],
+      ['mes mayor a 12', { anio: 2026, mes: 13 }],
+      ['mes decimal', { anio: 2026, mes: 2.5 }],
+      ['estado desconocido', { anio: 2026, estado: 'realizada' }],
+      ['parámetro no permitido', { anio: 2026, otro: 1 }],
+    ])('rechaza %s con 400', async (_caso, consulta) => {
+      await servidor()
+        .get(URL_CIFRAS)
+        .query(consulta)
+        .set('Cookie', COOKIE)
+        .expect(400);
+    });
+  });
+
   describe('editar', () => {
     it('publica un borrador existente y registra los cambios', async () => {
       const existente = crearCampana({
@@ -372,6 +482,7 @@ describe('administración de campañas (e2e)', () => {
       ['contador decimal', { ...publicada, gatosHembras: 2.5 }],
       ['contador de texto', { ...publicada, gatosMachos: 'abc' }],
       ['contador excesivo', { ...publicada, perrosHembras: 100001 }],
+      ['contador nulo', { ...publicada, gatosMachos: null }],
     ];
 
     it.each(casosInvalidos)('rechaza %s con 400', async (_caso, cuerpo) => {

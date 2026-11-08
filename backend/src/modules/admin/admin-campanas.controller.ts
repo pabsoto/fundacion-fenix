@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
   Req,
   UnauthorizedException,
   UseGuards,
@@ -31,6 +32,10 @@ import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
 import { CampanasAdminService } from '../campanas/campanas-admin.service.js';
 import { CampanaAdminDto } from '../campanas/dto/campana-admin.dto.js';
+import {
+  CifrasPeriodoDto,
+  ConsultaCifrasDto,
+} from '../campanas/dto/consulta-cifras.dto.js';
 import { GuardarCampanaDto } from '../campanas/dto/guardar-campana.dto.js';
 
 /**
@@ -67,6 +72,27 @@ export class AdminCampanasController {
   })
   listar(): Promise<CampanaAdminDto[]> {
     return this.campanas.listar();
+  }
+
+  @Get('cifras')
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity('cookieAuth')
+  @ApiOperation({
+    summary: 'Consultar cifras por año y mes',
+    description:
+      'Suma las cifras de las campañas con fecha dentro del periodo. Sin `mes` abarca todo el año. Incluye borradores salvo que se filtre por `estado`.',
+  })
+  @ApiOkResponse({ type: CifrasPeriodoDto })
+  @ApiBadRequestResponse({
+    description: 'El año, el mes o el estado no son válidos.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta administrativa está desactivada.',
+    type: ErrorResponseDto,
+  })
+  cifras(@Query() consulta: ConsultaCifrasDto): Promise<CifrasPeriodoDto> {
+    return this.campanas.consultarCifras(consulta);
   }
 
   @Get(':id')
