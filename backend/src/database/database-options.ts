@@ -5,6 +5,7 @@ import { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataS
 import { Administrador } from '../modules/administradores/entities/administrador.entity.js';
 import { Auditoria } from '../modules/auditoria/entities/auditoria.entity.js';
 import { Campana } from '../modules/campanas/entities/campana.entity.js';
+import { FotoCampana } from '../modules/campanas/entities/foto-campana.entity.js';
 import { SesionAdmin } from '../modules/auth/entities/sesion-admin.entity.js';
 import { CanalContacto } from '../modules/canales-contacto/entities/canal-contacto.entity.js';
 import { ContenidoInstitucional } from '../modules/contenido-institucional/entities/contenido-institucional.entity.js';
@@ -14,6 +15,7 @@ export const DATABASE_ENTITIES = [
   Administrador,
   Auditoria,
   Campana,
+  FotoCampana,
   DatoDonacion,
   ContenidoInstitucional,
   CanalContacto,
