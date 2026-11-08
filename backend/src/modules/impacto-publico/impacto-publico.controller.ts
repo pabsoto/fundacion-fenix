@@ -1,6 +1,16 @@
-import { Controller, Get, ParseIntPipe, Query } from '@nestjs/common';
 import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
+  ApiParam,
   ApiOperation,
   ApiQuery,
   ApiServiceUnavailableResponse,
@@ -27,6 +37,19 @@ export class ImpactoPublicoController {
     @Query('anio', new ParseIntPipe({ optional: true })) anio?: number,
   ): Promise<CampanaPublicaDto[]> {
     return this.servicio.listarCampanas(anio);
+  }
+
+  @Get('campanas/:id')
+  @ApiOperation({ summary: 'Obtener una campaña publicada o cerrada' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: CampanaPublicaDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
+  @ApiServiceUnavailableResponse({ type: ErrorResponseDto })
+  obtenerCampana(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<CampanaPublicaDto> {
+    return this.servicio.obtenerCampana(id);
   }
 
   @Get('estadisticas')

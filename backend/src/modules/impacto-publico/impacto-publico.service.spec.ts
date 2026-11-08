@@ -1,30 +1,40 @@
-import { ServiceUnavailableException } from '@nestjs/common';
+import { NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { describe, expect, it, vi } from 'vitest';
 import { ImpactoPublicoService } from './impacto-publico.service.js';
 
 describe('ImpactoPublicoService', () => {
-  it('mapea campañas realizadas sin inventar datos', async () => {
-    const query = vi.fn().mockResolvedValue([
-      {
-        id: '11111111-1111-1111-1111-111111111111',
-        lugar: 'Villa Esperanza',
-        fecha: '2026-05-10',
-        total_perros: 8,
-        total_gatos: 4,
-        total_machos: 5,
-        total_hembras: 7,
-        total_esterilizaciones: 12,
-        fotos: ['/images/campana.webp'],
-      },
-    ]);
-    const service = new ImpactoPublicoService({
-      query,
-    } as unknown as DataSource);
+  const filaCampana = {
+    id: '11111111-1111-1111-1111-111111111111',
+    titulo_es: 'Campaña Villa Esperanza',
+    titulo_en: 'Villa Esperanza campaign',
+    descripcion_es: 'Esterilización gratuita.',
+    descripcion_en: null,
+    lugar: 'Villa Esperanza',
+    fecha: '2026-05-10',
+    total_perros: 8,
+    total_gatos: 4,
+    total_machos: 5,
+    total_hembras: 7,
+    total_esterilizaciones: '12',
+    fotos: ['/images/campana.webp'],
+  };
+
+  const crearServicio = (query = vi.fn().mockResolvedValue([filaCampana])) => ({
+    query,
+    service: new ImpactoPublicoService({ query } as unknown as DataSource),
+  });
+
+  it('mapea campañas visibles con textos bilingües sin inventar datos', async () => {
+    const { service, query } = crearServicio();
 
     await expect(service.listarCampanas(2026)).resolves.toEqual([
       {
         id: '11111111-1111-1111-1111-111111111111',
+        tituloEs: 'Campaña Villa Esperanza',
+        tituloEn: 'Villa Esperanza campaign',
+        descripcionEs: 'Esterilización gratuita.',
+        descripcionEn: null,
         lugar: 'Villa Esperanza',
         fecha: '2026-05-10',
         perros: 8,
@@ -38,17 +48,91 @@ describe('ImpactoPublicoService', () => {
     expect(query.mock.calls[0][1]).toEqual([2026]);
   });
 
-  it('muestra solo campañas publicadas o cerradas, nunca borradores', async () => {
-    const query = vi.fn().mockResolvedValue([]);
-    const service = new ImpactoPublicoService({
-      query,
-    } as unknown as DataSource);
+  it('filtra por estado en la tabla campanas: publicadas o cerradas, nunca borradores', async () => {
+    const { service, query } = crearServicio(vi.fn().mockResolvedValue([]));
 
     await service.listarCampanas();
 
     const sql = String(query.mock.calls[0][0]);
-    expect(sql).toContain("resumen.estado in ('publicada', 'cerrada')");
-    expect(sql).not.toContain('realizada');
+    expect(sql).toContain("campana.estado in ('publicada', 'cerrada')");
+    expect(sql).toContain('campana.fecha is not null');
+    expect(sql).not.toContain('borrador');
+    expect(query.mock.calls[0][1]).toEqual([]);
+  });
+
+  it('no selecciona columnas administrativas', async () => {
+    const { service, query } = crearServicio(vi.fn().mockResolvedValue([]));
+
+    await service.listarCampanas();
+
+    const sql = String(query.mock.calls[0][0]);
+    for (const columna of [
+      'creado_por',
+      'actualizado_por',
+      'creado_en',
+      'actualizado_en',
+      'es_historico',
+      'campana.*',
+      'resumen.*',
+    ]) {
+      expect(sql).not.toContain(columna);
+    }
+  });
+
+  it('descarta columnas no previstas aunque la consulta las devuelva', async () => {
+    const { service } = crearServicio(
+      vi.fn().mockResolvedValue([
+        {
+          ...filaCampana,
+          estado: 'publicada',
+          creado_por: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          es_historico: true,
+        },
+      ]),
+    );
+
+    const [campana] = await service.listarCampanas();
+
+    expect(Object.keys(campana).sort()).toEqual(
+      [
+        'id',
+        'tituloEs',
+        'tituloEn',
+        'descripcionEs',
+        'descripcionEn',
+        'lugar',
+        'fecha',
+        'perros',
+        'gatos',
+        'machos',
+        'hembras',
+        'total',
+        'fotos',
+      ].sort(),
+    );
+  });
+
+  it('obtiene una campaña visible por id con el mismo filtro de visibilidad', async () => {
+    const { service, query } = crearServicio();
+
+    await expect(service.obtenerCampana(filaCampana.id)).resolves.toMatchObject(
+      {
+        id: filaCampana.id,
+        tituloEs: 'Campaña Villa Esperanza',
+      },
+    );
+    const sql = String(query.mock.calls[0][0]);
+    expect(sql).toContain("campana.estado in ('publicada', 'cerrada')");
+    expect(sql).toContain('campana.id = $1');
+    expect(query.mock.calls[0][1]).toEqual([filaCampana.id]);
+  });
+
+  it('responde 404 si la campaña no existe o no es visible', async () => {
+    const { service } = crearServicio(vi.fn().mockResolvedValue([]));
+
+    await expect(service.obtenerCampana(filaCampana.id)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('devuelve estadísticas en cero cuando la vista no contiene una fila', async () => {
@@ -70,5 +154,8 @@ describe('ImpactoPublicoService', () => {
     await expect(service.listarCampanas()).rejects.toBeInstanceOf(
       ServiceUnavailableException,
     );
+    await expect(
+      service.obtenerCampana('11111111-1111-1111-1111-111111111111'),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
 });
