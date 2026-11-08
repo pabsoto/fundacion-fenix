@@ -270,6 +270,31 @@ describe('administración de campañas (e2e)', () => {
     });
   });
 
+  describe('contadores', () => {
+    it('crea una campaña con contadores y devuelve los totales', async () => {
+      const creada = await servidor()
+        .post(URL_BASE)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .send({
+          ...publicada,
+          perrosMachos: 12,
+          perrosHembras: 20,
+          gatosMachos: 8,
+          gatosHembras: 15,
+        })
+        .expect(201);
+
+      expect(creada.body).toMatchObject({
+        perrosMachos: 12,
+        perrosHembras: 20,
+        gatosMachos: 8,
+        gatosHembras: 15,
+        totales: { perros: 32, gatos: 23, machos: 20, hembras: 35, total: 55 },
+      });
+    });
+  });
+
   describe('editar', () => {
     it('publica un borrador existente y registra los cambios', async () => {
       const existente = crearCampana({
@@ -342,7 +367,11 @@ describe('administración de campañas (e2e)', () => {
       ['publicar sin fecha', { ...publicada, fecha: null }],
       ['fecha con formato inválido', { ...publicada, fecha: '21/11/2026' }],
       ['fecha inexistente', { ...publicada, fecha: '2026-02-30' }],
-      ['campo no permitido', { ...publicada, perrosMachos: 10 }],
+      ['campo no permitido', { ...publicada, otroCampo: 10 }],
+      ['contador negativo', { ...publicada, perrosMachos: -3 }],
+      ['contador decimal', { ...publicada, gatosHembras: 2.5 }],
+      ['contador de texto', { ...publicada, gatosMachos: 'abc' }],
+      ['contador excesivo', { ...publicada, perrosHembras: 100001 }],
     ];
 
     it.each(casosInvalidos)('rechaza %s con 400', async (_caso, cuerpo) => {

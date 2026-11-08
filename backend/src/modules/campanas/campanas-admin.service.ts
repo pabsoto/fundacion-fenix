@@ -181,6 +181,18 @@ export class CampanasAdminService {
       lugar: entrada.lugar ?? null,
       fecha: entrada.fecha ?? null,
       estado: entrada.estado,
+      ...(entrada.perrosMachos !== undefined && {
+        perrosMachos: entrada.perrosMachos,
+      }),
+      ...(entrada.perrosHembras !== undefined && {
+        perrosHembras: entrada.perrosHembras,
+      }),
+      ...(entrada.gatosMachos !== undefined && {
+        gatosMachos: entrada.gatosMachos,
+      }),
+      ...(entrada.gatosHembras !== undefined && {
+        gatosHembras: entrada.gatosHembras,
+      }),
     };
   }
 
@@ -194,6 +206,21 @@ export class CampanasAdminService {
       lugar: campana.lugar,
       fecha: campana.fecha,
       estado: campana.estado,
+      perrosMachos: campana.perrosMachos,
+      perrosHembras: campana.perrosHembras,
+      gatosMachos: campana.gatosMachos,
+      gatosHembras: campana.gatosHembras,
+      totales: {
+        perros: campana.perrosMachos + campana.perrosHembras,
+        gatos: campana.gatosMachos + campana.gatosHembras,
+        machos: campana.perrosMachos + campana.gatosMachos,
+        hembras: campana.perrosHembras + campana.gatosHembras,
+        total:
+          campana.perrosMachos +
+          campana.perrosHembras +
+          campana.gatosMachos +
+          campana.gatosHembras,
+      },
       esHistorico: campana.esHistorico,
       creadoEn: new Date(campana.creadoEn).toISOString(),
       actualizadoEn: new Date(campana.actualizadoEn).toISOString(),
@@ -210,6 +237,10 @@ export class CampanasAdminService {
       lugar: campana.lugar,
       fecha: campana.fecha,
       estado: campana.estado,
+      perros_machos: campana.perrosMachos,
+      perros_hembras: campana.perrosHembras,
+      gatos_machos: campana.gatosMachos,
+      gatos_hembras: campana.gatosHembras,
       creado_por: campana.creadoPorId,
       actualizado_por: campana.actualizadoPorId,
     };
