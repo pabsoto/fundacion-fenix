@@ -67,14 +67,33 @@ editables. Los opcionales que se omiten o se envían vacíos se guardan como
 | `lugar` | Máximo 200. **Obligatorio si `estado` es `publicada`.** |
 | `fecha` | `AAAA-MM-DD` válida. **Obligatoria si `estado` es `publicada`.** |
 | `estado` | `borrador` o `publicada`. |
+| `perrosMachos`, `perrosHembras`, `gatosMachos`, `gatosHembras` | Opcionales. Enteros entre 0 y 100000. Los omitidos se conservan en `PUT` y valen 0 en `POST`. |
 
-Se rechaza cualquier otro campo (por ejemplo, cifras o fotos).
+Los totales (`perros`, `gatos`, `machos`, `hembras`, `total`) no se envían: se
+calculan en el servidor a partir de los cuatro contadores.
+
+Se rechaza cualquier otro campo (por ejemplo, fotos).
 
 `POST` responde `201` y `PUT` responde `200`, ambos con la campaña guardada.
 Cada escritura se registra en `auditoria` (`tabla = 'campanas'`) dentro de la
 misma transacción: si la auditoría falla, la campaña no se guarda.
 
-`PUT` conserva cifras, fotos y el autor original (`creado_por`).
+`PUT` conserva las cifras omitidas, las fotos y el autor original (`creado_por`).
+
+## Consulta de cifras por periodo
+
+`GET /api/admin/campanas/cifras?anio=2026&mes=11`
+
+| Parámetro | Regla |
+| --- | --- |
+| `anio` | Obligatorio. Entero entre 2000 y 2100. |
+| `mes` | Opcional. Entero entre 1 y 12. Sin `mes` abarca todo el año. |
+| `estado` | Opcional. `borrador`, `publicada` o `cerrada`. Sin él se incluyen todos. |
+
+Suma las cifras de las campañas cuya `fecha` cae en el periodo; las campañas
+sin fecha no se cuentan. Responde `200` con `{ periodo, totales, campanas }`; un
+periodo sin campañas devuelve totales en 0 y `campanas: []`. Responde `400` si
+algún parámetro no es válido.
 
 ## Errores
 

@@ -8,13 +8,18 @@ import {
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import {
+  Between,
   DataSource,
   EntityManager,
   QueryFailedError,
   Repository,
 } from 'typeorm';
 import { Auditoria } from '../auditoria/entities/auditoria.entity.js';
-import { CampanaAdminDto } from './dto/campana-admin.dto.js';
+import { CampanaAdminDto, TotalesCampanaDto } from './dto/campana-admin.dto.js';
+import {
+  CifrasPeriodoDto,
+  ConsultaCifrasDto,
+} from './dto/consulta-cifras.dto.js';
 import { GuardarCampanaDto } from './dto/guardar-campana.dto.js';
 import { Campana } from './entities/campana.entity.js';
 
@@ -48,6 +53,45 @@ export class CampanasAdminService {
         'Las campañas no están disponibles temporalmente',
       );
     }
+  }
+
+  async consultarCifras(
+    consulta: ConsultaCifrasDto,
+  ): Promise<CifrasPeriodoDto> {
+    const { anio, mes, estado } = consulta;
+    const mesTexto = mes === undefined ? null : String(mes).padStart(2, '0');
+    const desde = `${anio}-${mesTexto ?? '01'}-01`;
+    const ultimoDia =
+      mes === undefined ? 31 : new Date(Date.UTC(anio, mes, 0)).getUTCDate();
+    const hasta = `${anio}-${mesTexto ?? '12'}-${String(ultimoDia).padStart(2, '0')}`;
+
+    let campanas: Campana[];
+    try {
+      campanas = await this.repositorio.find({
+        where: { fecha: Between(desde, hasta), ...(estado && { estado }) },
+        order: { fecha: 'ASC', creadoEn: 'ASC' },
+      });
+    } catch {
+      throw new ServiceUnavailableException(
+        'Las campañas no están disponibles temporalmente',
+      );
+    }
+
+    const suma = campanas.reduce(
+      (acumulado, campana) => ({
+        perrosMachos: acumulado.perrosMachos + campana.perrosMachos,
+        perrosHembras: acumulado.perrosHembras + campana.perrosHembras,
+        gatosMachos: acumulado.gatosMachos + campana.gatosMachos,
+        gatosHembras: acumulado.gatosHembras + campana.gatosHembras,
+      }),
+      { perrosMachos: 0, perrosHembras: 0, gatosMachos: 0, gatosHembras: 0 },
+    );
+
+    return {
+      periodo: { anio, mes: mes ?? null },
+      totales: this.calcularTotales(suma),
+      campanas: campanas.map((campana) => this.aDto(campana)),
+    };
   }
 
   async obtener(id: string): Promise<CampanaAdminDto> {
@@ -210,20 +254,25 @@ export class CampanasAdminService {
       perrosHembras: campana.perrosHembras,
       gatosMachos: campana.gatosMachos,
       gatosHembras: campana.gatosHembras,
-      totales: {
-        perros: campana.perrosMachos + campana.perrosHembras,
-        gatos: campana.gatosMachos + campana.gatosHembras,
-        machos: campana.perrosMachos + campana.gatosMachos,
-        hembras: campana.perrosHembras + campana.gatosHembras,
-        total:
-          campana.perrosMachos +
-          campana.perrosHembras +
-          campana.gatosMachos +
-          campana.gatosHembras,
-      },
+      totales: this.calcularTotales(campana),
       esHistorico: campana.esHistorico,
       creadoEn: new Date(campana.creadoEn).toISOString(),
       actualizadoEn: new Date(campana.actualizadoEn).toISOString(),
+    };
+  }
+
+  private calcularTotales(
+    c: Pick<
+      Campana,
+      'perrosMachos' | 'perrosHembras' | 'gatosMachos' | 'gatosHembras'
+    >,
+  ): TotalesCampanaDto {
+    return {
+      perros: c.perrosMachos + c.perrosHembras,
+      gatos: c.gatosMachos + c.gatosHembras,
+      machos: c.perrosMachos + c.gatosMachos,
+      hembras: c.perrosHembras + c.gatosHembras,
+      total: c.perrosMachos + c.perrosHembras + c.gatosMachos + c.gatosHembras,
     };
   }
 

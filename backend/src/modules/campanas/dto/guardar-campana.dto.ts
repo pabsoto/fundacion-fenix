@@ -113,28 +113,28 @@ export class GuardarCampanaDto {
   estado: EstadoEditable;
 
   @ApiPropertyOptional({ minimum: 0, maximum: MAXIMO_CONTADOR, example: 12 })
-  @IsOptional()
+  @ValidateIf((_, valor) => valor !== undefined)
   @IsInt(contador('perrosMachos'))
   @Min(0, contador('perrosMachos'))
   @Max(MAXIMO_CONTADOR, contador('perrosMachos'))
   perrosMachos?: number;
 
   @ApiPropertyOptional({ minimum: 0, maximum: MAXIMO_CONTADOR, example: 20 })
-  @IsOptional()
+  @ValidateIf((_, valor) => valor !== undefined)
   @IsInt(contador('perrosHembras'))
   @Min(0, contador('perrosHembras'))
   @Max(MAXIMO_CONTADOR, contador('perrosHembras'))
   perrosHembras?: number;
 
   @ApiPropertyOptional({ minimum: 0, maximum: MAXIMO_CONTADOR, example: 8 })
-  @IsOptional()
+  @ValidateIf((_, valor) => valor !== undefined)
   @IsInt(contador('gatosMachos'))
   @Min(0, contador('gatosMachos'))
   @Max(MAXIMO_CONTADOR, contador('gatosMachos'))
   gatosMachos?: number;
 
   @ApiPropertyOptional({ minimum: 0, maximum: MAXIMO_CONTADOR, example: 15 })
-  @IsOptional()
+  @ValidateIf((_, valor) => valor !== undefined)
   @IsInt(contador('gatosHembras'))
   @Min(0, contador('gatosHembras'))
   @Max(MAXIMO_CONTADOR, contador('gatosHembras'))
