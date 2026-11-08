@@ -51,7 +51,7 @@ export class ImpactoPublicoService {
                 ) as fotos
            from public.v_campanas_resumen resumen
            left join public.campana_fotos foto on foto.campana_id = resumen.id
-          where resumen.estado = 'realizada'
+          where resumen.estado in ('publicada', 'cerrada')
             and resumen.fecha is not null
             ${filtroAnio}
           group by resumen.id, resumen.lugar, resumen.titulo_es, resumen.fecha,

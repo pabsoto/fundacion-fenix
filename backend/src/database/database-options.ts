@@ -4,6 +4,7 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions.js';
 import { Administrador } from '../modules/administradores/entities/administrador.entity.js';
 import { Auditoria } from '../modules/auditoria/entities/auditoria.entity.js';
+import { Campana } from '../modules/campanas/entities/campana.entity.js';
 import { SesionAdmin } from '../modules/auth/entities/sesion-admin.entity.js';
 import { CanalContacto } from '../modules/canales-contacto/entities/canal-contacto.entity.js';
 import { ContenidoInstitucional } from '../modules/contenido-institucional/entities/contenido-institucional.entity.js';
@@ -12,6 +13,7 @@ import { DatoDonacion } from '../modules/donaciones/entities/dato-donacion.entit
 export const DATABASE_ENTITIES = [
   Administrador,
   Auditoria,
+  Campana,
   DatoDonacion,
   ContenidoInstitucional,
   CanalContacto,

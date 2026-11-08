@@ -35,7 +35,7 @@ describe('database configuration', () => {
     ).toThrow('DATABASE_URL no debe contener parámetros SSL');
   });
 
-  it('builds metadata for the six tables without connecting', async () => {
+  it('builds metadata for the seven tables without connecting', async () => {
     const dataSource = new DataSource(createDatabaseOptions(testEnvironment));
     const metadataBuilder = dataSource as DataSource & {
       buildMetadatas(): Promise<void>;
@@ -49,12 +49,13 @@ describe('database configuration', () => {
     ).toEqual([
       'administradores',
       'auditoria',
+      'campanas',
       'canales_contacto',
       'contenido_institucional',
       'datos_donacion',
       'sesiones_admin',
     ]);
-    expect(DATABASE_ENTITIES).toHaveLength(6);
+    expect(DATABASE_ENTITIES).toHaveLength(7);
 
     const expectedColumns: Record<string, string[]> = {
       administradores: [
@@ -77,6 +78,25 @@ describe('database configuration', () => {
         'id',
         'registro_id',
         'tabla',
+      ],
+      campanas: [
+        'actualizado_en',
+        'actualizado_por',
+        'creado_en',
+        'creado_por',
+        'descripcion_en',
+        'descripcion_es',
+        'es_historico',
+        'estado',
+        'fecha',
+        'gatos_hembras',
+        'gatos_machos',
+        'id',
+        'lugar',
+        'perros_hembras',
+        'perros_machos',
+        'titulo_en',
+        'titulo_es',
       ],
       canales_contacto: [
         'activo',
@@ -185,7 +205,7 @@ describe('database configuration', () => {
       clavesForaneas
         .filter((clave) => clave.nombre !== 'fk_sesiones_admin_administrador')
         .map((clave) => clave.onDelete),
-    ).toEqual(['RESTRICT', 'RESTRICT', 'RESTRICT', 'RESTRICT', 'RESTRICT']);
+    ).toEqual(Array(7).fill('RESTRICT'));
 
     expect(
       dataSource.entityMetadatas
