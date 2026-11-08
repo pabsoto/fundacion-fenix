@@ -15,10 +15,15 @@ const buttonVariants = cva(
         md: 'px-6 py-3',
         lg: 'px-8 py-4',
       },
+      shape: {
+        default: 'rounded-btn',
+        pill: 'rounded-full',
+      },
     },
     defaultVariants: {
       variant: 'primary',
       size: 'md',
+      shape: 'default',
     },
   }
 );
