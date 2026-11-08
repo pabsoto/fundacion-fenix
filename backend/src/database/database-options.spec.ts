@@ -35,7 +35,7 @@ describe('database configuration', () => {
     ).toThrow('DATABASE_URL no debe contener parámetros SSL');
   });
 
-  it('builds metadata for the seven tables without connecting', async () => {
+  it('builds metadata for the eight tables without connecting', async () => {
     const dataSource = new DataSource(createDatabaseOptions(testEnvironment));
     const metadataBuilder = dataSource as DataSource & {
       buildMetadatas(): Promise<void>;
@@ -53,9 +53,10 @@ describe('database configuration', () => {
       'canales_contacto',
       'contenido_institucional',
       'datos_donacion',
+      'fotos_campana',
       'sesiones_admin',
     ]);
-    expect(DATABASE_ENTITIES).toHaveLength(7);
+    expect(DATABASE_ENTITIES).toHaveLength(8);
 
     const expectedColumns: Record<string, string[]> = {
       administradores: [
@@ -202,10 +203,20 @@ describe('database configuration', () => {
     ).toBe('CASCADE');
 
     expect(
+      clavesForaneas.find(
+        (clave) => clave.nombre === 'fotos_campana_campana_id_fkey',
+      )?.onDelete,
+    ).toBe('CASCADE');
+
+    expect(
       clavesForaneas
-        .filter((clave) => clave.nombre !== 'fk_sesiones_admin_administrador')
+        .filter(
+          (clave) =>
+            clave.nombre !== 'fk_sesiones_admin_administrador' &&
+            clave.nombre !== 'fotos_campana_campana_id_fkey',
+        )
         .map((clave) => clave.onDelete),
-    ).toEqual(Array(7).fill('RESTRICT'));
+    ).toEqual(Array(8).fill('RESTRICT'));
 
     expect(
       dataSource.entityMetadatas

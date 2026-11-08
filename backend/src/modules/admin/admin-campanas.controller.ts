@@ -10,9 +10,15 @@ import {
   Query,
   Req,
   UnauthorizedException,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  ApiConsumes,
+  ApiPayloadTooLargeResponse,
+  ApiUnsupportedMediaTypeResponse,
   ApiBadRequestResponse,
   ApiBody,
   ApiConflictResponse,
@@ -36,7 +42,16 @@ import {
   CifrasPeriodoDto,
   ConsultaCifrasDto,
 } from '../campanas/dto/consulta-cifras.dto.js';
+import {
+  ArchivoFotoSwaggerDto,
+  FotoCampanaDto,
+} from '../campanas/dto/foto-campana.dto.js';
 import { GuardarCampanaDto } from '../campanas/dto/guardar-campana.dto.js';
+import {
+  FotosCampanaService,
+  TAMANO_MAXIMO_FOTO,
+  type ArchivoFotoCargado,
+} from '../campanas/fotos-campana.service.js';
 
 /**
  * Gestión de campañas desde el panel (SF-6 / RF-07).
@@ -56,7 +71,10 @@ import { GuardarCampanaDto } from '../campanas/dto/guardar-campana.dto.js';
   type: ErrorResponseDto,
 })
 export class AdminCampanasController {
-  constructor(private readonly campanas: CampanasAdminService) {}
+  constructor(
+    private readonly campanas: CampanasAdminService,
+    private readonly fotos: FotosCampanaService,
+  ) {}
 
   @Get()
   @Header('Cache-Control', 'no-store')
@@ -175,6 +193,49 @@ export class AdminCampanasController {
     @Req() request: PeticionConSesion,
   ): Promise<CampanaAdminDto> {
     return this.campanas.actualizar(id, entrada, this.administradorId(request));
+  }
+
+  @Post(':id/fotos')
+  @UseGuards(CsrfGuard)
+  @UseInterceptors(
+    FileInterceptor('archivo', { limits: { fileSize: TAMANO_MAXIMO_FOTO } }),
+  )
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Subir una fotografía de campaña',
+    description:
+      'Acepta JPG, PNG o WebP de hasta 5 MB, validando el contenido real del archivo.',
+  })
+  @ApiBody({ type: ArchivoFotoSwaggerDto })
+  @ApiCreatedResponse({ type: FotoCampanaDto })
+  @ApiBadRequestResponse({
+    description: 'Falta el archivo o el identificador no es válido.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta está desactivada o el token CSRF es inválido.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'La campaña no existe.',
+    type: ErrorResponseDto,
+  })
+  @ApiPayloadTooLargeResponse({
+    description: 'La fotografía supera 5 MB.',
+    type: ErrorResponseDto,
+  })
+  @ApiUnsupportedMediaTypeResponse({
+    description: 'El archivo no es un JPG, PNG o WebP válido.',
+    type: ErrorResponseDto,
+  })
+  subirFoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() archivo: ArchivoFotoCargado | undefined,
+    @Req() request: PeticionConSesion,
+  ): Promise<FotoCampanaDto> {
+    return this.fotos.subir(id, archivo, this.administradorId(request));
   }
 
   private administradorId(request: PeticionConSesion): string {
