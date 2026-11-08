@@ -150,6 +150,33 @@ describe('CampanasAdminService', () => {
     );
   });
 
+  it('actualiza los contadores cuando se envían y los audita', async () => {
+    findOneTransaccion.mockResolvedValue(crearCampana());
+
+    await servicio.actualizar(
+      CAMPANA_ID,
+      { ...entrada, perrosMachos: 12, perrosHembras: 0, gatosHembras: 15 },
+      ADMIN_ID,
+    );
+
+    expect(guardar.mock.calls[0][0]).toMatchObject({
+      perrosMachos: 12,
+      perrosHembras: 0,
+      gatosMachos: 1,
+      gatosHembras: 15,
+    });
+    expect(crearAuditoria.mock.calls[0][0].camposModificados).toEqual(
+      expect.arrayContaining([
+        'perros_machos',
+        'perros_hembras',
+        'gatos_hembras',
+      ]),
+    );
+    expect(crearAuditoria.mock.calls[0][0].camposModificados).not.toContain(
+      'gatos_machos',
+    );
+  });
+
   it('responde 404 al actualizar una campaña inexistente', async () => {
     findOneTransaccion.mockResolvedValue(null);
 
@@ -188,6 +215,48 @@ describe('CampanasAdminService', () => {
     await expect(servicio.crear(entrada, ADMIN_ID)).rejects.toBeInstanceOf(
       ServiceUnavailableException,
     );
+  });
+
+  it('calcula los totales agregados a partir de los cuatro contadores', async () => {
+    findOne.mockResolvedValue(
+      crearCampana({
+        perrosMachos: 12,
+        perrosHembras: 20,
+        gatosMachos: 8,
+        gatosHembras: 15,
+      }),
+    );
+
+    const resultado = await servicio.obtener(CAMPANA_ID);
+
+    expect(resultado).toMatchObject({
+      perrosMachos: 12,
+      perrosHembras: 20,
+      gatosMachos: 8,
+      gatosHembras: 15,
+      totales: { perros: 32, gatos: 23, machos: 20, hembras: 35, total: 55 },
+    });
+  });
+
+  it('devuelve totales en cero para una campaña sin contadores', async () => {
+    findOne.mockResolvedValue(
+      crearCampana({
+        perrosMachos: 0,
+        perrosHembras: 0,
+        gatosMachos: 0,
+        gatosHembras: 0,
+      }),
+    );
+
+    const resultado = await servicio.obtener(CAMPANA_ID);
+
+    expect(resultado.totales).toEqual({
+      perros: 0,
+      gatos: 0,
+      machos: 0,
+      hembras: 0,
+      total: 0,
+    });
   });
 
   it('responde 404 al obtener una campaña inexistente', async () => {

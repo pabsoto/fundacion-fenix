@@ -15,15 +15,7 @@ async function bootstrap() {
   configureApplication(app, config);
   configureSwagger(app, config);
 
-  // La conexión se establece de forma explícita y determinista al arrancar.
-  // TypeORM está configurado con `manualInitialization: true`, por lo que
-  // nadie más la inicializa: sin este paso, la primera petición que llegue
-  // antes de un `GET /api/health` fallaría con un 503 aunque la base de
-  // datos esté perfectamente disponible.
-  //
-  // Si la base de datos no está disponible en el arranque, la aplicación
-  // arranca igualmente (para que el comprobador de salud pueda informar del
-  // estado) y el servicio de salud reintenta la inicialización.
+
   const dataSource = app.get(DataSource);
   if (!dataSource.isInitialized) {
     try {

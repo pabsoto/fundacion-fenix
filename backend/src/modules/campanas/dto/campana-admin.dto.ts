@@ -4,6 +4,23 @@ import {
   type EstadoCampana,
 } from '../entities/campana.entity.js';
 
+export class TotalesCampanaDto {
+  @ApiProperty({ example: 32 })
+  readonly perros: number;
+
+  @ApiProperty({ example: 23 })
+  readonly gatos: number;
+
+  @ApiProperty({ example: 20 })
+  readonly machos: number;
+
+  @ApiProperty({ example: 35 })
+  readonly hembras: number;
+
+  @ApiProperty({ example: 55 })
+  readonly total: number;
+}
+
 export class CampanaAdminDto {
   @ApiProperty({ format: 'uuid' })
   readonly id: string;
@@ -31,6 +48,21 @@ export class CampanaAdminDto {
 
   @ApiProperty({ enum: ESTADOS_CAMPANA, example: 'borrador' })
   readonly estado: EstadoCampana;
+
+  @ApiProperty({ example: 12 })
+  readonly perrosMachos: number;
+
+  @ApiProperty({ example: 20 })
+  readonly perrosHembras: number;
+
+  @ApiProperty({ example: 8 })
+  readonly gatosMachos: number;
+
+  @ApiProperty({ example: 15 })
+  readonly gatosHembras: number;
+
+  @ApiProperty({ type: TotalesCampanaDto })
+  readonly totales: TotalesCampanaDto;
 
   @ApiProperty({ example: false })
   readonly esHistorico: boolean;
