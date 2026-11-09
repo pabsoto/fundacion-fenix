@@ -35,7 +35,7 @@ describe('database configuration', () => {
     ).toThrow('DATABASE_URL no debe contener parámetros SSL');
   });
 
-  it('builds metadata for the eight tables without connecting', async () => {
+  it('builds metadata for the nine tables without connecting', async () => {
     const dataSource = new DataSource(createDatabaseOptions(testEnvironment));
     const metadataBuilder = dataSource as DataSource & {
       buildMetadatas(): Promise<void>;
@@ -48,6 +48,7 @@ describe('database configuration', () => {
       dataSource.entityMetadatas.map(({ tableName }) => tableName).sort(),
     ).toEqual([
       'administradores',
+      'animales',
       'auditoria',
       'campanas',
       'canales_contacto',
@@ -56,7 +57,7 @@ describe('database configuration', () => {
       'fotos_campana',
       'sesiones_admin',
     ]);
-    expect(DATABASE_ENTITIES).toHaveLength(8);
+    expect(DATABASE_ENTITIES).toHaveLength(9);
 
     const expectedColumns: Record<string, string[]> = {
       administradores: [
@@ -68,6 +69,31 @@ describe('database configuration', () => {
         'id',
         'nombre',
         'ultimo_acceso',
+      ],
+      animales: [
+        'actualizado_en',
+        'actualizado_por',
+        'adoptado',
+        'creado_en',
+        'creado_por',
+        'direccion_adoptante',
+        'edad',
+        'edad_unidad',
+        'eliminado_en',
+        'eliminado_por',
+        'especie',
+        'fecha_adopcion',
+        'fecha_ingreso',
+        'foto_animal_content_type',
+        'foto_animal_ruta',
+        'foto_animal_tamano',
+        'foto_entrega_content_type',
+        'foto_entrega_ruta',
+        'foto_entrega_tamano',
+        'id',
+        'nombre',
+        'nombre_adoptante',
+        'sexo',
       ],
       auditoria: [
         'accion',
@@ -216,7 +242,7 @@ describe('database configuration', () => {
             clave.nombre !== 'fotos_campana_campana_id_fkey',
         )
         .map((clave) => clave.onDelete),
-    ).toEqual(Array(8).fill('RESTRICT'));
+    ).toEqual(Array(11).fill('RESTRICT'));
 
     expect(
       dataSource.entityMetadatas

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions.js';
 import { Administrador } from '../modules/administradores/entities/administrador.entity.js';
+import { Animal } from '../modules/animales/entities/animal.entity.js';
 import { Auditoria } from '../modules/auditoria/entities/auditoria.entity.js';
 import { Campana } from '../modules/campanas/entities/campana.entity.js';
 import { FotoCampana } from '../modules/campanas/entities/foto-campana.entity.js';
@@ -13,6 +14,7 @@ import { DatoDonacion } from '../modules/donaciones/entities/dato-donacion.entit
 
 export const DATABASE_ENTITIES = [
   Administrador,
+  Animal,
   Auditoria,
   Campana,
   FotoCampana,
