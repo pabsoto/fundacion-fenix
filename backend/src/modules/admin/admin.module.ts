@@ -3,8 +3,10 @@ import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import { CsrfGuard } from '../../common/guards/csrf.guard.js';
 import { AdministradoresModule } from '../administradores/administradores.module.js';
 import { AuthModule } from '../auth/auth.module.js';
+import { AnimalesModule } from '../animales/animales.module.js';
 import { CampanasModule } from '../campanas/campanas.module.js';
 import { DonacionesModule } from '../donaciones/donaciones.module.js';
+import { AdminAnimalesController } from './admin-animales.controller.js';
 import { AdminCampanasController } from './admin-campanas.controller.js';
 import { AdminController } from './admin.controller.js';
 
@@ -21,8 +23,13 @@ import { AdminController } from './admin.controller.js';
     AdministradoresModule,
     DonacionesModule,
     CampanasModule,
+    AnimalesModule,
   ],
-  controllers: [AdminController, AdminCampanasController],
+  controllers: [
+    AdminController,
+    AdminCampanasController,
+    AdminAnimalesController,
+  ],
   providers: [SesionAdminGuard, CsrfGuard],
 })
 export class AdminModule {}
