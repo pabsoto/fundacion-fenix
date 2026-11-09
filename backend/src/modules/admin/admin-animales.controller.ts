@@ -4,25 +4,33 @@ import {
   Get,
   Header,
   Param,
+  ParseEnumPipe,
   ParseUUIDPipe,
   Post,
   Query,
   Req,
   UnauthorizedException,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
   ApiBody,
+  ApiConflictResponse,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiPayloadTooLargeResponse,
   ApiSecurity,
   ApiServiceUnavailableResponse,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiUnsupportedMediaTypeResponse,
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../../common/dto/error-response.dto.js';
 import { CsrfGuard } from '../../common/guards/csrf.guard.js';
@@ -31,7 +39,19 @@ import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
 import { AnimalesAdminService } from '../animales/animales-admin.service.js';
 import { AnimalDto } from '../animales/dto/animal.dto.js';
 import { ConsultaAnimalesDto } from '../animales/dto/consulta-animales.dto.js';
+import { FotoAnimalDto } from '../animales/dto/foto-animal.dto.js';
 import { RegistrarAnimalDto } from '../animales/dto/registrar-animal.dto.js';
+import {
+  FotosAnimalService,
+  type TipoFotoAnimal,
+} from '../animales/fotos-animal.service.js';
+import { ArchivoFotoSwaggerDto } from '../campanas/dto/foto-campana.dto.js';
+import {
+  TAMANO_MAXIMO_FOTO,
+  type ArchivoFotoCargado,
+} from '../campanas/fotos-campana.service.js';
+
+const TIPOS_FOTO = ['animal', 'entrega'];
 
 @Controller('admin/animales')
 @UseGuards(SesionAdminGuard)
@@ -49,7 +69,10 @@ import { RegistrarAnimalDto } from '../animales/dto/registrar-animal.dto.js';
   type: ErrorResponseDto,
 })
 export class AdminAnimalesController {
-  constructor(private readonly animales: AnimalesAdminService) {}
+  constructor(
+    private readonly animales: AnimalesAdminService,
+    private readonly fotosAnimal: FotosAnimalService,
+  ) {}
 
   @Get()
   @Header('Cache-Control', 'no-store')
@@ -92,12 +115,71 @@ export class AdminAnimalesController {
     @Body() entrada: RegistrarAnimalDto,
     @Req() request: PeticionConSesion,
   ): Promise<AnimalDto> {
+    return this.animales.registrar(entrada, this.administradorId(request));
+  }
+
+  @Post(':id/fotos/:tipo')
+  @UseGuards(CsrfGuard)
+  @UseInterceptors(
+    FileInterceptor('archivo', { limits: { fileSize: TAMANO_MAXIMO_FOTO } }),
+  )
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Subir la foto de un animal o de su entrega',
+    description:
+      '`tipo` es `animal` o `entrega`. Acepta JPG, PNG o WebP de hasta 5 MB y la guarda en un bucket privado. Reemplaza la foto anterior. La foto de entrega exige un animal adoptado.',
+  })
+  @ApiBody({ type: ArchivoFotoSwaggerDto })
+  @ApiCreatedResponse({ type: FotoAnimalDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
+  @ApiConflictResponse({
+    description: 'La foto de entrega exige un animal adoptado.',
+    type: ErrorResponseDto,
+  })
+  @ApiPayloadTooLargeResponse({ type: ErrorResponseDto })
+  @ApiUnsupportedMediaTypeResponse({ type: ErrorResponseDto })
+  subirFoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('tipo', new ParseEnumPipe(TIPOS_FOTO)) tipo: TipoFotoAnimal,
+    @UploadedFile() archivo: ArchivoFotoCargado | undefined,
+    @Req() request: PeticionConSesion,
+  ): Promise<FotoAnimalDto> {
+    return this.fotosAnimal.subir(
+      tipo,
+      id,
+      archivo,
+      this.administradorId(request),
+    );
+  }
+
+  @Get(':id/fotos/:tipo')
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity('cookieAuth')
+  @ApiOperation({
+    summary: 'Obtener un acceso temporal a la foto de un animal o su entrega',
+    description: 'Devuelve una URL firmada que caduca en pocos minutos.',
+  })
+  @ApiOkResponse({ type: FotoAnimalDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
+  @ApiConflictResponse({ type: ErrorResponseDto })
+  obtenerFoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('tipo', new ParseEnumPipe(TIPOS_FOTO)) tipo: TipoFotoAnimal,
+  ): Promise<FotoAnimalDto> {
+    return this.fotosAnimal.obtener(tipo, id);
+  }
+
+  private administradorId(request: PeticionConSesion): string {
     const administradorId = request.administradorSesion?.id;
     if (!administradorId) {
       throw new UnauthorizedException(
-        'No hay un administrador autenticado para registrar animales',
+        'No hay un administrador autenticado para gestionar animales',
       );
     }
-    return this.animales.registrar(entrada, administradorId);
+    return administradorId;
   }
 }

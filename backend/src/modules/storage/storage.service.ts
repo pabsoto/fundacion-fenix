@@ -16,12 +16,14 @@ export class StorageOperacionError extends Error {
 @Injectable()
 export class StorageService {
   private readonly bucket: string | undefined;
+  private readonly bucketPrivado: string | undefined;
   private readonly client: SupabaseClient | undefined;
 
   constructor(config: ConfigService) {
     const url = config.get<string>('SUPABASE_URL');
     const serviceRoleKey = config.get<string>('SUPABASE_SERVICE_ROLE_KEY');
     this.bucket = config.get<string>('SUPABASE_STORAGE_BUCKET');
+    this.bucketPrivado = config.get<string>('SUPABASE_STORAGE_BUCKET_PRIVADO');
 
     if (url && serviceRoleKey && this.bucket) {
       this.client = createClient(url, serviceRoleKey, {
@@ -38,10 +40,11 @@ export class StorageService {
     ruta: string,
     contenido: Buffer,
     contentType: string,
+    privado = false,
   ): Promise<void> {
-    const bucket = this.obtenerBucket();
+    const bucket = this.obtenerBucket(privado);
     const { error } = await bucket.upload(ruta, contenido, {
-      cacheControl: '31536000',
+      cacheControl: privado ? '0' : '31536000',
       contentType,
       upsert: false,
     });
@@ -54,8 +57,8 @@ export class StorageService {
     }
   }
 
-  async eliminar(ruta: string): Promise<void> {
-    const bucket = this.obtenerBucket();
+  async eliminar(ruta: string, privado = false): Promise<void> {
+    const bucket = this.obtenerBucket(privado);
     const { error } = await bucket.remove([ruta]);
 
     if (error) {
@@ -72,13 +75,27 @@ export class StorageService {
     return data.publicUrl;
   }
 
-  private obtenerBucket() {
-    if (!this.client || !this.bucket) {
+  async crearUrlFirmada(ruta: string, segundos: number): Promise<string> {
+    const bucket = this.obtenerBucket(true);
+    const { data, error } = await bucket.createSignedUrl(ruta, segundos);
+
+    if (error || !data) {
+      throw new StorageOperacionError(
+        'No fue posible firmar el archivo de Supabase Storage',
+        error,
+      );
+    }
+    return data.signedUrl;
+  }
+
+  private obtenerBucket(privado = false) {
+    const nombre = privado ? this.bucketPrivado : this.bucket;
+    if (!this.client || !nombre) {
       throw new StorageNoConfiguradoError(
         'Supabase Storage no está configurado en el servidor',
       );
     }
 
-    return this.client.storage.from(this.bucket);
+    return this.client.storage.from(nombre);
   }
 }
