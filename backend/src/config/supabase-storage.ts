@@ -48,9 +48,27 @@ export function validateSupabaseStorageEnvironment(
     );
   }
 
-  return {
+  const resultado: Record<string, string> = {
     SUPABASE_URL: supabaseUrl,
     SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey,
     SUPABASE_STORAGE_BUCKET: bucket,
   };
+
+  const privado = values.SUPABASE_STORAGE_BUCKET_PRIVADO;
+  if (typeof privado === 'string' && privado.trim() !== '') {
+    const bucketPrivado = privado.trim();
+    if (!/^[a-z0-9][a-z0-9._-]{1,61}[a-z0-9]$/.test(bucketPrivado)) {
+      throw new Error(
+        'SUPABASE_STORAGE_BUCKET_PRIVADO debe ser un nombre seguro de 3 a 63 caracteres',
+      );
+    }
+    if (bucketPrivado === bucket) {
+      throw new Error(
+        'SUPABASE_STORAGE_BUCKET_PRIVADO debe ser distinto del bucket público',
+      );
+    }
+    resultado.SUPABASE_STORAGE_BUCKET_PRIVADO = bucketPrivado;
+  }
+
+  return resultado;
 }

@@ -116,6 +116,7 @@ describe('application bootstrap (e2e)', () => {
       [
         '/api/admin/animales',
         '/api/admin/animales/{id}',
+        '/api/admin/animales/{id}/fotos/{tipo}',
         '/api/admin/campanas',
         '/api/admin/campanas/cifras',
         '/api/admin/campanas/{id}',
@@ -139,6 +140,12 @@ describe('application bootstrap (e2e)', () => {
     expect(document.paths['/api/admin/animales']).toHaveProperty('get');
     expect(document.paths['/api/admin/animales']).toHaveProperty('post');
     expect(document.paths['/api/admin/animales/{id}']).toHaveProperty('get');
+    expect(
+      document.paths['/api/admin/animales/{id}/fotos/{tipo}'],
+    ).toHaveProperty('get');
+    expect(
+      document.paths['/api/admin/animales/{id}/fotos/{tipo}'],
+    ).toHaveProperty('post');
     expect(document.paths['/api/admin/campanas']).toHaveProperty('get');
     expect(document.paths['/api/admin/campanas']).toHaveProperty('post');
     expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('get');

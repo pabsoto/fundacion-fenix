@@ -23,13 +23,13 @@ export interface ArchivoFotoCargado {
   readonly buffer: Buffer;
 }
 
-const FORMATOS = {
+export const FORMATOS = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
 } as const;
 
-type TipoFoto = keyof typeof FORMATOS;
+export type TipoFoto = keyof typeof FORMATOS;
 
 function detectarTipo(buffer: Buffer): TipoFoto | null {
   if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8) {
@@ -51,6 +51,27 @@ function detectarTipo(buffer: Buffer): TipoFoto | null {
     return 'image/webp';
   }
   return null;
+}
+
+export function validarArchivoFoto(
+  archivo: ArchivoFotoCargado | undefined,
+): TipoFoto {
+  if (!archivo?.buffer || archivo.size === 0) {
+    throw new BadRequestException('Debe adjuntar una fotografía');
+  }
+  if (archivo.size > TAMANO_MAXIMO_FOTO) {
+    throw new PayloadTooLargeException(
+      'La fotografía no puede superar los 5 MB',
+    );
+  }
+
+  const tipo = detectarTipo(archivo.buffer);
+  if (!tipo || archivo.mimetype.toLowerCase() !== tipo) {
+    throw new UnsupportedMediaTypeException(
+      'La fotografía debe ser un JPG, PNG o WebP válido',
+    );
+  }
+  return tipo;
 }
 
 @Injectable()
@@ -126,21 +147,6 @@ export class FotosCampanaService {
   }
 
   private validar(archivo: ArchivoFotoCargado | undefined): TipoFoto {
-    if (!archivo?.buffer || archivo.size === 0) {
-      throw new BadRequestException('Debe adjuntar una fotografía');
-    }
-    if (archivo.size > TAMANO_MAXIMO_FOTO) {
-      throw new PayloadTooLargeException(
-        'La fotografía no puede superar los 5 MB',
-      );
-    }
-
-    const tipo = detectarTipo(archivo.buffer);
-    if (!tipo || archivo.mimetype.toLowerCase() !== tipo) {
-      throw new UnsupportedMediaTypeException(
-        'La fotografía debe ser un JPG, PNG o WebP válido',
-      );
-    }
-    return tipo;
+    return validarArchivoFoto(archivo);
   }
 }
