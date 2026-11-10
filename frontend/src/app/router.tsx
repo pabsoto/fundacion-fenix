@@ -5,6 +5,7 @@ import { StyleguidePage } from '@/pages/StyleguidePage';
 import { AdminNoIndex } from '@/app/AdminNoIndex';
 import { AdminLoginPage } from '@/pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
+import { ComponentesAdminPage } from '@/pages/admin/ComponentesAdminPage';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 
 const router = createBrowserRouter([
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
       {
         path: '/admin',
         element: <AdminDashboardPage />,
+      },
+      {
+        path: '/admin/_componentes',
+        element: <ComponentesAdminPage />,
       },
     ],
   },

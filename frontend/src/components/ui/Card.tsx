@@ -6,11 +6,13 @@ const cardVariants = cva('bg-blanco border border-linea', {
     radius: {
       card: 'rounded-card',
       panel: 'rounded-panel',
+      admin: 'rounded-admin',
     },
     elevated: {
       false: '',
       soft: 'shadow-soft',
       lift: 'shadow-lift',
+      panel: 'shadow-panel-admin',
     },
   },
   defaultVariants: {

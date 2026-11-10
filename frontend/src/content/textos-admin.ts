@@ -138,7 +138,8 @@ export const textosAdmin = {
     meses: 'Meses',
     fechaIngreso: 'Fecha de ingreso (opcional)',
     fotoIngreso: 'Foto del animal al ingresar (opcional)',
-    agregarFoto: '+  Agregar foto del animal · opcional',
+    agregarFoto: '+  Agregar foto del ingreso · opcional',
+    agregarFotoAdopcion: '+  Agregar foto de la adopción · opcional',
     yaAdoptado: '¿Ya fue adoptado?',
     yaAdoptadoNota: 'Si lo activas, anota los datos de la adopción.',
     datosAdopcion: 'Datos de la adopción',
@@ -199,5 +200,18 @@ export const textosAdmin = {
     obligatorio: 'Completa este campo.',
     entero: 'Escribe un número entero mayor o igual a 0.',
     fecha: 'La fecha debe tener el formato AAAA-MM-DD.',
+  },
+  /** Página temporal /admin/_componentes. Se borra junto con la página. */
+  componentes: {
+    titulo: 'Componentes',
+    nota: 'Página temporal para comparar con Figma.',
+    boton: 'Botón píldora',
+    chip: 'Chip',
+    kpi: 'Tarjeta KPI',
+    campo: 'Campo',
+    interruptor: 'Interruptor',
+    fotos: 'Zona de fotos',
+    tabla: 'Tabla y panel de detalle',
+    modal: 'Modal',
   },
 } as const;

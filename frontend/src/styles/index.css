@@ -29,8 +29,33 @@
   --radius-admin-control: var(--radius-card);
   --radius-pill: 9999px;
   --size-control-admin: 48px;
+  --size-boton-admin: 42px;
   --size-modal-admin: 640px;
+  --size-switch-ancho: 44px;
+  --size-switch-alto: 26px;
+  --size-switch-perilla: 20px;
   --shadow-modal-admin: 0 24px 60px -8px rgb(0 0 0 / 0.18);
+  --shadow-panel-admin: 0 8px 10px -6px rgb(0 0 0 / 0.1), 0 20px 25px -5px rgb(0 0 0 / 0.1);
+
+  /* Medidas del panel tomadas de Figma (Animales, Registrar animal, Resumen). */
+  --spacing-chip-admin: 14px;
+  --spacing-chip-admin-y: 5px;
+  --spacing-switch-inset: 3px;
+  --spacing-fila-admin: 56px;
+  --spacing-encabezado-tabla: 40px;
+  --spacing-dato-admin: 46px;
+  --spacing-inicial: 32px;
+  --spacing-foto-detalle: 120px;
+  --spacing-zona-foto: 72px;
+  --spacing-panel-detalle: 380px;
+  --spacing-lienzo-admin: 1328px;
+  --spacing-pagina-admin: 56px;
+  --spacing-col-nombre: 200px;
+  --spacing-col-corta: 100px;
+  --spacing-col-estado: 190px;
+  --spacing-col-adoptante: 210px;
+  --spacing-direccion: 200px;
+  --spacing-campo-corto: 283px;
 }
 
 @utility t-hero {
@@ -138,6 +163,79 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   line-height: 1.2;
+}
+
+@utility t-barra {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: normal;
+}
+
+@utility t-chip {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: normal;
+}
+
+@utility t-control {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.9375rem;
+  line-height: normal;
+}
+
+@utility t-fila {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: normal;
+}
+
+@utility t-fila-nombre {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: normal;
+}
+
+@utility t-inicial {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: normal;
+}
+
+@utility t-foto {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: normal;
+}
+
+@utility t-detalle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.75rem;
+  line-height: normal;
+  letter-spacing: -0.02em;
+}
+
+@utility t-modal-titulo {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.75rem;
+  line-height: normal;
+  letter-spacing: -0.054em;
+}
+
+@utility t-kpi {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 3.25rem;
+  line-height: normal;
+  letter-spacing: -0.048em;
 }
 
 body {
