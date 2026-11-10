@@ -20,6 +20,83 @@
 
   --shadow-soft: 0 3px 10px rgb(28 28 28 / 0.10);
   --shadow-lift: 0 12px 30px rgb(28 28 28 / 0.16);
+
+  /* Panel admin. Crema, negro, naranja, amarillo y línea al 15 % se reutilizan. */
+  --color-texto-secundario: rgb(28 28 28 / 0.62);
+  --color-placeholder: rgb(28 28 28 / 0.5);
+  --color-velo: rgb(28 28 28 / 0.42);
+  --radius-admin: 20px;
+  --radius-admin-control: var(--radius-card);
+  --radius-pill: 9999px;
+  --size-control-admin: 48px;
+  --size-boton-admin: 42px;
+  --size-modal-admin: 640px;
+  --size-switch-ancho: 44px;
+  --size-switch-alto: 26px;
+  --size-switch-perilla: 20px;
+  --shadow-modal-admin: 0 24px 60px -8px rgb(0 0 0 / 0.18);
+  --shadow-panel-admin: 0 8px 10px -6px rgb(0 0 0 / 0.1), 0 20px 25px -5px rgb(0 0 0 / 0.1);
+
+  /* Medidas del panel tomadas de Figma (Animales, Registrar animal, Resumen). */
+  --spacing-chip-admin: 14px;
+  --spacing-chip-admin-y: 5px;
+  --spacing-switch-inset: 3px;
+  --spacing-fila-admin: 56px;
+  --spacing-encabezado-tabla: 40px;
+  --spacing-dato-admin: 46px;
+  --spacing-inicial: 32px;
+  --spacing-foto-detalle: 120px;
+  --spacing-zona-foto: 72px;
+  --spacing-panel-detalle: 380px;
+  --spacing-lienzo-admin: 1328px;
+  --spacing-pagina-admin: 56px;
+  --spacing-col-nombre: 200px;
+  --spacing-col-corta: 100px;
+  --spacing-col-estado: 190px;
+  --spacing-col-adoptante: 210px;
+  --spacing-direccion: 200px;
+  --spacing-campo-corto: 283px;
+
+  /* Cabecera del panel (Admin — Campañas, nav 228:255). */
+  --breakpoint-tablet: 48rem;
+  --breakpoint-escritorio: 80rem;
+  --spacing-pagina-admin-compacto: 24px;
+  --spacing-nav-admin: 16px;
+  --spacing-marca-admin: 12px;
+  --spacing-tabs-admin: 8px;
+  --spacing-tab-x-admin: 16px;
+  --spacing-tab-y-admin: 7px;
+  --spacing-cuenta-admin: 16px;
+  --spacing-bloque-admin: 40px;
+  --spacing-bloque-gap-admin: 28px;
+  --size-marca-admin: 40px;
+  --size-icono-marca-admin: 22px;
+  --size-toque-admin: 44px;
+  --size-panel-vacio-admin: 320px;
+
+  /* Admin — Campañas y modal Nueva campaña. */
+  --spacing-titulo-pagina-admin: 6px;
+  --spacing-col-campana: 250px;
+  --spacing-col-fecha-admin: 120px;
+  --spacing-col-contador: 108px;
+  --spacing-col-total-admin: 98px;
+  --spacing-foto-campana: 124px;
+  --spacing-miniatura-campana: 56px;
+  --spacing-fecha-campo: 200px;
+  --spacing-area-admin: 96px;
+  --spacing-agregar-foto: 190px;
+  --spacing-mosaico-foto: 96px;
+  --spacing-quitar-foto: 26px;
+
+  /* Admin — Resumen: gráfica de barras (nodo 271:550). */
+  --spacing-grafica-admin: 303px;
+  --spacing-barra-admin: 22px;
+  --spacing-barra-max-admin: 184px;
+  --spacing-barra-cero-admin: 4px;
+  --spacing-entre-barras: 5px;
+  --spacing-leyenda-admin: 18px;
+  --radius-barra-admin: 7px;
+  --radius-barra-cero: 2px;
 }
 
 @utility t-hero {
@@ -127,6 +204,149 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   line-height: 1.2;
+}
+
+@utility t-barra {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: normal;
+}
+
+@utility t-chip {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: normal;
+}
+
+@utility t-control {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.9375rem;
+  line-height: normal;
+}
+
+@utility t-fila {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: normal;
+}
+
+@utility t-fila-nombre {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: normal;
+}
+
+@utility t-inicial {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: normal;
+}
+
+@utility t-foto {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: normal;
+}
+
+@utility t-detalle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.75rem;
+  line-height: normal;
+  letter-spacing: -0.02em;
+}
+
+@utility t-modal-titulo {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.75rem;
+  line-height: normal;
+  letter-spacing: -0.054em;
+}
+
+@utility t-kpi {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 3.25rem;
+  line-height: normal;
+  letter-spacing: -0.048em;
+}
+
+@utility t-cifra-barra {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  line-height: normal;
+  letter-spacing: -0.05em;
+}
+
+@utility t-marca {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: normal;
+  letter-spacing: -0.02em;
+}
+
+@utility t-marca-sub {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.6875rem;
+  line-height: normal;
+  letter-spacing: 0.08em;
+}
+
+@utility t-avatar {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  line-height: normal;
+}
+
+@utility t-pagina {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2.75rem;
+  line-height: normal;
+  letter-spacing: -0.025em;
+}
+
+@utility t-subtitulo {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 1.125rem;
+  line-height: normal;
+}
+
+@utility t-total {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: normal;
+  letter-spacing: -0.01em;
+}
+
+@utility t-total-detalle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.375rem;
+  line-height: normal;
+  letter-spacing: -0.01em;
+}
+
+@utility t-total-vivo {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2rem;
+  line-height: normal;
+  letter-spacing: -0.046875em;
 }
 
 body {

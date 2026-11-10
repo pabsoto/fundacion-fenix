@@ -1,0 +1,201 @@
+import type { Animal, Campana, Resumen } from '@/types/admin';
+
+/**
+ * Datos de ejemplo del Figma. No van dentro de los componentes.
+ *
+ * Fechas pensadas para el Resumen (referencia 9 nov 2026, la fecha del modal):
+ * - 4 adoptados con fechaAdopcion en 2026, en ene, abr, jul y oct.
+ * - Pelusa, Apolo, Mishi y Toby llevan 214, 168, 97 y 41 días al 9 nov 2026.
+ * Max conserva el ingreso 12 mar 2025 del detalle. Con esa fecha visible, el
+ * promedio de días hasta adoptar no puede ser 46 y la gráfica de ingresos no
+ * cierra con 8: un ingreso de 2025 queda fuera de los últimos 12 meses, y
+ * abril y agosto reciben ingresos de quienes siguen esperando.
+ */
+export const ANIMALES_EJEMPLO: Animal[] = [
+  {
+    id: 'a1000000-0000-4000-8000-000000000001',
+    nombre: 'Max',
+    especie: 'perro',
+    sexo: 'macho',
+    edad: { valor: 3, unidad: 'años' },
+    fechaIngreso: '2025-03-12',
+    fotoIngreso: null,
+    adoptadoPor: 'Carla Mamani',
+    direccionAdoptante: 'Calle 5, Villa Adela, El Alto',
+    fotoAdopcion: null,
+    fechaAdopcion: '2026-01-15',
+  },
+  {
+    id: 'a1000000-0000-4000-8000-000000000002',
+    nombre: 'Luna',
+    especie: 'perro',
+    sexo: 'hembra',
+    edad: { valor: 2, unidad: 'años' },
+    fechaIngreso: '2025-12-18',
+    fotoIngreso: null,
+    adoptadoPor: 'Jorge Quispe',
+    direccionAdoptante: null,
+    fotoAdopcion: null,
+    fechaAdopcion: '2026-04-20',
+  },
+  {
+    id: 'a1000000-0000-4000-8000-000000000003',
+    nombre: 'Rocky',
+    especie: 'perro',
+    sexo: 'macho',
+    edad: { valor: 5, unidad: 'años' },
+    fechaIngreso: '2026-02-11',
+    fotoIngreso: null,
+    adoptadoPor: 'Ana Flores',
+    direccionAdoptante: null,
+    fotoAdopcion: null,
+    fechaAdopcion: '2026-07-08',
+  },
+  {
+    id: 'a1000000-0000-4000-8000-000000000004',
+    nombre: 'Canela',
+    especie: 'perro',
+    sexo: 'hembra',
+    edad: { valor: 1, unidad: 'años' },
+    fechaIngreso: '2026-03-16',
+    fotoIngreso: null,
+    adoptadoPor: 'Luis Condori',
+    direccionAdoptante: null,
+    fotoAdopcion: null,
+    fechaAdopcion: '2026-10-06',
+  },
+  {
+    id: 'a1000000-0000-4000-8000-000000000005',
+    nombre: 'Apolo',
+    especie: 'perro',
+    sexo: 'macho',
+    edad: { valor: 4, unidad: 'años' },
+    fechaIngreso: '2026-05-25',
+    fotoIngreso: null,
+    adoptadoPor: null,
+    direccionAdoptante: null,
+    fotoAdopcion: null,
+    fechaAdopcion: null,
+  },
+  {
+    id: 'a1000000-0000-4000-8000-000000000006',
+    nombre: 'Mishi',
+    especie: 'gato',
+    sexo: 'hembra',
+    edad: { valor: 2, unidad: 'años' },
+    fechaIngreso: '2026-08-04',
+    fotoIngreso: null,
+    adoptadoPor: null,
+    direccionAdoptante: null,
+    fotoAdopcion: null,
+    fechaAdopcion: null,
+  },
+  {
+    id: 'a1000000-0000-4000-8000-000000000007',
+    nombre: 'Toby',
+    especie: 'perro',
+    sexo: 'macho',
+    edad: { valor: 8, unidad: 'meses' },
+    fechaIngreso: '2026-09-29',
+    fotoIngreso: null,
+    adoptadoPor: null,
+    direccionAdoptante: null,
+    fotoAdopcion: null,
+    fechaAdopcion: null,
+  },
+  {
+    id: 'a1000000-0000-4000-8000-000000000008',
+    nombre: 'Pelusa',
+    especie: 'gato',
+    sexo: 'hembra',
+    edad: { valor: 6, unidad: 'años' },
+    fechaIngreso: '2026-04-09',
+    fotoIngreso: null,
+    adoptadoPor: null,
+    direccionAdoptante: null,
+    fotoAdopcion: null,
+    fechaAdopcion: null,
+  },
+];
+
+export const CAMPANAS_EJEMPLO: Campana[] = [
+  {
+    id: 'c1000000-0000-4000-8000-000000000001',
+    titulo: 'Jornada Villa Adela',
+    lugar: 'Villa Adela, El Alto',
+    fecha: '2025-03-08',
+    descripcion: null,
+    perrosMachos: 22,
+    perrosHembras: 22,
+    gatosMachos: 13,
+    gatosHembras: 19,
+    fotos: [],
+  },
+  {
+    id: 'c1000000-0000-4000-8000-000000000002',
+    titulo: 'Jornada Distrito 4',
+    lugar: 'Distrito 4, El Alto',
+    fecha: '2024-11-23',
+    descripcion: null,
+    perrosMachos: 26,
+    perrosHembras: 26,
+    gatosMachos: 12,
+    gatosHembras: 21,
+    fotos: [],
+  },
+  {
+    id: 'c1000000-0000-4000-8000-000000000003',
+    titulo: 'Jornada Obrajes',
+    lugar: 'Obrajes, La Paz',
+    fecha: '2024-09-14',
+    descripcion: null,
+    perrosMachos: 28,
+    perrosHembras: 27,
+    gatosMachos: 16,
+    gatosHembras: 20,
+    fotos: [],
+  },
+  {
+    id: 'c1000000-0000-4000-8000-000000000004',
+    titulo: 'Jornada Ciudad Satélite',
+    lugar: 'Ciudad Satélite, El Alto',
+    fecha: '2024-06-15',
+    descripcion: null,
+    perrosMachos: 17,
+    perrosHembras: 17,
+    gatosMachos: 10,
+    gatosHembras: 14,
+    fotos: [],
+  },
+];
+
+/**
+ * Cifras fijas del frame Admin — Resumen, solo para la galería de componentes.
+ * getResumen() no las usa: las calcula con las listas.
+ */
+export const RESUMEN_EJEMPLO: Resumen = {
+  esterilizaciones: { total: 310, jornadas: 4 },
+  enLaFundacion: { cantidad: 4, registrados: 8 },
+  adopcionesDelAnio: { cantidad: 4, anio: 2026 },
+  diasHastaAdoptar: 46,
+  serie: [
+    { anio: 2025, mes: 12, ingresos: 1, adopciones: 0 },
+    { anio: 2026, mes: 1, ingresos: 0, adopciones: 1 },
+    { anio: 2026, mes: 2, ingresos: 1, adopciones: 0 },
+    { anio: 2026, mes: 3, ingresos: 1, adopciones: 0 },
+    { anio: 2026, mes: 4, ingresos: 0, adopciones: 1 },
+    { anio: 2026, mes: 5, ingresos: 2, adopciones: 0 },
+    { anio: 2026, mes: 6, ingresos: 0, adopciones: 0 },
+    { anio: 2026, mes: 7, ingresos: 1, adopciones: 1 },
+    { anio: 2026, mes: 8, ingresos: 0, adopciones: 0 },
+    { anio: 2026, mes: 9, ingresos: 1, adopciones: 0 },
+    { anio: 2026, mes: 10, ingresos: 1, adopciones: 1 },
+    { anio: 2026, mes: 11, ingresos: 0, adopciones: 0 },
+  ],
+  espera: [
+    { id: 'a1000000-0000-4000-8000-000000000008', nombre: 'Pelusa', especie: 'gato', dias: 214 },
+    { id: 'a1000000-0000-4000-8000-000000000005', nombre: 'Apolo', especie: 'perro', dias: 168 },
+    { id: 'a1000000-0000-4000-8000-000000000006', nombre: 'Mishi', especie: 'gato', dias: 97 },
+    { id: 'a1000000-0000-4000-8000-000000000007', nombre: 'Toby', especie: 'perro', dias: 41 },
+  ],
+};

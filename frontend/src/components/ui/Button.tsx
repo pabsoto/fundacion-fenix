@@ -2,7 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/cn';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-btn t-button transition-colors duration-200',
+  'inline-flex cursor-pointer items-center justify-center transition-colors duration-200',
   {
     variants: {
       variant: {
@@ -10,10 +10,13 @@ const buttonVariants = cva(
         secondary:
           'bg-transparent border-[1.5px] border-negro text-negro hover:bg-negro hover:text-crema',
         dark: 'bg-negro text-crema',
+        naranja: 'bg-naranja text-blanco hover:bg-naranja-hover hover:text-blanco disabled:text-blanco',
+        ghost: 'border border-negro bg-transparent text-negro hover:bg-crema-tono',
       },
       size: {
-        md: 'px-6 py-3',
-        lg: 'px-8 py-4',
+        md: 'rounded-btn t-button px-6 py-3',
+        lg: 'rounded-btn t-button px-8 py-4',
+        pill: 'min-h-(--size-boton-admin) rounded-pill t-nav px-5 py-2.5 disabled:pointer-events-none disabled:opacity-50',
       },
     },
     defaultVariants: {

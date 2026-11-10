@@ -2,8 +2,15 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { StyleguidePage } from '@/pages/StyleguidePage';
+import { AdminNoIndex } from '@/app/AdminNoIndex';
+import { AdminGuard } from '@/app/AdminGuard';
 import { AdminLoginPage } from '@/pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
+import { AdminDonacionesPage } from '@/pages/admin/AdminDonacionesPage';
+import { AdminCampanasPage } from '@/pages/admin/AdminCampanasPage';
+import { AdminAnimalesPage } from '@/pages/admin/AdminAnimalesPage';
+import { AdminResumenPage } from '@/pages/admin/AdminResumenPage';
+import { ComponentesAdminPage } from '@/pages/admin/ComponentesAdminPage';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 
 const router = createBrowserRouter([
@@ -26,12 +33,44 @@ const router = createBrowserRouter([
       ]
     : []),
   {
-    path: '/admin/login',
-    element: <AdminLoginPage />,
-  },
-  {
-    path: '/admin',
-    element: <AdminDashboardPage />,
+    element: <AdminNoIndex />,
+    children: [
+      {
+        path: '/admin/login',
+        element: <AdminLoginPage />,
+      },
+      {
+        path: '/admin',
+        element: <AdminGuard />,
+        children: [
+          {
+            element: <AdminDashboardPage />,
+            children: [
+              {
+                index: true,
+                element: <AdminResumenPage />,
+              },
+              {
+                path: 'campanas',
+                element: <AdminCampanasPage />,
+              },
+              {
+                path: 'animales',
+                element: <AdminAnimalesPage />,
+              },
+              {
+                path: 'donaciones',
+                element: <AdminDonacionesPage />,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        path: '/admin/_componentes',
+        element: <ComponentesAdminPage />,
+      },
+    ],
   },
   {
     path: '*',

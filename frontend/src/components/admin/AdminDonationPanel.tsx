@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { textosAdmin } from '@/content/textos-admin';
 import {
   deleteDonationQr,
   getAdminDonation,
@@ -102,24 +103,26 @@ export function AdminDonationPanel({ csrfToken }: { csrfToken: string }) {
   ];
 
   return (
-    <section className="mt-10 border-t border-linea pt-8" aria-labelledby="admin-donaciones">
-      <h2 id="admin-donaciones" className="t-heading-md">Donaciones</h2>
+    <section aria-labelledby="admin-donaciones">
+      <h1 id="admin-donaciones" className="t-pagina text-negro">
+        {textosAdmin.donaciones.titulo}
+      </h1>
       <form className="mt-5 grid gap-4" onSubmit={(event) => void save(event)}>
         {fields.map(([field, label, required]) => (
-          <label key={field} className="grid gap-1 t-small">
+          <label key={field} className="t-small grid gap-1">
             {label}
             <input
               required={required}
               value={form[field] ?? ''}
               onChange={(event) => update(field, event.target.value)}
-              className="min-h-11 rounded-btn border border-linea bg-blanco px-3 py-2 t-body"
+              className="rounded-btn border-linea bg-blanco t-body min-h-11 border px-3 py-2"
             />
           </label>
         ))}
         <button
           type="submit"
           disabled={busy}
-          className="t-button min-h-11 rounded-btn bg-negro px-5 py-3 text-crema disabled:opacity-60"
+          className="t-button rounded-btn bg-negro text-crema min-h-11 px-5 py-3 disabled:opacity-60"
         >
           Guardar datos
         </button>
@@ -127,7 +130,7 @@ export function AdminDonationPanel({ csrfToken }: { csrfToken: string }) {
 
       <div className="mt-8 grid gap-4">
         <p className="t-body-strong">QR: {hasQr ? 'disponible' : 'no disponible'}</p>
-        <label className="grid gap-1 t-small">
+        <label className="t-small grid gap-1">
           Imagen PNG, JPG o WebP (máximo 2 MB)
           <input
             type="file"
@@ -135,13 +138,13 @@ export function AdminDonationPanel({ csrfToken }: { csrfToken: string }) {
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           />
         </label>
-        <label className="grid gap-1 t-small">
+        <label className="t-small grid gap-1">
           Vencimiento opcional
           <input
             type="date"
             value={expiration}
             onChange={(event) => setExpiration(event.target.value)}
-            className="min-h-11 rounded-btn border border-linea bg-blanco px-3 py-2 t-body"
+            className="rounded-btn border-linea bg-blanco t-body min-h-11 border px-3 py-2"
           />
         </label>
         <div className="flex flex-wrap gap-3">
@@ -149,7 +152,7 @@ export function AdminDonationPanel({ csrfToken }: { csrfToken: string }) {
             type="button"
             disabled={!file || busy}
             onClick={() => void upload()}
-            className="t-button min-h-11 rounded-btn bg-negro px-5 py-3 text-crema disabled:opacity-60"
+            className="t-button rounded-btn bg-negro text-crema min-h-11 px-5 py-3 disabled:opacity-60"
           >
             Subir o reemplazar QR
           </button>
@@ -157,13 +160,17 @@ export function AdminDonationPanel({ csrfToken }: { csrfToken: string }) {
             type="button"
             disabled={!hasQr || busy}
             onClick={() => void removeQr()}
-            className="t-button min-h-11 rounded-btn border border-negro px-5 py-3 disabled:opacity-60"
+            className="t-button rounded-btn border-negro min-h-11 border px-5 py-3 disabled:opacity-60"
           >
             Retirar QR
           </button>
         </div>
       </div>
-      {message && <p className="t-small mt-4" role="status">{message}</p>}
+      {message && (
+        <p className="t-small mt-4" role="status">
+          {message}
+        </p>
+      )}
     </section>
   );
 }
