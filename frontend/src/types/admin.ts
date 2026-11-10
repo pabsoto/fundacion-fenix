@@ -27,6 +27,8 @@ export type Animal = {
   adoptadoPor: string | null;
   direccionAdoptante: string | null;
   fotoAdopcion: string | null;
+  /** Solo lectura en la UI. Al registrar la adopción se envía la fecha de hoy. */
+  fechaAdopcion: string | null;
 };
 
 export type AnimalEntrada = Omit<Animal, 'id'>;

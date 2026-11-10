@@ -120,6 +120,7 @@ export const textosAdmin = {
     anios: 'años',
     ano: 'año',
     meses: 'meses',
+    mes: 'mes',
   },
   registrarAnimal: {
     titulo: 'Registrar animal',
@@ -208,6 +209,8 @@ export const textosAdmin = {
     fotoNoSubio: 'Se guardó, pero la foto no se pudo subir.',
     campanaCerrada: 'Esta jornada está cerrada y no se puede editar.',
     fecha: 'La fecha debe tener el formato AAAA-MM-DD.',
+    edad: 'La edad admite un entero de 0 a 40.',
+    adopcionAntes: 'La fecha de adopción no puede ser anterior al ingreso.',
     /** El Figma no dibuja el menú móvil ni los estados de acceso. */
     abrirMenu: 'Abrir menú',
     cerrarMenu: 'Cerrar menú',

@@ -15,6 +15,9 @@ type ModalAdminProps = {
 const SELECCION =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+/** Solo el modal de encima cierra con Esc y atrapa el tabulador. */
+let modalesAbiertos = 0;
+
 export function ModalAdmin({
   abierto,
   titulo,
@@ -37,6 +40,8 @@ export function ModalAdmin({
     const previo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    modalesAbiertos += 1;
+    const orden = modalesAbiertos;
     dialogRef.current?.focus();
 
     function enfocable() {
@@ -48,6 +53,7 @@ export function ModalAdmin({
     }
 
     function onKey(event: KeyboardEvent) {
+      if (orden !== modalesAbiertos) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         cerrarRef.current();
@@ -70,6 +76,7 @@ export function ModalAdmin({
 
     document.addEventListener('keydown', onKey);
     return () => {
+      modalesAbiertos -= 1;
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = overflow;
       previo?.focus();

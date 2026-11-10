@@ -1,6 +1,16 @@
 import type { Animal, Campana, Resumen } from '@/types/admin';
 
-/** Datos de ejemplo del Figma. No van dentro de los componentes. */
+/**
+ * Datos de ejemplo del Figma. No van dentro de los componentes.
+ *
+ * Fechas pensadas para el Resumen (referencia 9 nov 2026, la fecha del modal):
+ * - 4 adoptados con fechaAdopcion en 2026, en ene, abr, jul y oct.
+ * - Pelusa, Apolo, Mishi y Toby llevan 214, 168, 97 y 41 días al 9 nov 2026.
+ * Max conserva el ingreso 12 mar 2025 del detalle. Con esa fecha visible, el
+ * promedio de días hasta adoptar no puede ser 46 y la gráfica de ingresos no
+ * cierra con 8: un ingreso de 2025 queda fuera de los últimos 12 meses, y
+ * abril y agosto reciben ingresos de quienes siguen esperando.
+ */
 export const ANIMALES_EJEMPLO: Animal[] = [
   {
     id: 'a1000000-0000-4000-8000-000000000001',
@@ -13,6 +23,7 @@ export const ANIMALES_EJEMPLO: Animal[] = [
     adoptadoPor: 'Carla Mamani',
     direccionAdoptante: 'Calle 5, Villa Adela, El Alto',
     fotoAdopcion: null,
+    fechaAdopcion: '2026-01-15',
   },
   {
     id: 'a1000000-0000-4000-8000-000000000002',
@@ -20,11 +31,12 @@ export const ANIMALES_EJEMPLO: Animal[] = [
     especie: 'perro',
     sexo: 'hembra',
     edad: { valor: 2, unidad: 'años' },
-    fechaIngreso: null,
+    fechaIngreso: '2025-12-18',
     fotoIngreso: null,
     adoptadoPor: 'Jorge Quispe',
     direccionAdoptante: null,
     fotoAdopcion: null,
+    fechaAdopcion: '2026-04-20',
   },
   {
     id: 'a1000000-0000-4000-8000-000000000003',
@@ -32,11 +44,12 @@ export const ANIMALES_EJEMPLO: Animal[] = [
     especie: 'perro',
     sexo: 'macho',
     edad: { valor: 5, unidad: 'años' },
-    fechaIngreso: null,
+    fechaIngreso: '2026-02-11',
     fotoIngreso: null,
     adoptadoPor: 'Ana Flores',
     direccionAdoptante: null,
     fotoAdopcion: null,
+    fechaAdopcion: '2026-07-08',
   },
   {
     id: 'a1000000-0000-4000-8000-000000000004',
@@ -44,11 +57,12 @@ export const ANIMALES_EJEMPLO: Animal[] = [
     especie: 'perro',
     sexo: 'hembra',
     edad: { valor: 1, unidad: 'años' },
-    fechaIngreso: null,
+    fechaIngreso: '2026-03-16',
     fotoIngreso: null,
     adoptadoPor: 'Luis Condori',
     direccionAdoptante: null,
     fotoAdopcion: null,
+    fechaAdopcion: '2026-10-06',
   },
   {
     id: 'a1000000-0000-4000-8000-000000000005',
@@ -61,6 +75,7 @@ export const ANIMALES_EJEMPLO: Animal[] = [
     adoptadoPor: null,
     direccionAdoptante: null,
     fotoAdopcion: null,
+    fechaAdopcion: null,
   },
   {
     id: 'a1000000-0000-4000-8000-000000000006',
@@ -73,6 +88,7 @@ export const ANIMALES_EJEMPLO: Animal[] = [
     adoptadoPor: null,
     direccionAdoptante: null,
     fotoAdopcion: null,
+    fechaAdopcion: null,
   },
   {
     id: 'a1000000-0000-4000-8000-000000000007',
@@ -85,6 +101,7 @@ export const ANIMALES_EJEMPLO: Animal[] = [
     adoptadoPor: null,
     direccionAdoptante: null,
     fotoAdopcion: null,
+    fechaAdopcion: null,
   },
   {
     id: 'a1000000-0000-4000-8000-000000000008',
@@ -97,6 +114,7 @@ export const ANIMALES_EJEMPLO: Animal[] = [
     adoptadoPor: null,
     direccionAdoptante: null,
     fotoAdopcion: null,
+    fechaAdopcion: null,
   },
 ];
 

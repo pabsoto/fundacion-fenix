@@ -62,6 +62,8 @@ export function validarAnimal(formulario: AnimalFormulario): ResultadoAnimal {
   if (edadTexto) {
     if (!/^\d+$/.test(edadTexto)) {
       errores.edadValor = textosAdmin.supuestos.entero;
+    } else if (Number(edadTexto) > 40) {
+      errores.edadValor = textosAdmin.supuestos.edad;
     } else {
       edad = { valor: Number(edadTexto), unidad: formulario.edadUnidad };
     }
@@ -70,6 +72,8 @@ export function validarAnimal(formulario: AnimalFormulario): ResultadoAnimal {
   const fecha = formulario.fechaIngreso.trim();
   if (fecha && !fechaValida(fecha)) {
     errores.fechaIngreso = textosAdmin.supuestos.fecha;
+  } else if (formulario.adoptado && fecha && fecha > fechaHoy()) {
+    errores.fechaIngreso = textosAdmin.supuestos.adopcionAntes;
   }
 
   if (formulario.fotoIngreso) {
@@ -97,13 +101,18 @@ export function validarAnimal(formulario: AnimalFormulario): ResultadoAnimal {
       sexo: formulario.sexo,
       edad,
       fechaIngreso: fecha || null,
-      fotoIngreso: formulario.fotoIngreso?.name ?? null,
+      fotoIngreso: null,
       adoptadoPor: formulario.adoptado ? adoptadoPor : null,
       direccionAdoptante: formulario.adoptado && direccion ? direccion : null,
-      fotoAdopcion:
-        formulario.adoptado && formulario.fotoAdopcion
-          ? formulario.fotoAdopcion.name
-          : null,
+      fotoAdopcion: null,
+      fechaAdopcion: null,
     },
   };
+}
+
+function fechaHoy(): string {
+  const ahora = new Date();
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  return `${ahora.getFullYear()}-${mes}-${dia}`;
 }

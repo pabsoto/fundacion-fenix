@@ -9,6 +9,7 @@ import { AdminLoginPage } from '@/pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 import { AdminDonacionesPage } from '@/pages/admin/AdminDonacionesPage';
 import { AdminCampanasPage } from '@/pages/admin/AdminCampanasPage';
+import { AdminAnimalesPage } from '@/pages/admin/AdminAnimalesPage';
 import { AdminSeccionVacia } from '@/pages/admin/AdminSeccionVacia';
 import { ComponentesAdminPage } from '@/pages/admin/ComponentesAdminPage';
 import { PublicLayout } from '@/components/layout/PublicLayout';
@@ -56,7 +57,7 @@ const router = createBrowserRouter([
               },
               {
                 path: 'animales',
-                element: <AdminSeccionVacia titulo={textosAdmin.animales.titulo} />,
+                element: <AdminAnimalesPage />,
               },
               {
                 path: 'donaciones',

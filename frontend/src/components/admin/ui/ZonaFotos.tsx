@@ -137,7 +137,7 @@ export function ZonaFotos({
             </span>
           ))}
         </div>
-      ) : vistos.length === 0 ? (
+      ) : vistos.length === 0 && existentes.length === 0 ? (
         <label
           htmlFor={id}
           className="flex h-zona-foto cursor-pointer items-center justify-center rounded-admin-control border border-dashed border-linea bg-crema-tono px-4 t-control text-negro"
@@ -146,6 +146,19 @@ export function ZonaFotos({
         </label>
       ) : (
         <div className="flex min-h-zona-foto flex-wrap items-center gap-2 rounded-admin-control border border-dashed border-linea bg-crema-tono p-2">
+          {existentes.map((foto) => (
+            <span
+              key={foto.clave}
+              className="relative h-14 w-14 overflow-hidden rounded-btn bg-blanco"
+            >
+              {foto.src ? (
+                <img src={foto.src} alt={foto.nombre} className="size-full object-cover" />
+              ) : null}
+              {onQuitarExistente ? (
+                <BotonQuitar onClick={() => onQuitarExistente(foto.clave)} />
+              ) : null}
+            </span>
+          ))}
           {vistos.map((visto, indice) => (
             <span key={visto.url} className="relative h-14 w-14 overflow-hidden rounded-btn">
               <img src={visto.url} alt={visto.nombre} className="size-full object-cover" />
