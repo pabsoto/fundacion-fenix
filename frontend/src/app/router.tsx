@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { StyleguidePage } from '@/pages/StyleguidePage';
+import { AdminNoIndex } from '@/app/AdminNoIndex';
 import { AdminLoginPage } from '@/pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 import { PublicLayout } from '@/components/layout/PublicLayout';
@@ -26,12 +27,17 @@ const router = createBrowserRouter([
       ]
     : []),
   {
-    path: '/admin/login',
-    element: <AdminLoginPage />,
-  },
-  {
-    path: '/admin',
-    element: <AdminDashboardPage />,
+    element: <AdminNoIndex />,
+    children: [
+      {
+        path: '/admin/login',
+        element: <AdminLoginPage />,
+      },
+      {
+        path: '/admin',
+        element: <AdminDashboardPage />,
+      },
+    ],
   },
   {
     path: '*',

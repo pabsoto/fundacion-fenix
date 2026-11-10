@@ -20,6 +20,17 @@
 
   --shadow-soft: 0 3px 10px rgb(28 28 28 / 0.10);
   --shadow-lift: 0 12px 30px rgb(28 28 28 / 0.16);
+
+  /* Panel admin. Crema, negro, naranja, amarillo y línea al 15 % se reutilizan. */
+  --color-texto-secundario: rgb(28 28 28 / 0.62);
+  --color-placeholder: rgb(28 28 28 / 0.5);
+  --color-velo: rgb(28 28 28 / 0.42);
+  --radius-admin: 20px;
+  --radius-admin-control: var(--radius-card);
+  --radius-pill: 9999px;
+  --size-control-admin: 48px;
+  --size-modal-admin: 640px;
+  --shadow-modal-admin: 0 24px 60px -8px rgb(0 0 0 / 0.18);
 }
 
 @utility t-hero {
