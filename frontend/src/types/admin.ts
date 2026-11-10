@@ -60,6 +60,8 @@ export type CampanaEntrada = Omit<Campana, 'id'>;
 
 export type CampanaConTotales = Campana & {
   totales: TotalesCampana;
+  /** False cuando el backend marca la campaña como cerrada. */
+  editable: boolean;
 };
 
 export type PuntoMensual = {

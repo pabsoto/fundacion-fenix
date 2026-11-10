@@ -5,12 +5,22 @@ import { validarImagen } from '@/schemas/imagen';
 
 type Vista = { nombre: string; url: string };
 
+export type FotoExistente = {
+  clave: string;
+  src: string | null;
+  nombre: string;
+};
+
 type ZonaFotosProps = {
   id: string;
   texto: string;
   multiple?: boolean;
   archivos: File[];
   onArchivos: (archivos: File[]) => void;
+  variante?: 'apilada' | 'mosaico';
+  existentes?: FotoExistente[];
+  onQuitarExistente?: (clave: string) => void;
+  nota?: string;
 };
 
 function vistasDe(archivos: File[]): Vista[] {
@@ -20,12 +30,29 @@ function vistasDe(archivos: File[]): Vista[] {
   }));
 }
 
+function BotonQuitar({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={textosAdmin.nuevaCampana.quitarFoto}
+      onClick={onClick}
+      className="absolute top-1.5 right-1.5 flex size-quitar-foto cursor-pointer items-center justify-center rounded-full border border-linea bg-blanco text-negro"
+    >
+      <X className="size-4" aria-hidden="true" />
+    </button>
+  );
+}
+
 export function ZonaFotos({
   id,
   texto,
   multiple = false,
   archivos,
   onArchivos,
+  variante = 'apilada',
+  existentes = [],
+  onQuitarExistente,
+  nota,
 }: ZonaFotosProps) {
   const errorId = useId();
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +106,38 @@ export function ZonaFotos({
           event.target.value = '';
         }}
       />
-      {vistos.length === 0 ? (
+      {variante === 'mosaico' ? (
+        <div className="flex flex-wrap items-start gap-3">
+          <label
+            htmlFor={id}
+            className="flex h-mosaico-foto w-agregar-foto cursor-pointer items-center justify-center rounded-admin-control border border-dashed border-linea bg-crema-tono px-4 t-control text-negro"
+          >
+            {texto}
+          </label>
+          {existentes.map((foto) => (
+            <span
+              key={foto.clave}
+              className="relative size-mosaico-foto overflow-hidden rounded-admin-control bg-crema-tono"
+            >
+              {foto.src ? (
+                <img src={foto.src} alt={foto.nombre} className="size-full object-cover" />
+              ) : null}
+              {onQuitarExistente ? (
+                <BotonQuitar onClick={() => onQuitarExistente(foto.clave)} />
+              ) : null}
+            </span>
+          ))}
+          {vistos.map((visto, indice) => (
+            <span
+              key={visto.url}
+              className="relative size-mosaico-foto overflow-hidden rounded-admin-control bg-crema-tono"
+            >
+              <img src={visto.url} alt={visto.nombre} className="size-full object-cover" />
+              <BotonQuitar onClick={() => quitar(indice)} />
+            </span>
+          ))}
+        </div>
+      ) : vistos.length === 0 ? (
         <label
           htmlFor={id}
           className="flex h-zona-foto cursor-pointer items-center justify-center rounded-admin-control border border-dashed border-linea bg-crema-tono px-4 t-control text-negro"
@@ -106,6 +164,7 @@ export function ZonaFotos({
           </label>
         </div>
       )}
+      {nota ? <p className="t-small text-negro">{nota}</p> : null}
       {error ? (
         <p id={errorId} className="t-small text-naranja">
           {error}

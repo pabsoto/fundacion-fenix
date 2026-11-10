@@ -13,6 +13,8 @@ export const textosAdmin = {
     animales: 'Animales',
     donaciones: 'Donaciones',
     salir: 'Salir',
+    /** No está en Figma: nombre accesible del nav. */
+    etiqueta: 'Secciones del panel',
   },
   resumen: {
     titulo: 'Resumen',
@@ -65,7 +67,7 @@ export const textosAdmin = {
     cerrar: 'Cerrar',
     tituloCampo: 'Título *',
     tituloPlaceholder: 'Ej. Jornada Villa Fátima',
-    lugar: 'Lugar (opcional)',
+    lugar: 'Lugar',
     lugarPlaceholder: 'Ej. Villa Fátima, La Paz',
     fecha: 'Fecha *',
     fechaPlaceholder: 'dd / mm / aaaa',
@@ -199,7 +201,24 @@ export const textosAdmin = {
     imagenInvalida: 'La imagen debe ser JPG, PNG o WebP de hasta 5 MB.',
     obligatorio: 'Completa este campo.',
     entero: 'Escribe un número entero mayor o igual a 0.',
+    contador: 'Escribe un número entero entre 0 y 100000.',
+    tituloLargo: 'El título admite hasta 200 caracteres.',
+    lugarLargo: 'El lugar admite hasta 200 caracteres.',
+    descripcionLarga: 'La descripción admite hasta 5000 caracteres.',
+    fotoNoSubio: 'Se guardó, pero la foto no se pudo subir.',
+    campanaCerrada: 'Esta jornada está cerrada y no se puede editar.',
     fecha: 'La fecha debe tener el formato AAAA-MM-DD.',
+    /** El Figma no dibuja el menú móvil ni los estados de acceso. */
+    abrirMenu: 'Abrir menú',
+    cerrarMenu: 'Cerrar menú',
+    comprobando: 'Comprobando acceso administrativo…',
+    tituloAcceso: 'Panel de administración',
+    denegado: 'Acceso denegado: la cuenta administrativa está desactivada.',
+    noDisponible: 'El servicio no está disponible. Inténtalo más tarde.',
+    noComprobado: 'No se pudo comprobar el acceso administrativo.',
+    csrf: 'No se pudo cerrar sesión: token CSRF inválido.',
+    logoutNoDisponible: 'No se pudo cerrar sesión: servicio no disponible.',
+    logoutError: 'No se pudo cerrar la sesión.',
   },
   /** Página temporal /admin/_componentes. Se borra junto con la página. */
   componentes: {

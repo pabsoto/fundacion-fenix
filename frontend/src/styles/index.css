@@ -56,6 +56,37 @@
   --spacing-col-adoptante: 210px;
   --spacing-direccion: 200px;
   --spacing-campo-corto: 283px;
+
+  /* Cabecera del panel (Admin — Campañas, nav 228:255). */
+  --breakpoint-tablet: 48rem;
+  --breakpoint-escritorio: 80rem;
+  --spacing-pagina-admin-compacto: 24px;
+  --spacing-nav-admin: 16px;
+  --spacing-marca-admin: 12px;
+  --spacing-tabs-admin: 8px;
+  --spacing-tab-x-admin: 16px;
+  --spacing-tab-y-admin: 7px;
+  --spacing-cuenta-admin: 16px;
+  --spacing-bloque-admin: 40px;
+  --spacing-bloque-gap-admin: 28px;
+  --size-marca-admin: 40px;
+  --size-icono-marca-admin: 22px;
+  --size-toque-admin: 44px;
+  --size-panel-vacio-admin: 320px;
+
+  /* Admin — Campañas y modal Nueva campaña. */
+  --spacing-titulo-pagina-admin: 6px;
+  --spacing-col-campana: 250px;
+  --spacing-col-fecha-admin: 120px;
+  --spacing-col-contador: 108px;
+  --spacing-col-total-admin: 98px;
+  --spacing-foto-campana: 124px;
+  --spacing-miniatura-campana: 56px;
+  --spacing-fecha-campo: 200px;
+  --spacing-area-admin: 96px;
+  --spacing-agregar-foto: 190px;
+  --spacing-mosaico-foto: 96px;
+  --spacing-quitar-foto: 26px;
 }
 
 @utility t-hero {
@@ -236,6 +267,68 @@
   font-size: 3.25rem;
   line-height: normal;
   letter-spacing: -0.048em;
+}
+
+@utility t-marca {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: normal;
+  letter-spacing: -0.02em;
+}
+
+@utility t-marca-sub {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.6875rem;
+  line-height: normal;
+  letter-spacing: 0.08em;
+}
+
+@utility t-avatar {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  line-height: normal;
+}
+
+@utility t-pagina {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2.75rem;
+  line-height: normal;
+  letter-spacing: -0.025em;
+}
+
+@utility t-subtitulo {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 1.125rem;
+  line-height: normal;
+}
+
+@utility t-total {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: normal;
+  letter-spacing: -0.01em;
+}
+
+@utility t-total-detalle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.375rem;
+  line-height: normal;
+  letter-spacing: -0.01em;
+}
+
+@utility t-total-vivo {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2rem;
+  line-height: normal;
+  letter-spacing: -0.046875em;
 }
 
 body {

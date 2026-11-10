@@ -21,6 +21,7 @@ type PanelDetalleProps = {
   titulo: string;
   subtitulo: string;
   accion?: React.ReactNode;
+  antes?: React.ReactNode;
   filas: FilaDetalle[];
   className?: string;
 };
@@ -51,11 +52,13 @@ export function PanelDetalle({
   titulo,
   subtitulo,
   accion,
+  antes,
   filas,
   className,
 }: PanelDetalleProps) {
   return (
     <aside className={cn('flex w-panel-detalle shrink-0 flex-col items-center gap-5 border-l border-linea p-7', className)}>
+      {antes}
       {fotos.length > 0 ? (
         <div className="flex w-full gap-2">
           {fotos.map((foto) => (
@@ -84,7 +87,7 @@ export function PanelDetalle({
               </span>
               <span className="t-control">{fila.etiqueta}</span>
             </dt>
-            <dd className={cn('t-nav text-right text-negro', fila.valorClassName)}>{fila.valor}</dd>
+            <dd className={cn('text-right text-negro', fila.valorClassName ?? 't-nav')}>{fila.valor}</dd>
           </div>
         ))}
       </dl>

@@ -1,11 +1,13 @@
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import { textosAdmin } from '@/content/textos-admin';
 
 export type ColumnaTabla<T> = {
   id: string;
-  encabezado: string;
+  encabezado: ReactNode;
   className?: string;
-  celda: (fila: T) => React.ReactNode;
+  crece?: boolean;
+  celda: (fila: T) => ReactNode;
 };
 
 type TablaSeleccionProps<T extends { id: string }> = {
@@ -14,6 +16,7 @@ type TablaSeleccionProps<T extends { id: string }> = {
   filas: T[];
   seleccionId: string | null;
   onSeleccionar: (id: string) => void;
+  pie?: ReactNode;
 };
 
 export function TablaSeleccion<T extends { id: string }>({
@@ -22,6 +25,7 @@ export function TablaSeleccion<T extends { id: string }>({
   filas,
   seleccionId,
   onSeleccionar,
+  pie,
 }: TablaSeleccionProps<T>) {
   function mover(indice: number, delta: number) {
     const destino = filas[indice + delta];
@@ -36,7 +40,11 @@ export function TablaSeleccion<T extends { id: string }>({
           <div
             key={columna.id}
             role="columnheader"
-            className={cn('t-small shrink-0 text-negro', columna.className)}
+            className={cn(
+              't-small text-negro',
+              columna.crece ? 'min-w-0 flex-1' : 'shrink-0',
+              columna.className,
+            )}
           >
             {columna.encabezado}
           </div>
@@ -72,7 +80,11 @@ export function TablaSeleccion<T extends { id: string }>({
               )}
             >
               {columnas.map((columna) => (
-                <div key={columna.id} role="cell" className={cn('shrink-0', columna.className)}>
+                <div
+                  key={columna.id}
+                  role="cell"
+                  className={cn(columna.crece ? 'min-w-0 flex-1' : 'shrink-0', columna.className)}
+                >
                   {columna.celda(fila)}
                 </div>
               ))}
@@ -80,6 +92,7 @@ export function TablaSeleccion<T extends { id: string }>({
           );
         })
       )}
+      {pie}
     </div>
   );
 }

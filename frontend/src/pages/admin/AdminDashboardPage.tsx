@@ -1,67 +1,81 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  AuthApiError,
-  cerrarSesion,
-  consultarEstadoAdministrativo,
-  consultarSesion,
-  type EstadoAdministrativo,
-  type SesionActual,
-} from '@/services/auth.service';
-import { AdminDonationPanel } from '@/components/admin/AdminDonationPanel';
+import { useEffect, useId, useState } from 'react';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
+import { textosAdmin } from '@/content/textos-admin';
+import { BotonPildora } from '@/components/admin/ui/BotonPildora';
+import { FlameIcon } from '@/components/ui/icons';
+import { useAdminSesion } from '@/app/admin-sesion';
+import { cn } from '@/lib/cn';
+import { AuthApiError, cerrarSesion } from '@/services/auth.service';
 
-function mensajeError(cause: unknown): string {
-  if (cause instanceof AuthApiError) {
-    if (cause.status === 403) {
-      return 'Acceso denegado: la cuenta administrativa está desactivada.';
-    }
-    if (cause.status === 503) {
-      return 'El servicio no está disponible. Inténtalo más tarde.';
-    }
+const PESTANAS = [
+  { to: '/admin', end: true, label: textosAdmin.nav.resumen },
+  { to: '/admin/campanas', end: false, label: textosAdmin.nav.campanas },
+  { to: '/admin/animales', end: false, label: textosAdmin.nav.animales },
+  { to: '/admin/donaciones', end: false, label: textosAdmin.nav.donaciones },
+] as const;
+
+function inicialDe(nombre: string): string {
+  const letra = Array.from(nombre.trim())[0];
+  return letra ? letra.toLocaleUpperCase('es') : '';
+}
+
+function mensajeLogout(cause: unknown): string {
+  if (cause instanceof AuthApiError && cause.status === 403) {
+    return textosAdmin.supuestos.csrf;
   }
+  if (cause instanceof AuthApiError && cause.status === 503) {
+    return textosAdmin.supuestos.logoutNoDisponible;
+  }
+  return textosAdmin.supuestos.logoutError;
+}
 
-  return 'No se pudo comprobar el acceso administrativo.';
+function Pestanas({ amplia = false, onNavegar }: { amplia?: boolean; onNavegar?: () => void }) {
+  return (
+    <>
+      {PESTANAS.map((pestana) => (
+        <NavLink
+          key={pestana.to}
+          to={pestana.to}
+          end={pestana.end}
+          onClick={onNavegar}
+          className={({ isActive }) =>
+            cn(
+              'rounded-pill t-nav text-negro inline-flex items-center px-(--spacing-tab-x-admin) py-(--spacing-tab-y-admin)',
+              amplia && 'min-h-(--size-toque-admin)',
+              isActive ? 'bg-amarillo' : 'hover:bg-crema-tono',
+            )
+          }
+        >
+          {pestana.label}
+        </NavLink>
+      ))}
+    </>
+  );
 }
 
 export function AdminDashboardPage() {
+  const sesion = useAdminSesion();
   const navigate = useNavigate();
-  const [sesion, setSesion] = useState<SesionActual | null>(null);
-  const [estado, setEstado] = useState<EstadoAdministrativo | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const menuId = useId();
+  const nombre = sesion.administrador.nombre;
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const [cerrando, setCerrando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
+    if (!menuAbierto) return;
 
-    async function comprobarAcceso() {
-      try {
-        const sesionActual = await consultarSesion(controller.signal);
-        const estadoActual = await consultarEstadoAdministrativo(
-          controller.signal,
-        );
-
-        if (!controller.signal.aborted) {
-          setSesion(sesionActual);
-          setEstado(estadoActual);
-        }
-      } catch (cause: unknown) {
-        if (controller.signal.aborted) return;
-
-        if (cause instanceof AuthApiError && cause.status === 401) {
-          navigate('/admin/login', { replace: true });
-          return;
-        }
-
-        setError(mensajeError(cause));
-      }
+    function cerrarConEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMenuAbierto(false);
     }
 
-    void comprobarAcceso();
-    return () => controller.abort();
-  }, [navigate]);
+    document.addEventListener('keydown', cerrarConEscape);
+    return () => document.removeEventListener('keydown', cerrarConEscape);
+  }, [menuAbierto]);
 
   async function manejarLogout() {
-    if (!sesion) return;
+    if (cerrando) return;
 
     setCerrando(true);
     setError(null);
@@ -75,78 +89,103 @@ export function AdminDashboardPage() {
         return;
       }
 
-      if (cause instanceof AuthApiError && cause.status === 403) {
-        setError('No se pudo cerrar sesión: token CSRF inválido.');
-      } else if (cause instanceof AuthApiError && cause.status === 503) {
-        setError('No se pudo cerrar sesión: servicio no disponible.');
-      } else {
-        setError('No se pudo cerrar la sesión.');
-      }
+      setError(mensajeLogout(cause));
       setCerrando(false);
     }
   }
 
-  if (error && (!sesion || !estado)) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-crema px-6 py-12">
-        <section className="w-full max-w-lg rounded-card border border-linea bg-blanco p-8 text-center shadow-soft">
-          <h1 className="t-heading-lg">Panel de administración</h1>
-          <p className="t-body mt-6 text-red-700" role="alert">
-            {error}
-          </p>
-        </section>
-      </main>
-    );
-  }
-
-  if (!sesion || !estado) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-crema px-6 py-12">
-        <p className="t-body" role="status">
-          Comprobando acceso administrativo…
-        </p>
-      </main>
-    );
-  }
-
   return (
-    <main className="min-h-screen bg-crema px-6 py-12">
-      <section className="mx-auto w-full max-w-2xl rounded-card border border-linea bg-blanco p-8 shadow-soft">
-        <h1 className="t-heading-lg">Panel de administración</h1>
-        <dl className="t-body mt-8 grid gap-4">
-          <div>
-            <dt className="font-semibold">Administrador</dt>
-            <dd>{sesion.administrador.nombre}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold">Estado de la sesión</dt>
-            <dd>{sesion.autenticado ? 'Autenticada' : 'No autenticada'}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold">Endpoint administrativo</dt>
-            <dd>
-              /api/admin/health: {estado.status === 'ok' ? '200 OK' : estado.status}
-            </dd>
-          </div>
-        </dl>
+    <div className="bg-crema text-negro flex min-h-dvh flex-col overflow-x-clip">
+      <header className="border-linea border-b">
+        <div className="escritorio:grid-cols-[1fr_auto_1fr] escritorio:px-(--spacing-pagina-admin) grid grid-cols-[auto_minmax(0,1fr)_auto] items-center px-(--spacing-pagina-admin-compacto) py-(--spacing-nav-admin)">
+          <Link
+            to="/admin"
+            className="flex w-fit shrink-0 items-center gap-(--spacing-marca-admin) justify-self-start no-underline"
+          >
+            <span className="rounded-pill bg-amarillo flex size-(--size-marca-admin) shrink-0 items-center justify-center">
+              <FlameIcon className="size-(--size-icono-marca-admin)" />
+            </span>
+            <span className="text-negro whitespace-nowrap">
+              <span className="t-marca block">{textosAdmin.marca.nombre}</span>
+              <span className="t-marca-sub block">{textosAdmin.marca.fundacion}</span>
+            </span>
+          </Link>
 
-        <AdminDonationPanel csrfToken={sesion.csrfToken} />
+          <nav
+            aria-label={textosAdmin.nav.etiqueta}
+            className="escritorio:flex hidden items-center justify-center gap-(--spacing-tabs-admin)"
+          >
+            <Pestanas onNavegar={() => setMenuAbierto(false)} />
+          </nav>
 
-        {error && (
-          <p className="t-small mt-6 text-red-700" role="alert">
-            {error}
-          </p>
-        )}
+          <div className="col-start-3 flex items-center gap-(--spacing-cuenta-admin) justify-self-end">
+            <button
+              type="button"
+              className="rounded-pill text-negro tablet:hidden inline-flex size-(--size-toque-admin) items-center justify-center"
+              aria-expanded={menuAbierto}
+              aria-controls={menuId}
+              onClick={() => setMenuAbierto((abierto) => !abierto)}
+            >
+              {menuAbierto ? (
+                <X className="size-6" aria-hidden="true" />
+              ) : (
+                <Menu className="size-6" aria-hidden="true" />
+              )}
+              <span className="sr-only">
+                {menuAbierto ? textosAdmin.supuestos.cerrarMenu : textosAdmin.supuestos.abrirMenu}
+              </span>
+            </button>
 
-        <button
-          className="t-button mt-8 cursor-pointer rounded-btn border border-negro px-5 py-3 hover:bg-crema-tono disabled:cursor-wait disabled:opacity-60"
-          type="button"
-          disabled={cerrando}
-          onClick={() => void manejarLogout()}
+            <p
+              className="rounded-pill bg-amarillo t-avatar text-negro escritorio:size-(--size-marca-admin) flex size-(--size-toque-admin) shrink-0 items-center justify-center"
+              aria-label={nombre}
+            >
+              <span aria-hidden="true">{inicialDe(nombre)}</span>
+            </p>
+
+            <BotonPildora
+              variante="ghost"
+              className="escritorio:min-h-(--size-boton-admin) min-h-(--size-toque-admin)"
+              disabled={cerrando}
+              aria-busy={cerrando}
+              onClick={() => void manejarLogout()}
+            >
+              {textosAdmin.nav.salir}
+            </BotonPildora>
+          </div>
+        </div>
+
+        <nav
+          aria-label={textosAdmin.nav.etiqueta}
+          className="tablet:flex escritorio:hidden hidden flex-wrap items-center justify-center gap-(--spacing-tabs-admin) px-(--spacing-pagina-admin-compacto) pb-(--spacing-nav-admin)"
         >
-          {cerrando ? 'Cerrando sesión…' : 'Cerrar sesión'}
-        </button>
-      </section>
-    </main>
+          <Pestanas onNavegar={() => setMenuAbierto(false)} />
+        </nav>
+
+        <nav
+          id={menuId}
+          aria-label={textosAdmin.nav.etiqueta}
+          className={cn(
+            'tablet:hidden flex-col items-start gap-(--spacing-tabs-admin) px-(--spacing-pagina-admin-compacto) pb-(--spacing-nav-admin)',
+            menuAbierto ? 'flex' : 'hidden',
+          )}
+        >
+          <Pestanas amplia onNavegar={() => setMenuAbierto(false)} />
+        </nav>
+      </header>
+
+      {error && (
+        <p
+          className="t-small escritorio:px-(--spacing-pagina-admin) px-(--spacing-pagina-admin-compacto) pt-4 text-red-700"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+
+      <main className="escritorio:px-(--spacing-pagina-admin) flex min-h-0 flex-1 flex-col px-(--spacing-pagina-admin-compacto) py-(--spacing-bloque-admin)">
+        <Outlet />
+      </main>
+    </div>
   );
 }

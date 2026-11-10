@@ -3,6 +3,10 @@ import type { CampanaEntrada } from '@/types/admin';
 import { validarImagenes } from './imagen';
 
 const FECHA = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_CONTADOR = 100000;
+const MAX_TITULO = 200;
+const MAX_LUGAR = 200;
+const MAX_DESCRIPCION = 5000;
 
 export type CampanaFormulario = {
   titulo: string;
@@ -24,8 +28,11 @@ export type ResultadoCampana =
 
 function entero(valor: string): number | null {
   const limpio = valor.trim();
+  if (limpio === '') return 0;
   if (!/^\d+$/.test(limpio)) return null;
-  return Number(limpio);
+  const numero = Number(limpio);
+  if (numero > MAX_CONTADOR) return null;
+  return numero;
 }
 
 function fechaValida(valor: string): boolean {
@@ -43,6 +50,16 @@ export function validarCampana(formulario: CampanaFormulario): ResultadoCampana 
   const errores: ErroresCampana = {};
   const titulo = formulario.titulo.trim();
   if (!titulo) errores.titulo = textosAdmin.supuestos.obligatorio;
+  else if (titulo.length > MAX_TITULO) errores.titulo = textosAdmin.supuestos.tituloLargo;
+
+  const lugar = formulario.lugar.trim();
+  if (!lugar) errores.lugar = textosAdmin.supuestos.obligatorio;
+  else if (lugar.length > MAX_LUGAR) errores.lugar = textosAdmin.supuestos.lugarLargo;
+
+  const descripcion = formulario.descripcion.trim();
+  if (descripcion.length > MAX_DESCRIPCION) {
+    errores.descripcion = textosAdmin.supuestos.descripcionLarga;
+  }
 
   const fecha = formulario.fecha.trim();
   if (!fecha) errores.fecha = textosAdmin.supuestos.obligatorio;
@@ -52,10 +69,10 @@ export function validarCampana(formulario: CampanaFormulario): ResultadoCampana 
   const perrosHembras = entero(formulario.perrosHembras);
   const gatosMachos = entero(formulario.gatosMachos);
   const gatosHembras = entero(formulario.gatosHembras);
-  if (perrosMachos === null) errores.perrosMachos = textosAdmin.supuestos.entero;
-  if (perrosHembras === null) errores.perrosHembras = textosAdmin.supuestos.entero;
-  if (gatosMachos === null) errores.gatosMachos = textosAdmin.supuestos.entero;
-  if (gatosHembras === null) errores.gatosHembras = textosAdmin.supuestos.entero;
+  if (perrosMachos === null) errores.perrosMachos = textosAdmin.supuestos.contador;
+  if (perrosHembras === null) errores.perrosHembras = textosAdmin.supuestos.contador;
+  if (gatosMachos === null) errores.gatosMachos = textosAdmin.supuestos.contador;
+  if (gatosHembras === null) errores.gatosHembras = textosAdmin.supuestos.contador;
 
   const errorFotos = validarImagenes(formulario.fotos);
   if (errorFotos) errores.fotos = errorFotos;
@@ -70,13 +87,11 @@ export function validarCampana(formulario: CampanaFormulario): ResultadoCampana 
     return { ok: false, errores };
   }
 
-  const lugar = formulario.lugar.trim();
-  const descripcion = formulario.descripcion.trim();
   return {
     ok: true,
     datos: {
       titulo,
-      lugar: lugar || null,
+      lugar,
       fecha,
       descripcion: descripcion || null,
       perrosMachos,

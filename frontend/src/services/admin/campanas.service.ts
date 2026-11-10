@@ -1,3 +1,4 @@
+import { validarImagenes } from '@/schemas/imagen';
 import { validarCampana, type CampanaFormulario } from '@/schemas/campana';
 import { CAMPANAS_EJEMPLO } from '@/services/admin/datos-ejemplo';
 import { esperarMock, NoEncontradoError } from '@/services/admin/latencia';
@@ -6,7 +7,12 @@ import { totalesDe, type Campana, type CampanaConTotales, type CampanaEntrada } 
 const campanas: Campana[] = structuredClone(CAMPANAS_EJEMPLO);
 
 function presentar(campana: Campana): CampanaConTotales {
-  return { ...structuredClone(campana), totales: totalesDe(campana) };
+  return {
+    ...structuredClone(campana),
+    totales: totalesDe(campana),
+    // TODO(backend): editable es false cuando la campaña llega con estado "cerrada".
+    editable: true,
+  };
 }
 
 // TODO(backend): GET /api/admin/campanas
@@ -46,13 +52,32 @@ export async function updateCampana(
   return presentar(campana);
 }
 
+// TODO(backend): POST /api/admin/campanas/:id/fotos (JPG, PNG o WebP, 5 MB), después del guardado.
+export async function subirFotosCampana(id: string, archivos: File[]): Promise<CampanaConTotales> {
+  await esperarMock();
+  const error = validarImagenes(archivos);
+  if (error) throw new Error(error);
+  const indice = campanas.findIndex((item) => item.id === id);
+  if (indice < 0) throw new NoEncontradoError();
+  const actual = campanas[indice];
+  if (!actual) throw new NoEncontradoError();
+  const urls = archivos.map((archivo) => URL.createObjectURL(archivo));
+  const campana: Campana = { ...actual, fotos: [...actual.fotos, ...urls] };
+  campanas[indice] = campana;
+  return presentar(campana);
+}
+
 export async function guardarCampana(
   formulario: CampanaFormulario,
   id?: string,
+  fotosConservadas: readonly string[] = [],
 ): Promise<CampanaConTotales> {
   const resultado = validarCampana(formulario);
   if (!resultado.ok) {
     throw new Error(Object.values(resultado.errores)[0] ?? 'Datos inválidos');
   }
-  return id ? updateCampana(id, resultado.datos) : createCampana(resultado.datos);
+  // TODO(backend): enviar tituloEs, descripcionEs, estado "publicada" y esHistorico false.
+  // No enviar tituloEn, descripcionEn, totales ni fotos en el JSON.
+  const entrada: CampanaEntrada = { ...resultado.datos, fotos: [...fotosConservadas] };
+  return id ? updateCampana(id, entrada) : createCampana(entrada);
 }
