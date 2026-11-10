@@ -10,7 +10,7 @@ const buttonVariants = cva(
         secondary:
           'bg-transparent border-[1.5px] border-negro text-negro hover:bg-negro hover:text-crema',
         dark: 'bg-negro text-crema',
-        naranja: 'bg-naranja text-negro hover:bg-naranja-hover',
+        naranja: 'bg-naranja text-blanco hover:bg-naranja-hover hover:text-blanco disabled:text-blanco',
         ghost: 'border border-negro bg-transparent text-negro hover:bg-crema-tono',
       },
       size: {

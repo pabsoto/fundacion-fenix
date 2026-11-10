@@ -5,7 +5,7 @@ type BotonPildoraProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   children: React.ReactNode;
 };
 
-/** Botón del panel: píldora naranja (texto negro) o ghost con borde negro. */
+/** Botón del panel: píldora naranja (texto blanco) o ghost con borde negro. */
 export function BotonPildora({
   variante = 'naranja',
   className,
