@@ -172,23 +172,27 @@ export function ComponentesAdminPage() {
               destacada
               etiqueta={textosAdmin.resumen.esterilizaciones}
               valor={formatNumber(RESUMEN_EJEMPLO.esterilizaciones.total, 'es')}
-              nota={textosAdmin.resumen.enJornadas}
+              nota={textosAdmin.resumen.enJornadas(RESUMEN_EJEMPLO.esterilizaciones.jornadas)}
             />
             <TarjetaKpi
               separador
               etiqueta={textosAdmin.resumen.enLaFundacion}
               valor={formatNumber(RESUMEN_EJEMPLO.enLaFundacion.cantidad, 'es')}
-              nota={textosAdmin.resumen.deRegistrados}
+              nota={textosAdmin.resumen.deRegistrados(RESUMEN_EJEMPLO.enLaFundacion.registrados)}
             />
             <TarjetaKpi
               separador
               etiqueta={textosAdmin.resumen.adopciones}
               valor={formatNumber(RESUMEN_EJEMPLO.adopcionesDelAnio.cantidad, 'es')}
-              nota={textosAdmin.resumen.enLoQueVa}
+              nota={textosAdmin.resumen.enLoQueVa(RESUMEN_EJEMPLO.adopcionesDelAnio.anio)}
             />
             <TarjetaKpi
               etiqueta={textosAdmin.resumen.diasHastaAdoptar}
-              valor={formatNumber(RESUMEN_EJEMPLO.diasHastaAdoptar, 'es')}
+              valor={
+                RESUMEN_EJEMPLO.diasHastaAdoptar === null
+                  ? textosAdmin.animales.sinAdoptante
+                  : formatNumber(RESUMEN_EJEMPLO.diasHastaAdoptar, 'es')
+              }
               nota={textosAdmin.resumen.promedio}
             />
           </Card>

@@ -1,7 +1,14 @@
+import { formatNumber } from '@/lib/format';
+
 /**
  * Textos del panel admin, solo en español.
  * Los de pantalla salen de Figma. Los de estados no dibujados están marcados.
  */
+
+function cifra(cantidad: number): string {
+  return formatNumber(cantidad, 'es');
+}
+
 export const textosAdmin = {
   marca: {
     nombre: 'Fénix LPB',
@@ -20,11 +27,15 @@ export const textosAdmin = {
     titulo: 'Resumen',
     subtitulo: 'Lo que la fundación ha logrado, a un vistazo.',
     esterilizaciones: 'Esterilizaciones',
-    enJornadas: 'en 4 jornadas',
+    enJornadas: (cantidad: number) =>
+      cantidad === 1 ? `en ${cifra(cantidad)} jornada` : `en ${cifra(cantidad)} jornadas`,
     enLaFundacion: 'En la fundación hoy',
-    deRegistrados: 'de 8 animales registrados',
+    deRegistrados: (cantidad: number) =>
+      cantidad === 1
+        ? `de ${cifra(cantidad)} animal registrado`
+        : `de ${cifra(cantidad)} animales registrados`,
     adopciones: 'Adopciones del año',
-    enLoQueVa: 'en lo que va de 2026',
+    enLoQueVa: (anio: number) => `en lo que va de ${anio}`,
     diasHastaAdoptar: 'Días hasta adoptar',
     promedio: 'promedio desde que ingresan',
     grafica: 'Ingresos vs. adopciones por mes',
@@ -33,8 +44,9 @@ export const textosAdmin = {
     adopcionesLeyenda: 'Adopciones',
     espera: 'Los que más llevan esperando',
     esperaNota: 'Animales sin adoptar, del más antiguo',
-    dias: 'días',
-    meses: ['Dic', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov'],
+    dias: (cantidad: number) => (cantidad === 1 ? `${cifra(cantidad)} día` : `${cifra(cantidad)} días`),
+    /** Índice 0 = enero. El marco de Figma los muestra desde diciembre. */
+    meses: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
   },
   campanas: {
     titulo: 'Campañas',

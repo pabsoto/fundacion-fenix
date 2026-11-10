@@ -169,7 +169,10 @@ export const CAMPANAS_EJEMPLO: Campana[] = [
   },
 ];
 
-/** Cifras fijas del frame Admin — Resumen. No se recalculan. */
+/**
+ * Cifras fijas del frame Admin — Resumen, solo para la galería de componentes.
+ * getResumen() no las usa: las calcula con las listas.
+ */
 export const RESUMEN_EJEMPLO: Resumen = {
   esterilizaciones: { total: 310, jornadas: 4 },
   enLaFundacion: { cantidad: 4, registrados: 8 },

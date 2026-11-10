@@ -84,7 +84,8 @@ export type Resumen = {
   esterilizaciones: { total: number; jornadas: number };
   enLaFundacion: { cantidad: number; registrados: number };
   adopcionesDelAnio: { cantidad: number; anio: number };
-  diasHastaAdoptar: number;
+  /** Null cuando ningún animal tiene ingreso y adopción: la UI muestra "—". */
+  diasHastaAdoptar: number | null;
   serie: PuntoMensual[];
   espera: AnimalEnEspera[];
 };

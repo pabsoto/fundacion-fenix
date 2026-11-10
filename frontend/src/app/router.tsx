@@ -4,13 +4,12 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 import { StyleguidePage } from '@/pages/StyleguidePage';
 import { AdminNoIndex } from '@/app/AdminNoIndex';
 import { AdminGuard } from '@/app/AdminGuard';
-import { textosAdmin } from '@/content/textos-admin';
 import { AdminLoginPage } from '@/pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 import { AdminDonacionesPage } from '@/pages/admin/AdminDonacionesPage';
 import { AdminCampanasPage } from '@/pages/admin/AdminCampanasPage';
 import { AdminAnimalesPage } from '@/pages/admin/AdminAnimalesPage';
-import { AdminSeccionVacia } from '@/pages/admin/AdminSeccionVacia';
+import { AdminResumenPage } from '@/pages/admin/AdminResumenPage';
 import { ComponentesAdminPage } from '@/pages/admin/ComponentesAdminPage';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 
@@ -49,7 +48,7 @@ const router = createBrowserRouter([
             children: [
               {
                 index: true,
-                element: <AdminSeccionVacia titulo={textosAdmin.resumen.titulo} />,
+                element: <AdminResumenPage />,
               },
               {
                 path: 'campanas',

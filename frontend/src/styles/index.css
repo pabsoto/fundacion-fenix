@@ -87,6 +87,16 @@
   --spacing-agregar-foto: 190px;
   --spacing-mosaico-foto: 96px;
   --spacing-quitar-foto: 26px;
+
+  /* Admin — Resumen: gráfica de barras (nodo 271:550). */
+  --spacing-grafica-admin: 303px;
+  --spacing-barra-admin: 22px;
+  --spacing-barra-max-admin: 184px;
+  --spacing-barra-cero-admin: 4px;
+  --spacing-entre-barras: 5px;
+  --spacing-leyenda-admin: 18px;
+  --radius-barra-admin: 7px;
+  --radius-barra-cero: 2px;
 }
 
 @utility t-hero {
@@ -267,6 +277,14 @@
   font-size: 3.25rem;
   line-height: normal;
   letter-spacing: -0.048em;
+}
+
+@utility t-cifra-barra {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  line-height: normal;
+  letter-spacing: -0.05em;
 }
 
 @utility t-marca {
