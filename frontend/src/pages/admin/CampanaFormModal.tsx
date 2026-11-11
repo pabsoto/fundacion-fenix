@@ -3,10 +3,16 @@ import { Calendar, ChevronDown } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import { validarCampana, type CampanaFormulario, type ErroresCampana } from '@/schemas/campana';
-import { guardarCampana, subirFotosCampana } from '@/services/admin/campanas.service';
+import {
+  guardarCampana,
+  quitarFotoCampana,
+  subirFotosCampana,
+} from '@/services/admin/campanas.service';
+import { ErrorApiAdmin } from '@/services/admin/cliente-admin';
 import type { CampanaConTotales } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
 import { CampoTexto } from '@/components/admin/ui/CampoTexto';
+import { Interruptor } from '@/components/admin/ui/Interruptor';
 import { ModalAdmin } from '@/components/admin/ui/ModalAdmin';
 import { ZonaFotos, type FotoExistente } from '@/components/admin/ui/ZonaFotos';
 
@@ -26,6 +32,7 @@ const VACIO: CampanaFormulario = {
   lugar: '',
   fecha: '',
   descripcion: '',
+  publicada: true,
   perrosMachos: '',
   perrosHembras: '',
   gatosMachos: '',
@@ -40,6 +47,7 @@ function formularioDe(campana: CampanaConTotales | null): CampanaFormulario {
     lugar: campana.lugar ?? '',
     fecha: campana.fecha ?? '',
     descripcion: campana.descripcion ?? '',
+    publicada: campana.estado !== 'borrador',
     perrosMachos: String(campana.perrosMachos),
     perrosHembras: String(campana.perrosHembras),
     gatosMachos: String(campana.gatosMachos),
@@ -100,6 +108,22 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
     onCerrar();
   }
 
+  /** Quita del servidor las fotos que el usuario retiró. Una que ya no existe cuenta como quitada. */
+  async function quitarFotosRetiradas(original: CampanaConTotales): Promise<boolean> {
+    const conservadas = new Set(guardadas.map((foto) => foto.valor));
+    let todoBien = true;
+    for (const [indice, url] of original.fotos.entries()) {
+      const fotoId = original.fotoIds[indice];
+      if (conservadas.has(url) || !fotoId) continue;
+      try {
+        await quitarFotoCampana(original.id, fotoId);
+      } catch (causa) {
+        if (!(causa instanceof ErrorApiAdmin && causa.status === 404)) todoBien = false;
+      }
+    }
+    return todoBien;
+  }
+
   async function guardar() {
     if (guardando) return;
     const resultado = validarCampana(formulario);
@@ -118,6 +142,11 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
         campana?.id,
         guardadas.map((foto) => foto.valor),
       );
+      if (campana && !(await quitarFotosRetiradas(campana))) {
+        setErrorGeneral(textosAdmin.supuestos.fotoNoQuito);
+        setGuardando(false);
+        return;
+      }
       let fotosFallidas: File[] | null = null;
       if (formulario.fotos.length > 0) {
         try {
@@ -193,7 +222,7 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
           <div className="w-fecha-campo shrink-0">
             <CampoTexto
               id={`${formId}-fecha`}
-              etiqueta={textos.fecha}
+              etiqueta={formulario.publicada ? textos.fecha : textos.fechaOpcional}
               tipo="date"
               idioma="es"
               valor={formulario.fecha}
@@ -283,6 +312,17 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
           </div>
           <ChevronDown className="size-5 shrink-0 text-negro" aria-hidden="true" />
         </div>
+        <Interruptor
+          id={`${formId}-publicada`}
+          etiqueta={textos.publicada}
+          nota={textos.publicadaNota}
+          activo={formulario.publicada}
+          onChange={(activo) => {
+            if (guardando) return;
+            setFormulario((actual) => ({ ...actual, publicada: activo }));
+            if (!activo) setErrores((actual) => ({ ...actual, lugar: undefined, fecha: undefined }));
+          }}
+        />
         <div className="flex flex-col gap-2">
           <p className="t-chip text-negro">{textos.fotos}</p>
           <ZonaFotos

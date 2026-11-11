@@ -82,15 +82,15 @@ misma transacción: si la auditoría falla, la campaña no se guarda.
 
 ## Cierre y corrección de cifras
 
-`POST /api/admin/campanas/{id}/cerrar` cierra una campaña publicada, la marca
-como histórica (`esHistorico = true`) y registra el cambio en auditoría dentro
-de la transacción. Borradores y campañas ya cerradas responden `409`; un cierre
+`POST /api/admin/campanas/{id}/cerrar` cierra una campaña publicada (`estado = cerrada`) y
+registra el cambio en auditoría dentro de la transacción. No usa `esHistorico`,
+que solo admite una fila en la base. Borradores y campañas ya cerradas responden `409`; un cierre
 repetido no suma ni duplica cifras.
 
 `POST /api/admin/campanas/{id}/cifras` permite corregir una campaña cerrada.
 Requiere reemplazar los cuatro contadores base (`perrosMachos`,
 `perrosHembras`, `gatosMachos`, `gatosHembras`) por sus valores corregidos;
-cada uno debe ser un entero entre 0 y 100000. No acepta campañas no cerradas.
+cada uno debe ser un entero entre 0 y 100000. No acepta campañas que no estén cerradas.
 La corrección se audita con valores anteriores y nuevos. Los totales se derivan
 de los contadores guardados, por lo que la corrección reemplaza los valores y
 no se suma como una nueva campaña.
@@ -111,6 +111,29 @@ Suma las cifras de las campañas cuya `fecha` cae en el periodo; las campañas
 sin fecha no se cuentan. Responde `200` con `{ periodo, totales, campanas }`; un
 periodo sin campañas devuelve totales en 0 y `campanas: []`. Responde `400` si
 algún parámetro no es válido.
+
+## Fotos
+
+| Ruta | Qué hace |
+| --- | --- |
+| `POST /api/admin/campanas/{id}/fotos` | Sube una foto (`archivo`, JPG, PNG o WebP, máx. 5 MB). `201`. |
+| `DELETE /api/admin/campanas/{id}/fotos/{fotoId}` | Quita la foto de la galería y de Storage. `204`. |
+| `PUT /api/admin/campanas/{id}/fotos/orden` | Cuerpo `{ "ids": [...] }` con todas las fotos en el orden deseado; la primera es la principal. `200` con las fotos ordenadas. |
+
+`GET` de campañas devuelve `fotos: [{ id, url, orden }]`. `PUT .../orden` exige
+exactamente las fotos de la campaña, sin repetir ni agregar otras (`400`). En una
+campaña `cerrada`, quitar y reordenar responden `409`. El panel solo usa el
+borrado; el reordenamiento aún no tiene pantalla.
+
+## Cierre
+
+| Ruta | Qué hace |
+| --- | --- |
+| `POST /api/admin/campanas/{id}/cerrar` | `publicada` → `cerrada`. Exige al menos una esterilización. Sus cifras pasan al contador público. `200`. |
+| `POST /api/admin/campanas/{id}/reabrir` | `cerrada` → `publicada`, para corregirla. La campaña histórica no se reabre. `200`. |
+
+Ambas llevan `X-CSRF-Token` y se auditan. `409` si el estado no corresponde, `400`
+si no hay esterilizaciones registradas.
 
 ## Errores
 

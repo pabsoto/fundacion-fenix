@@ -96,6 +96,34 @@ export class FotosAnimalService {
     return this.firmar(animalId, ruta);
   }
 
+  /** Quita la foto del animal o de su entrega y la borra de Storage. */
+  async quitar(
+    tipoFoto: TipoFotoAnimal,
+    animalId: string,
+    administradorId: string,
+  ): Promise<void> {
+    const columnas = COLUMNAS[tipoFoto];
+    const animal = await this.buscar(tipoFoto, animalId);
+    const ruta = animal[columnas.ruta];
+    if (!ruta) throw new NotFoundException('El animal no tiene esa fotografía');
+
+    try {
+      await this.animales.update(animalId, {
+        [columnas.ruta]: null,
+        [columnas.contentType]: null,
+        [columnas.tamano]: null,
+        actualizadoPorId: administradorId,
+        actualizadoEn: new Date(),
+      });
+    } catch {
+      throw new ServiceUnavailableException(
+        'No fue posible quitar la fotografía',
+      );
+    }
+
+    await this.limpiar(ruta);
+  }
+
   private async buscar(
     tipoFoto: TipoFotoAnimal,
     animalId: string,

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { textosAdmin } from '@/content/textos-admin';
 import { AdminSesionProvider } from '@/app/admin-sesion';
+import { fijarCsrfAdmin } from '@/services/admin/cliente-admin';
 import {
   AuthApiError,
   consultarEstadoAdministrativo,
@@ -33,6 +34,7 @@ export function AdminGuard() {
         await consultarEstadoAdministrativo(controller.signal);
 
         if (!controller.signal.aborted) {
+          fijarCsrfAdmin(sesionActual.csrfToken);
           setSesion(sesionActual);
         }
       } catch (cause: unknown) {

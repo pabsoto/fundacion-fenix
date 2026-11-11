@@ -21,6 +21,17 @@ export class TotalesCampanaDto {
   readonly total: number;
 }
 
+export class FotoCampanaAdminDto {
+  @ApiProperty({ format: 'uuid' })
+  readonly id: string;
+
+  @ApiProperty({ format: 'uri' })
+  readonly url: string;
+
+  @ApiProperty({ example: 1 })
+  readonly orden: number;
+}
+
 export class CampanaAdminDto {
   @ApiProperty({ format: 'uuid' })
   readonly id: string;
@@ -66,6 +77,13 @@ export class CampanaAdminDto {
 
   @ApiProperty({ example: false })
   readonly esHistorico: boolean;
+
+  @ApiProperty({
+    type: FotoCampanaAdminDto,
+    isArray: true,
+    description: 'Fotografías de la campaña, en el orden de la galería.',
+  })
+  readonly fotos: FotoCampanaAdminDto[];
 
   @ApiProperty({ format: 'date-time' })
   readonly creadoEn: string;

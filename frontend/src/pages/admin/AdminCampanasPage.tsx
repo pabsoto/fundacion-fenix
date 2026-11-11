@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Cat, Hash, PawPrint, X } from 'lucide-react';
+import { Cat, Eye, Hash, PawPrint, X } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import { listCampanas, subirFotosCampana } from '@/services/admin/campanas.service';
@@ -11,11 +11,13 @@ import {
 import type { CampanaConTotales, ContadoresCampana } from '@/types/admin';
 import { totalesDe } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
+import { MarcaEstado } from '@/components/admin/ui/MarcaEstado';
 import { SelectFiltro } from '@/components/admin/ui/SelectFiltro';
 import { PanelDetalle } from '@/components/admin/ui/PanelDetalle';
 import { TablaSeleccion, type ColumnaTabla } from '@/components/admin/ui/TablaSeleccion';
 import { Card } from '@/components/ui/Card';
 import { CampanaFormModal } from '@/pages/admin/CampanaFormModal';
+import { CierreCampanaModal, type AccionCierre } from '@/pages/admin/CierreCampanaModal';
 
 type Carga = 'cargando' | 'listo' | 'error';
 type FotoPendiente = { id: string; archivos: File[] };
@@ -109,12 +111,20 @@ const COLUMNAS: ColumnaTabla<CampanaConTotales>[] = [
     encabezado: textosAdmin.campanas.columnas.campana,
     crece: true,
     className: 'min-w-col-campana',
-    celda: (campana) => (
-      <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="t-fila truncate text-negro">{campana.titulo}</span>
-        {campana.lugar ? <span className="t-small truncate text-negro">{campana.lugar}</span> : null}
-      </span>
-    ),
+    celda: (campana) => {
+      const detalle = [
+        campana.estado === 'borrador' ? textosAdmin.campanas.estados.borrador : null,
+        campana.lugar,
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      return (
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <span className="t-fila truncate text-negro">{campana.titulo}</span>
+          {detalle ? <span className="t-small truncate text-negro">{detalle}</span> : null}
+        </span>
+      );
+    },
   },
   {
     id: 'fecha',
@@ -268,6 +278,7 @@ export function AdminCampanasPage() {
   const [fotoActiva, setFotoActiva] = useState(0);
   const [modal, setModal] = useState<CampanaConTotales | null | 'crear'>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [cierre, setCierre] = useState<{ campana: CampanaConTotales; accion: AccionCierre } | null>(null);
   const [fotoPendiente, setFotoPendiente] = useState<FotoPendiente | null>(null);
   const [reintentandoFoto, setReintentandoFoto] = useState(false);
   const [periodo, setPeriodo] = useState<PeriodoCampanas>(PERIODO_TODOS);
@@ -461,6 +472,9 @@ export function AdminCampanasPage() {
                 </button>
               ) : null}
             </div>
+            {/* Las columnas tienen ancho fijo: si no caben, la tabla se desplaza sola y no invade el panel. */}
+            <div className="min-w-0 overflow-x-auto">
+              <div className="min-w-max">
             <TablaSeleccion
               etiqueta={textos.todas}
               columnas={COLUMNAS}
@@ -478,6 +492,8 @@ export function AdminCampanasPage() {
                 />
               }
             />
+              </div>
+            </div>
             <p className="t-small mt-auto px-3 text-negro">
               {hayFiltro
                 ? `${textoMostrando(visibles.length, campanas.length)} · ${nombrePeriodo(periodo, true)}`
@@ -507,9 +523,22 @@ export function AdminCampanasPage() {
                   >
                     {textos.editarJornada}
                   </BotonPildora>
-                  {seleccionada.editable ? null : (
-                    <p className="t-small text-center text-negro">{textosAdmin.supuestos.campanaCerrada}</p>
-                  )}
+                  {seleccionada.estado === 'publicada' ? (
+                    <BotonPildora onClick={() => setCierre({ campana: seleccionada, accion: 'cerrar' })}>
+                      {textos.cerrarCampana}
+                    </BotonPildora>
+                  ) : null}
+                  {seleccionada.estado === 'cerrada' ? (
+                    <>
+                      <p className="t-small text-center text-negro">{textosAdmin.supuestos.campanaCerrada}</p>
+                      <BotonPildora
+                        variante="ghost"
+                        onClick={() => setCierre({ campana: seleccionada, accion: 'reabrir' })}
+                      >
+                        {textos.reabrirCampana}
+                      </BotonPildora>
+                    </>
+                  ) : null}
                 </div>
               }
               filas={[
@@ -544,6 +573,16 @@ export function AdminCampanasPage() {
                   etiqueta: textos.columnas.gatosHembras,
                   valor: formatNumber(seleccionada.gatosHembras, 'es'),
                 },
+                {
+                  id: 'estado',
+                  icono: <Eye className={icono} aria-hidden="true" />,
+                  etiqueta: textos.estado,
+                  valor: (
+                    <MarcaEstado activo={seleccionada.estado === 'publicada'}>
+                      {textos.estados[seleccionada.estado]}
+                    </MarcaEstado>
+                  ),
+                },
               ]}
             />
           ) : (
@@ -561,6 +600,20 @@ export function AdminCampanasPage() {
         >
           {toast}
         </p>
+      ) : null}
+
+      {cierre ? (
+        <CierreCampanaModal
+          campana={cierre.campana}
+          accion={cierre.accion}
+          onCerrar={() => setCierre(null)}
+          onHecho={(id) => {
+            setToast(cierre.accion === 'cerrar' ? textos.cierre.cerrada : textos.cierre.reabierta);
+            setCierre(null);
+            setIntento((valor) => valor + 1);
+            setSeleccionId(id);
+          }}
+        />
       ) : null}
 
       {modal ? (

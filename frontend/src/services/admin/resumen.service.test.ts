@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { ANIMALES_EJEMPLO, CAMPANAS_EJEMPLO } from '@/services/admin/datos-ejemplo';
+import { describe, expect, it, vi } from 'vitest';
+import { ANIMALES_EJEMPLO, CAMPANAS_EJEMPLO } from '@/services/admin/demo/datos-ejemplo';
 import { calcularResumen, getResumen } from '@/services/admin/resumen.service';
 import type { Animal } from '@/types/admin';
+
+// DEMO: getResumen se prueba con las listas simuladas.
+vi.mock('@/lib/demo', () => ({ DEMO_SHOWCASE: true }));
 
 const HOY = new Date(2026, 10, 10);
 

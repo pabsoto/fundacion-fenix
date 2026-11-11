@@ -130,6 +130,7 @@ export const CAMPANAS_EJEMPLO: Campana[] = [
     gatosMachos: 13,
     gatosHembras: 19,
     fotos: [],
+    estado: 'publicada',
   },
   {
     id: 'c1000000-0000-4000-8000-000000000002',
@@ -142,6 +143,7 @@ export const CAMPANAS_EJEMPLO: Campana[] = [
     gatosMachos: 12,
     gatosHembras: 21,
     fotos: [],
+    estado: 'publicada',
   },
   {
     id: 'c1000000-0000-4000-8000-000000000003',
@@ -154,6 +156,7 @@ export const CAMPANAS_EJEMPLO: Campana[] = [
     gatosMachos: 16,
     gatosHembras: 20,
     fotos: [],
+    estado: 'publicada',
   },
   {
     id: 'c1000000-0000-4000-8000-000000000004',
@@ -166,6 +169,7 @@ export const CAMPANAS_EJEMPLO: Campana[] = [
     gatosMachos: 10,
     gatosHembras: 14,
     fotos: [],
+    estado: 'publicada',
   },
 ];
 

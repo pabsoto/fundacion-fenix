@@ -74,11 +74,10 @@ Formato común `{ statusCode, error, message, path, timestamp }`.
 
 ## Estadísticas públicas
 
-`GET /api/public/estadisticas` suma los contadores base únicamente de campañas
-con `estado = cerrada` y `es_historico = true`. El cierre administrativo marca
-la campaña como histórica; las correcciones posteriores reemplazan los
-contadores de esa misma campaña, por lo que los totales se recalculan sin
-duplicarla.
+`GET /api/public/estadisticas` suma los contadores base de todas las campañas
+con `estado = cerrada` (vista `v_contador_esterilizaciones`). Las correcciones
+posteriores reemplazan los contadores de esa misma campaña, por lo que los
+totales se recalculan sin duplicarla.
 
 ## Evidencia
 

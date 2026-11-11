@@ -7,13 +7,14 @@ import {
   consultarEstadoAdministrativo,
   consultarSesion,
 } from '../../services/auth.service';
+import { AdminGuard } from '@/app/AdminGuard';
+import { useAdminSesion } from '@/app/admin-sesion';
 import { AdminDashboardPage } from './AdminDashboardPage';
 
-vi.mock('@/components/admin/AdminDonationPanel', () => ({
-  AdminDonationPanel: ({ csrfToken }: { csrfToken: string }) => (
-    <div data-testid="donation-panel">{csrfToken}</div>
-  ),
-}));
+function PanelPrivado() {
+  const { csrfToken } = useAdminSesion();
+  return <div data-testid="donation-panel">{csrfToken}</div>;
+}
 
 vi.mock('@/services/auth.service', async (importOriginal) => {
   const actual =
@@ -36,7 +37,11 @@ function renderDashboard() {
   return render(
     <MemoryRouter initialEntries={['/admin']}>
       <Routes>
-        <Route path="/admin" element={<AdminDashboardPage />} />
+        <Route path="/admin" element={<AdminGuard />}>
+          <Route element={<AdminDashboardPage />}>
+            <Route index element={<PanelPrivado />} />
+          </Route>
+        </Route>
         <Route path="/admin/login" element={<p>Ruta de inicio de sesión</p>} />
       </Routes>
       <LocationProbe />
@@ -132,7 +137,7 @@ describe('AdminDashboardPage', () => {
   it('cierra la sesión usando el token CSRF y vuelve al login', async () => {
     renderDashboard();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Cerrar sesión' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Salir' }));
 
     await waitFor(() =>
       expect(cerrarSesion).toHaveBeenCalledWith(sesion.csrfToken),

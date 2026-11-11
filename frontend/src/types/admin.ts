@@ -49,6 +49,10 @@ export type TotalesCampana = {
   total: number;
 };
 
+export type EstadoCampana = 'borrador' | 'publicada' | 'cerrada';
+/** Lo que el formulario puede elegir. «Cerrada» solo la fija el backend. */
+export type EstadoEditableCampana = Exclude<EstadoCampana, 'cerrada'>;
+
 export type Campana = {
   id: string;
   titulo: string;
@@ -57,11 +61,16 @@ export type Campana = {
   fecha: string | null;
   descripcion: string | null;
   fotos: string[];
+  estado: EstadoCampana;
 } & ContadoresCampana;
 
-export type CampanaEntrada = Omit<Campana, 'id'>;
+export type CampanaEntrada = Omit<Campana, 'id' | 'estado'> & {
+  estado: EstadoEditableCampana;
+};
 
 export type CampanaConTotales = Campana & {
+  /** Identificador de cada foto, en el mismo orden que `fotos`. Sirve para quitarlas. */
+  fotoIds: string[];
   totales: TotalesCampana;
   /** False cuando el backend marca la campaña como cerrada. */
   editable: boolean;

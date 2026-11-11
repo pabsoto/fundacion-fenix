@@ -13,6 +13,8 @@ export type CampanaFormulario = {
   lugar: string;
   fecha: string;
   descripcion: string;
+  /** Apagado = borrador: no se ve en el sitio público y lugar y fecha son opcionales. */
+  publicada: boolean;
   perrosMachos: string;
   perrosHembras: string;
   gatosMachos: string;
@@ -53,8 +55,9 @@ export function validarCampana(formulario: CampanaFormulario): ResultadoCampana 
   else if (titulo.length > MAX_TITULO) errores.titulo = textosAdmin.supuestos.tituloLargo;
 
   const lugar = formulario.lugar.trim();
-  if (!lugar) errores.lugar = textosAdmin.supuestos.obligatorio;
-  else if (lugar.length > MAX_LUGAR) errores.lugar = textosAdmin.supuestos.lugarLargo;
+  if (!lugar) {
+    if (formulario.publicada) errores.lugar = textosAdmin.supuestos.obligatorio;
+  } else if (lugar.length > MAX_LUGAR) errores.lugar = textosAdmin.supuestos.lugarLargo;
 
   const descripcion = formulario.descripcion.trim();
   if (descripcion.length > MAX_DESCRIPCION) {
@@ -62,8 +65,9 @@ export function validarCampana(formulario: CampanaFormulario): ResultadoCampana 
   }
 
   const fecha = formulario.fecha.trim();
-  if (!fecha) errores.fecha = textosAdmin.supuestos.obligatorio;
-  else if (!fechaValida(fecha)) errores.fecha = textosAdmin.supuestos.fecha;
+  if (!fecha) {
+    if (formulario.publicada) errores.fecha = textosAdmin.supuestos.obligatorio;
+  } else if (!fechaValida(fecha)) errores.fecha = textosAdmin.supuestos.fecha;
 
   const perrosMachos = entero(formulario.perrosMachos);
   const perrosHembras = entero(formulario.perrosHembras);
@@ -91,8 +95,9 @@ export function validarCampana(formulario: CampanaFormulario): ResultadoCampana 
     ok: true,
     datos: {
       titulo,
-      lugar,
-      fecha,
+      lugar: lugar || null,
+      fecha: fecha || null,
+      estado: formulario.publicada ? 'publicada' : 'borrador',
       descripcion: descripcion || null,
       perrosMachos,
       perrosHembras,

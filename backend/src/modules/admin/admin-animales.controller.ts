@@ -1,12 +1,15 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Header,
+  HttpCode,
   Param,
   ParseEnumPipe,
   ParseUUIDPipe,
   Post,
+  Put,
   Query,
   Req,
   UnauthorizedException,
@@ -22,6 +25,7 @@ import {
   ApiConsumes,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -116,6 +120,72 @@ export class AdminAnimalesController {
     @Req() request: PeticionConSesion,
   ): Promise<AnimalDto> {
     return this.animales.registrar(entrada, this.administradorId(request));
+  }
+
+  @Put(':id')
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Actualizar un animal',
+    description:
+      'Reemplaza los datos del animal con las mismas reglas que al registrarlo. Conserva sus fotos; si el animal deja de estar adoptado se quita la foto de la entrega. Registra la auditoría en la misma transacción.',
+  })
+  @ApiBody({ type: RegistrarAnimalDto })
+  @ApiOkResponse({ type: AnimalDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
+  actualizar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() entrada: RegistrarAnimalDto,
+    @Req() request: PeticionConSesion,
+  ): Promise<AnimalDto> {
+    return this.animales.actualizar(id, entrada, this.administradorId(request));
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Eliminar un animal',
+    description:
+      'Borrado lógico: el animal deja de aparecer en el panel y en el resumen, pero el registro y sus fotos se conservan. Registra la auditoría en la misma transacción.',
+  })
+  @ApiNoContentResponse({ description: 'El animal se eliminó.' })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
+  eliminar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: PeticionConSesion,
+  ): Promise<void> {
+    return this.animales.eliminar(id, this.administradorId(request));
+  }
+
+  @Delete(':id/fotos/:tipo')
+  @HttpCode(204)
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Quitar la foto de un animal o de su entrega',
+    description:
+      '`tipo` es `animal` o `entrega`. Elimina la foto del bucket privado.',
+  })
+  @ApiNoContentResponse({ description: 'La fotografía se quitó.' })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiNotFoundResponse({
+    description: 'El animal no existe o no tiene esa fotografía.',
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({ type: ErrorResponseDto })
+  quitarFoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('tipo', new ParseEnumPipe(TIPOS_FOTO)) tipo: TipoFotoAnimal,
+    @Req() request: PeticionConSesion,
+  ): Promise<void> {
+    return this.fotosAnimal.quitar(tipo, id, this.administradorId(request));
   }
 
   @Post(':id/fotos/:tipo')

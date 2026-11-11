@@ -34,6 +34,12 @@ export class AnimalDto {
   @ApiProperty({ nullable: true, type: String })
   readonly fechaAdopcion: string | null;
 
+  @ApiProperty({ description: 'Indica si ya se subió la foto del animal.' })
+  readonly tieneFotoAnimal: boolean;
+
+  @ApiProperty({ description: 'Indica si ya se subió la foto de la entrega.' })
+  readonly tieneFotoEntrega: boolean;
+
   @ApiProperty()
   readonly creadoEn: string;
 

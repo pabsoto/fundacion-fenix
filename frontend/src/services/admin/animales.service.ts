@@ -1,21 +1,55 @@
+import { DEMO_SHOWCASE } from '@/lib/demo';
 import { validarImagen } from '@/schemas/imagen';
 import { validarAnimal, type AnimalFormulario } from '@/schemas/animal';
-import { ANIMALES_EJEMPLO } from '@/services/admin/datos-ejemplo';
-import { esperarMock, NoEncontradoError } from '@/services/admin/latencia';
+import {
+  borrar,
+  enviarArchivo,
+  enviarJson,
+  pedirJson,
+  soloFecha,
+} from '@/services/admin/cliente-admin';
+import {
+  createAnimalDemo,
+  deleteAnimalDemo,
+  getAnimalDemo,
+  listAnimalesDemo,
+  quitarFotoAnimalDemo,
+  subirFotoAnimalDemo,
+  updateAnimalDemo,
+} from '@/services/admin/demo/animales.demo';
 import {
   estaAdoptado,
   type Animal,
   type AnimalEntrada,
+  type Especie,
   type FiltroAnimales,
+  type Sexo,
 } from '@/types/admin';
-
-const animales: Animal[] = structuredClone(ANIMALES_EJEMPLO);
 
 export type TipoFotoAnimal = 'animal' | 'entrega';
 
-function copiar(animal: Animal): Animal {
-  return structuredClone(animal);
-}
+type ApiAnimal = {
+  id: string;
+  nombre: string;
+  especie: string;
+  sexo: string | null;
+  edad: number | null;
+  edadUnidad: string | null;
+  fechaIngreso: string | null;
+  adoptado: boolean;
+  nombreAdoptante: string | null;
+  direccionAdoptante: string | null;
+  fechaAdopcion: string | null;
+  tieneFotoAnimal: boolean;
+  tieneFotoEntrega: boolean;
+};
+
+type ApiFotoAnimal = { url: string };
+
+type OpcionesLista = {
+  /** El resumen no usa fotos: con `false` se evitan las consultas de fotos. */
+  conFotos?: boolean;
+};
 
 function fechaHoy(): string {
   const ahora = new Date();
@@ -24,83 +58,117 @@ function fechaHoy(): string {
   return `${ahora.getFullYear()}-${mes}-${dia}`;
 }
 
-function exigir(id: string): { indice: number; animal: Animal } {
-  const indice = animales.findIndex((item) => item.id === id);
-  const animal = indice < 0 ? undefined : animales[indice];
-  if (!animal) throw new NoEncontradoError();
-  return { indice, animal };
+/** La foto es protegida: se pide con la sesión y llega como URL firmada temporal. */
+async function urlFoto(id: string, tipo: TipoFotoAnimal): Promise<string | null> {
+  try {
+    const foto = await pedirJson<ApiFotoAnimal>(`/admin/animales/${id}/fotos/${tipo}`);
+    return foto.url;
+  } catch {
+    // Si la URL firmada no se pudo obtener, el animal se muestra sin esa foto.
+    return null;
+  }
 }
 
-// TODO(backend): GET /api/admin/animales?adoptado=
-export async function listAnimales(filtro: FiltroAnimales = 'todos'): Promise<Animal[]> {
-  await esperarMock();
-  return animales
-    .filter((animal) => {
-      if (filtro === 'adoptados') return estaAdoptado(animal);
-      if (filtro === 'en-la-fundacion') return !estaAdoptado(animal);
-      return true;
-    })
-    .map(copiar);
+async function desdeApi(animal: ApiAnimal, conFotos: boolean): Promise<Animal> {
+  // Solo se piden las fotos que existen: el API indica cuáles.
+  const [fotoIngreso, fotoAdopcion] = await Promise.all([
+    conFotos && animal.tieneFotoAnimal ? urlFoto(animal.id, 'animal') : null,
+    conFotos && animal.tieneFotoEntrega ? urlFoto(animal.id, 'entrega') : null,
+  ]);
+
+  return {
+    id: animal.id,
+    nombre: animal.nombre,
+    especie: animal.especie as Especie,
+    sexo: animal.sexo as Sexo | null,
+    edad:
+      animal.edad === null
+        ? null
+        : { valor: animal.edad, unidad: animal.edadUnidad === 'meses' ? 'meses' : 'años' },
+    fechaIngreso: soloFecha(animal.fechaIngreso),
+    fotoIngreso,
+    adoptadoPor: animal.adoptado ? animal.nombreAdoptante : null,
+    direccionAdoptante: animal.direccionAdoptante,
+    fotoAdopcion,
+    fechaAdopcion: soloFecha(animal.fechaAdopcion),
+  };
 }
 
-// TODO(backend): GET /api/admin/animales/:id
+function cuerpoApi(entrada: AnimalEntrada) {
+  const adoptado = estaAdoptado(entrada);
+  return {
+    nombre: entrada.nombre,
+    especie: entrada.especie,
+    sexo: entrada.sexo,
+    edad: entrada.edad ? entrada.edad.valor : null,
+    edadUnidad: entrada.edad ? (entrada.edad.unidad === 'meses' ? 'meses' : 'anios') : null,
+    fechaIngreso: entrada.fechaIngreso,
+    adoptado,
+    // Si falta la dirección, el API rechaza la adopción.
+    ...(adoptado
+      ? {
+          nombreAdoptante: entrada.adoptadoPor,
+          direccionAdoptante: entrada.direccionAdoptante,
+          fechaAdopcion: entrada.fechaAdopcion,
+        }
+      : {}),
+  };
+}
+
+export async function listAnimales(
+  filtro: FiltroAnimales = 'todos',
+  { conFotos = true }: OpcionesLista = {},
+): Promise<Animal[]> {
+  if (DEMO_SHOWCASE) return listAnimalesDemo(filtro);
+  const consulta =
+    filtro === 'adoptados' ? '?adoptado=true' : filtro === 'en-la-fundacion' ? '?adoptado=false' : '';
+  const lista = await pedirJson<ApiAnimal[]>(`/admin/animales${consulta}`);
+  return Promise.all(lista.map((animal) => desdeApi(animal, conFotos)));
+}
+
 export async function getAnimal(id: string): Promise<Animal> {
-  await esperarMock();
-  return copiar(exigir(id).animal);
+  if (DEMO_SHOWCASE) return getAnimalDemo(id);
+  return desdeApi(await pedirJson<ApiAnimal>(`/admin/animales/${id}`), true);
 }
 
-// TODO(backend): POST /api/admin/animales. Las fotos van después, por subirFotoAnimal.
+/** Las fotos van después, por `subirFotoAnimal`. */
 export async function createAnimal(entrada: AnimalEntrada): Promise<Animal> {
-  await esperarMock();
-  const animal: Animal = { ...structuredClone(entrada), id: crypto.randomUUID() };
-  animales.unshift(animal);
-  return copiar(animal);
+  if (DEMO_SHOWCASE) return createAnimalDemo(entrada);
+  const creado = await enviarJson<ApiAnimal>('POST', '/admin/animales', cuerpoApi(entrada));
+  return desdeApi(creado, false);
 }
 
-// TODO(backend): el API aún no tiene actualización de un animal.
+/** Reemplaza los datos del animal. Conserva sus fotos. */
 export async function updateAnimal(id: string, entrada: AnimalEntrada): Promise<Animal> {
-  await esperarMock();
-  const { indice } = exigir(id);
-  const animal: Animal = { ...structuredClone(entrada), id };
-  animales[indice] = animal;
-  return copiar(animal);
+  if (DEMO_SHOWCASE) return updateAnimalDemo(id, entrada);
+  const actualizado = await enviarJson<ApiAnimal>('PUT', `/admin/animales/${id}`, cuerpoApi(entrada));
+  return desdeApi(actualizado, true);
 }
 
-// TODO(backend): el API aún no tiene borrado de un animal.
+/** Borrado lógico: el animal deja de aparecer, pero el registro se conserva. */
 export async function deleteAnimal(id: string): Promise<void> {
-  await esperarMock();
-  const { indice } = exigir(id);
-  animales.splice(indice, 1);
+  if (DEMO_SHOWCASE) return deleteAnimalDemo(id);
+  await borrar(`/admin/animales/${id}`);
 }
 
-// TODO(backend): POST /api/admin/animales/:id/fotos/:tipo (animal | entrega, JPG/PNG/WebP, 5 MB).
+/** JPG, PNG o WebP, 5 MB. La de tipo `entrega` exige un animal adoptado. */
 export async function subirFotoAnimal(
   id: string,
   tipo: TipoFotoAnimal,
   archivo: File,
 ): Promise<Animal> {
-  await esperarMock();
+  if (DEMO_SHOWCASE) return subirFotoAnimalDemo(id, tipo, archivo);
   const error = validarImagen(archivo);
   if (error) throw new Error(error);
-  const { indice, animal } = exigir(id);
-  if (tipo === 'entrega' && !estaAdoptado(animal)) {
-    throw new Error('La foto de la adopción exige un animal adoptado');
-  }
-  const url = URL.createObjectURL(archivo);
-  const actualizado: Animal =
-    tipo === 'animal' ? { ...animal, fotoIngreso: url } : { ...animal, fotoAdopcion: url };
-  animales[indice] = actualizado;
-  return copiar(actualizado);
+  await enviarArchivo(`/admin/animales/${id}/fotos/${tipo}`, archivo);
+  return getAnimal(id);
 }
 
-// TODO(backend): el API aún no tiene quitar foto.
+/** Quita la foto del animal (`animal`) o la de su adopción (`entrega`). */
 export async function quitarFotoAnimal(id: string, tipo: TipoFotoAnimal): Promise<Animal> {
-  await esperarMock();
-  const { indice, animal } = exigir(id);
-  const actualizado: Animal =
-    tipo === 'animal' ? { ...animal, fotoIngreso: null } : { ...animal, fotoAdopcion: null };
-  animales[indice] = actualizado;
-  return copiar(actualizado);
+  if (DEMO_SHOWCASE) return quitarFotoAnimalDemo(id, tipo);
+  await borrar(`/admin/animales/${id}/fotos/${tipo}`);
+  return getAnimal(id);
 }
 
 export async function guardarAnimal(
@@ -112,11 +180,8 @@ export async function guardarAnimal(
     throw new Error(Object.values(resultado.errores)[0] ?? 'Datos inválidos');
   }
 
-  const previo = id ? exigir(id).animal : undefined;
+  const previo = id ? await getAnimal(id) : undefined;
   const adoptado = Boolean(resultado.datos.adoptadoPor);
-  // TODO(backend): enviar nombre, especie, sexo, edad (0–40), edadUnidad "anios"|"meses",
-  // fechaIngreso, adoptado, nombreAdoptante, direccionAdoptante y fechaAdopcion.
-  // No enviar fotos en el JSON. Si falta la dirección, el API real rechaza la adopción.
   const entrada: AnimalEntrada = {
     ...resultado.datos,
     fotoIngreso: previo?.fotoIngreso ?? null,

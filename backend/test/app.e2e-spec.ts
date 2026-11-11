@@ -123,6 +123,10 @@ describe('application bootstrap (e2e)', () => {
         '/api/admin/campanas/{id}/cerrar',
         '/api/admin/campanas/{id}/cifras',
         '/api/admin/campanas/{id}/fotos',
+        '/api/admin/campanas/{id}/fotos/orden',
+        '/api/admin/campanas/{id}/fotos/{fotoId}',
+        '/api/admin/campanas/{id}/reabrir',
+        '/api/admin/resumen',
         '/api/admin/donaciones',
         '/api/admin/donaciones/qr',
         '/api/admin/health',
@@ -141,6 +145,12 @@ describe('application bootstrap (e2e)', () => {
     );
     expect(document.paths['/api/admin/animales']).toHaveProperty('get');
     expect(document.paths['/api/admin/animales']).toHaveProperty('post');
+    expect(document.paths['/api/admin/animales/{id}']).toHaveProperty('put');
+    expect(document.paths['/api/admin/animales/{id}']).toHaveProperty('delete');
+    expect(document.paths['/api/admin/animales/{id}/fotos/{tipo}']).toHaveProperty('delete');
+    expect(document.paths['/api/admin/campanas/{id}/fotos/orden']).toHaveProperty('put');
+    expect(document.paths['/api/admin/campanas/{id}/fotos/{fotoId}']).toHaveProperty('delete');
+    expect(document.paths['/api/admin/resumen']).toHaveProperty('get');
     expect(document.paths['/api/admin/animales/{id}']).toHaveProperty('get');
     expect(
       document.paths['/api/admin/animales/{id}/fotos/{tipo}'],
@@ -152,6 +162,8 @@ describe('application bootstrap (e2e)', () => {
     expect(document.paths['/api/admin/campanas']).toHaveProperty('post');
     expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('get');
     expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('put');
+    expect(document.paths['/api/admin/campanas/{id}/cerrar']).toHaveProperty('post');
+    expect(document.paths['/api/admin/campanas/{id}/reabrir']).toHaveProperty('post');
     expect(document.paths['/api/public/campanas/{id}']).toHaveProperty('get');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('get');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('put');

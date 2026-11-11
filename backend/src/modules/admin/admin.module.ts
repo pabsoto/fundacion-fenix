@@ -8,7 +8,9 @@ import { CampanasModule } from '../campanas/campanas.module.js';
 import { DonacionesModule } from '../donaciones/donaciones.module.js';
 import { AdminAnimalesController } from './admin-animales.controller.js';
 import { AdminCampanasController } from './admin-campanas.controller.js';
+import { AdminResumenController } from './admin-resumen.controller.js';
 import { AdminController } from './admin.controller.js';
+import { ResumenAdminService } from './resumen-admin.service.js';
 
 /**
  * Módulo del panel administrativo.
@@ -29,7 +31,8 @@ import { AdminController } from './admin.controller.js';
     AdminController,
     AdminCampanasController,
     AdminAnimalesController,
+    AdminResumenController,
   ],
-  providers: [SesionAdminGuard, CsrfGuard],
+  providers: [SesionAdminGuard, CsrfGuard, ResumenAdminService],
 })
 export class AdminModule {}

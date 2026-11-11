@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
-import { ANIMALES_EJEMPLO, RESUMEN_EJEMPLO } from '@/services/admin/datos-ejemplo';
+import { ANIMALES_EJEMPLO, RESUMEN_EJEMPLO } from '@/services/admin/demo/datos-ejemplo';
 import type { Animal, Especie, FiltroAnimales, Sexo, UnidadEdad } from '@/types/admin';
 import { estaAdoptado } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
@@ -304,7 +304,7 @@ export function ComponentesAdminPage() {
                       encabezado: textosAdmin.animales.columnas.estado,
                       className: 'w-col-estado',
                       celda: (animal) => (
-                        <MarcaEstado adoptado={estaAdoptado(animal)}>
+                        <MarcaEstado activo={estaAdoptado(animal)}>
                           {estaAdoptado(animal)
                             ? textosAdmin.estado.adoptado
                             : textosAdmin.estado.enLaFundacion}
@@ -377,7 +377,7 @@ export function ComponentesAdminPage() {
                     icono: <Heart className={icono} />,
                     etiqueta: textosAdmin.animales.columnas.estado,
                     valor: (
-                      <MarcaEstado adoptado={estaAdoptado(seleccionado)}>
+                      <MarcaEstado activo={estaAdoptado(seleccionado)}>
                         {estaAdoptado(seleccionado)
                           ? textosAdmin.estado.adoptado
                           : textosAdmin.estado.enLaFundacion}

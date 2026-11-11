@@ -11,18 +11,25 @@ import {
   Between,
   DataSource,
   EntityManager,
+  In,
   QueryFailedError,
   Repository,
 } from 'typeorm';
 import { Auditoria } from '../auditoria/entities/auditoria.entity.js';
-import { CampanaAdminDto, TotalesCampanaDto } from './dto/campana-admin.dto.js';
+import {
+  CampanaAdminDto,
+  FotoCampanaAdminDto,
+  TotalesCampanaDto,
+} from './dto/campana-admin.dto.js';
 import {
   CifrasPeriodoDto,
   ConsultaCifrasDto,
 } from './dto/consulta-cifras.dto.js';
 import { CorregirCifrasCampanaDto } from './dto/corregir-cifras-campana.dto.js';
 import { GuardarCampanaDto } from './dto/guardar-campana.dto.js';
-import { Campana } from './entities/campana.entity.js';
+import { StorageService } from '../storage/storage.service.js';
+import { Campana, type EstadoCampana } from './entities/campana.entity.js';
+import { FotoCampana } from './entities/foto-campana.entity.js';
 
 const TABLA = 'campanas';
 
@@ -38,6 +45,9 @@ export class CampanasAdminService {
     @InjectRepository(Campana)
     private readonly repositorio: Repository<Campana>,
     @InjectDataSource() private readonly dataSource: DataSource,
+    @InjectRepository(FotoCampana)
+    private readonly fotos: Repository<FotoCampana>,
+    private readonly storage: StorageService,
   ) {}
 
   async listar(): Promise<CampanaAdminDto[]> {
@@ -48,7 +58,7 @@ export class CampanasAdminService {
           creadoEn: 'DESC',
         },
       });
-      return campanas.map((campana) => this.aDto(campana));
+      return await this.aDtos(campanas);
     } catch {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
@@ -67,11 +77,13 @@ export class CampanasAdminService {
     const hasta = `${anio}-${mesTexto ?? '12'}-${String(ultimoDia).padStart(2, '0')}`;
 
     let campanas: Campana[];
+    let detalle: CampanaAdminDto[];
     try {
       campanas = await this.repositorio.find({
         where: { fecha: Between(desde, hasta), ...(estado && { estado }) },
         order: { fecha: 'ASC', creadoEn: 'ASC' },
       });
+      detalle = await this.aDtos(campanas);
     } catch {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
@@ -91,60 +103,23 @@ export class CampanasAdminService {
     return {
       periodo: { anio, mes: mes ?? null },
       totales: this.calcularTotales(suma),
-      campanas: campanas.map((campana) => this.aDto(campana)),
+      campanas: detalle,
     };
   }
 
   async obtener(id: string): Promise<CampanaAdminDto> {
     let campana: Campana | null;
+    let fotos: FotoCampanaAdminDto[] = [];
     try {
       campana = await this.repositorio.findOne({ where: { id } });
+      if (campana) fotos = (await this.urlsDeFotos([id])).get(id) ?? [];
     } catch {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
       );
     }
     if (!campana) throw new NotFoundException('La campaña no existe');
-    return this.aDto(campana);
-  }
-
-  async cerrar(id: string, administradorId: string): Promise<CampanaAdminDto> {
-    return this.ejecutar('No fue posible cerrar la campaña', async (manager) => {
-      const campanas = manager.getRepository(Campana);
-      const existente = await campanas.findOne({
-        where: { id },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!existente) throw new NotFoundException('La campaña no existe');
-      if (existente.estado !== 'publicada') {
-        throw new ConflictException(
-          existente.estado === 'cerrada'
-            ? 'La campaña ya está cerrada'
-            : 'Solo se pueden cerrar campañas publicadas',
-        );
-      }
-
-      const datosAntes = this.aSnapshot(existente);
-      Object.assign(existente, {
-        estado: 'cerrada',
-        esHistorico: true,
-        actualizadoPorId: administradorId,
-        actualizadoEn: new Date(),
-      });
-      const guardada = await campanas.save(existente);
-      const datosDespues = this.aSnapshot(guardada);
-      await this.auditar(manager.getRepository(Auditoria), {
-        administradorId,
-        registroId: guardada.id,
-        accion: 'UPDATE',
-        camposModificados: Object.keys(datosDespues).filter(
-          (campo) => campo !== 'id' && datosAntes[campo] !== datosDespues[campo],
-        ),
-        datosAntes,
-        datosDespues,
-      });
-      return this.aDto(guardada);
-    });
+    return this.aDto(campana, fotos);
   }
 
   async corregirCifras(
@@ -161,7 +136,7 @@ export class CampanasAdminService {
           lock: { mode: 'pessimistic_write' },
         });
         if (!existente) throw new NotFoundException('La campaña no existe');
-        if (existente.estado !== 'cerrada' || !existente.esHistorico) {
+        if (existente.estado !== 'cerrada') {
           throw new ConflictException(
             'Solo se pueden corregir cifras de campañas cerradas',
           );
@@ -194,6 +169,7 @@ export class CampanasAdminService {
     entrada: GuardarCampanaDto,
     administradorId: string,
   ): Promise<CampanaAdminDto> {
+    // Una campaña nueva todavía no tiene fotografías.
     return this.ejecutar('No fue posible crear la campaña', async (manager) => {
       const campanas = manager.getRepository(Campana);
       const ahora = new Date();
@@ -227,7 +203,7 @@ export class CampanasAdminService {
     entrada: GuardarCampanaDto,
     administradorId: string,
   ): Promise<CampanaAdminDto> {
-    return this.ejecutar(
+    const actualizada = await this.ejecutar(
       'No fue posible actualizar la campaña',
       async (manager) => {
         const campanas = manager.getRepository(Campana);
@@ -261,8 +237,149 @@ export class CampanasAdminService {
           datosAntes,
           datosDespues,
         });
-        return this.aDto(guardada);
+        return guardada;
       },
+    );
+    return this.aDto(actualizada, await this.fotosSinFallar(id));
+  }
+
+  /**
+   * Cierra una campaña publicada: desde ese momento sus cifras cuentan en el
+   * contador público y deja de editarse desde el formulario.
+   */
+  async cerrar(
+    id: string,
+    administradorId: string,
+  ): Promise<CampanaAdminDto> {
+    return this.cambiarEstado(
+      id,
+      administradorId,
+      'cerrada',
+      'No fue posible cerrar la campaña',
+      (existente) => {
+        if (existente.estado === 'cerrada') {
+          throw new ConflictException('La campaña ya está cerrada');
+        }
+        if (existente.estado !== 'publicada') {
+          throw new ConflictException(
+            'Solo se puede cerrar una campaña publicada',
+          );
+        }
+        const total =
+          existente.perrosMachos +
+          existente.perrosHembras +
+          existente.gatosMachos +
+          existente.gatosHembras;
+        if (total <= 0) {
+          throw new BadRequestException(
+            'Registra al menos una esterilización antes de cerrar la campaña',
+          );
+        }
+      },
+    );
+  }
+
+  /**
+   * Vuelve a publicar una campaña cerrada para poder corregirla. Sus cifras
+   * dejan de contar en el contador público hasta que se cierre de nuevo.
+   */
+  async reabrir(
+    id: string,
+    administradorId: string,
+  ): Promise<CampanaAdminDto> {
+    return this.cambiarEstado(
+      id,
+      administradorId,
+      'publicada',
+      'No fue posible reabrir la campaña',
+      (existente) => {
+        if (existente.estado !== 'cerrada') {
+          throw new ConflictException('La campaña no está cerrada');
+        }
+        if (existente.esHistorico) {
+          throw new ConflictException(
+            'La campaña histórica siempre permanece cerrada',
+          );
+        }
+      },
+    );
+  }
+
+  private async cambiarEstado(
+    id: string,
+    administradorId: string,
+    estado: EstadoCampana,
+    mensajeFallo: string,
+    validar: (existente: Campana) => void,
+  ): Promise<CampanaAdminDto> {
+    const actualizada = await this.ejecutar(mensajeFallo, async (manager) => {
+      const campanas = manager.getRepository(Campana);
+      const existente = await campanas.findOne({
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!existente) throw new NotFoundException('La campaña no existe');
+      validar(existente);
+
+      const datosAntes = this.aSnapshot(existente);
+      Object.assign(existente, {
+        estado,
+        actualizadoPorId: administradorId,
+        actualizadoEn: new Date(),
+      });
+      const guardada = await campanas.save(existente);
+      const datosDespues = this.aSnapshot(guardada);
+
+      await this.auditar(manager.getRepository(Auditoria), {
+        administradorId,
+        registroId: guardada.id,
+        accion: 'UPDATE',
+        camposModificados: Object.keys(datosDespues).filter(
+          (campo) => campo !== 'id' && datosAntes[campo] !== datosDespues[campo],
+        ),
+        datosAntes,
+        datosDespues,
+      });
+      return guardada;
+    });
+    return this.aDto(actualizada, await this.fotosSinFallar(id));
+  }
+
+  /** La escritura ya se guardó: si las fotos fallan, se responde sin ellas. */
+  private async fotosSinFallar(id: string): Promise<FotoCampanaAdminDto[]> {
+    try {
+      return (await this.urlsDeFotos([id])).get(id) ?? [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** Una sola consulta para todas las campañas, ordenadas como la galería. */
+  private async urlsDeFotos(
+    ids: string[],
+  ): Promise<Map<string, FotoCampanaAdminDto[]>> {
+    const urls = new Map<string, FotoCampanaAdminDto[]>();
+    if (ids.length === 0) return urls;
+    const fotos = await this.fotos.find({
+      where: { campanaId: In(ids) },
+      order: { orden: 'ASC' },
+    });
+    for (const foto of fotos) {
+      const lista = urls.get(foto.campanaId) ?? [];
+      lista.push({
+        id: foto.id,
+        url: this.storage.obtenerUrlPublica(foto.ruta),
+        orden: foto.orden,
+      });
+      urls.set(foto.campanaId, lista);
+    }
+    return urls;
+  }
+
+  private async aDtos(campanas: Campana[]): Promise<CampanaAdminDto[]> {
+    const urls = await this.urlsDeFotos(campanas.map((campana) => campana.id));
+    return campanas.map((campana) =>
+      this.aDto(campana, urls.get(campana.id) ?? []),
     );
   }
 
@@ -323,7 +440,10 @@ export class CampanasAdminService {
     };
   }
 
-  private aDto(campana: Campana): CampanaAdminDto {
+  private aDto(
+    campana: Campana,
+    fotos: FotoCampanaAdminDto[] = [],
+  ): CampanaAdminDto {
     return {
       id: campana.id,
       tituloEs: campana.tituloEs,
@@ -339,6 +459,7 @@ export class CampanasAdminService {
       gatosHembras: campana.gatosHembras,
       totales: this.calcularTotales(campana),
       esHistorico: campana.esHistorico,
+      fotos,
       creadoEn: new Date(campana.creadoEn).toISOString(),
       actualizadoEn: new Date(campana.actualizadoEn).toISOString(),
     };
