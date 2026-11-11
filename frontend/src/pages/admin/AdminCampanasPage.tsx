@@ -470,6 +470,9 @@ export function AdminCampanasPage() {
                 </button>
               ) : null}
             </div>
+            {/* Las columnas tienen ancho fijo: si no caben, la tabla se desplaza sola y no invade el panel. */}
+            <div className="min-w-0 overflow-x-auto">
+              <div className="min-w-max">
             <TablaSeleccion
               etiqueta={textos.todas}
               columnas={COLUMNAS}
@@ -487,6 +490,8 @@ export function AdminCampanasPage() {
                 />
               }
             />
+              </div>
+            </div>
             <p className="t-small mt-auto px-3 text-negro">
               {hayFiltro
                 ? `${textoMostrando(visibles.length, campanas.length)} · ${nombrePeriodo(periodo, true)}`
