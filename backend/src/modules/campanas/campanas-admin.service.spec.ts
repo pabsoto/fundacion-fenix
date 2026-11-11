@@ -203,6 +203,96 @@ describe('CampanasAdminService', () => {
     expect(guardar).not.toHaveBeenCalled();
   });
 
+  it('cierra una campaña publicada una sola vez y la audita', async () => {
+    findOneTransaccion.mockResolvedValue(crearCampana({ estado: 'publicada' }));
+
+    const resultado = await servicio.cerrar(CAMPANA_ID, ADMIN_ID);
+
+    expect(resultado).toMatchObject({ estado: 'cerrada', esHistorico: false });
+    expect(guardar.mock.calls[0][0]).toMatchObject({
+      estado: 'cerrada',
+      esHistorico: false,
+      actualizadoPorId: ADMIN_ID,
+    });
+    expect(crearAuditoria.mock.calls[0][0]).toMatchObject({
+      administradorId: ADMIN_ID,
+      registroId: CAMPANA_ID,
+      accion: 'UPDATE',
+      camposModificados: expect.arrayContaining(['estado']),
+      datosAntes: expect.objectContaining({ estado: 'publicada' }),
+      datosDespues: expect.objectContaining({
+        estado: 'cerrada',
+        es_historico: false,
+      }),
+    });
+  });
+
+  it.each(['borrador', 'cerrada'] as const)(
+    'no permite cerrar una campaña en estado %s',
+    async (estado) => {
+      findOneTransaccion.mockResolvedValue(crearCampana({ estado }));
+
+      await expect(servicio.cerrar(CAMPANA_ID, ADMIN_ID)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+      expect(guardar).not.toHaveBeenCalled();
+      expect(guardarAuditoria).not.toHaveBeenCalled();
+    },
+  );
+
+  it('corrige por reemplazo las cifras cerradas y audita antes y después', async () => {
+    findOneTransaccion.mockResolvedValue(
+      crearCampana({ estado: 'cerrada', esHistorico: false }),
+    );
+
+    const resultado = await servicio.corregirCifras(
+      CAMPANA_ID,
+      { perrosMachos: 6, perrosHembras: 7, gatosMachos: 3, gatosHembras: 5 },
+      ADMIN_ID,
+    );
+
+    expect(resultado.totales).toEqual({
+      perros: 13,
+      gatos: 8,
+      machos: 9,
+      hembras: 12,
+      total: 21,
+    });
+    expect(guardar.mock.calls[0][0]).toMatchObject({
+      estado: 'cerrada',
+      esHistorico: false,
+      perrosMachos: 6,
+      perrosHembras: 7,
+      gatosMachos: 3,
+      gatosHembras: 5,
+    });
+    expect(crearAuditoria.mock.calls[0][0]).toMatchObject({
+      administradorId: ADMIN_ID,
+      accion: 'UPDATE',
+      camposModificados: expect.arrayContaining([
+        'perros_machos',
+        'perros_hembras',
+        'gatos_machos',
+        'gatos_hembras',
+      ]),
+      datosAntes: expect.objectContaining({ perros_machos: 3 }),
+      datosDespues: expect.objectContaining({ perros_machos: 6 }),
+    });
+  });
+
+  it('no permite corregir cifras de campañas no cerradas', async () => {
+    findOneTransaccion.mockResolvedValue(crearCampana({ estado: 'publicada' }));
+
+    await expect(
+      servicio.corregirCifras(
+        CAMPANA_ID,
+        { perrosMachos: 6, perrosHembras: 4, gatosMachos: 3, gatosHembras: 2 },
+        ADMIN_ID,
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(guardar).not.toHaveBeenCalled();
+  });
+
   it('traduce una restricción CHECK de PostgreSQL en 400', async () => {
     guardar.mockRejectedValueOnce(
       new QueryFailedError(

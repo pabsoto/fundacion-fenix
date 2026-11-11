@@ -89,6 +89,9 @@ const PUBLICADA = fila({
 const CERRADA = fila({
   id: '1a2b3c4d-5e6f-4a1b-8c2d-3e4f5a6b7c8d',
   titulo_es: 'Campaña Senkata',
+  descripcion_es: 'Esterilización gratuita de perros y gatos en Senkata.',
+  descripcion_en:
+    'Free spay and neuter for dogs and cats in Senkata.',
   lugar: 'Senkata',
   fecha: '2025-03-15',
   estado: 'cerrada',
@@ -97,7 +100,7 @@ const CERRADA = fila({
   total_machos: 30,
   total_hembras: 34,
   total_esterilizaciones: 64,
-  fotos: ['campanas/senkata/1.webp'],
+  fotos: ['campanas/senkata/1.webp', 'campanas/senkata/2.webp'],
 });
 
 const BORRADOR = fila({
@@ -232,8 +235,10 @@ describe('API pública de campañas (e2e)', () => {
           id: CERRADA.id,
           tituloEs: 'Campaña Senkata',
           tituloEn: null,
-          descripcionEs: null,
-          descripcionEn: null,
+          descripcionEs:
+            'Esterilización gratuita de perros y gatos en Senkata.',
+          descripcionEn:
+            'Free spay and neuter for dogs and cats in Senkata.',
           lugar: 'Senkata',
           fecha: '2025-03-15',
           perros: 40,
@@ -241,7 +246,10 @@ describe('API pública de campañas (e2e)', () => {
           machos: 30,
           hembras: 34,
           total: 64,
-          fotos: ['https://cdn.test/campanas/senkata/1.webp'],
+          fotos: [
+            'https://cdn.test/campanas/senkata/1.webp',
+            'https://cdn.test/campanas/senkata/2.webp',
+          ],
         },
       ]);
     });
@@ -274,13 +282,34 @@ describe('API pública de campañas (e2e)', () => {
   });
 
   describe(`GET ${URL_BASE}/{id}`, () => {
-    it('devuelve una campaña visible sin campos administrativos', async () => {
+    it('es anónimo y devuelve todo el contenido público sin datos internos', async () => {
       const respuesta = await servidor()
         .get(`${URL_BASE}/${CERRADA.id}`)
         .expect(200);
 
+      expect(respuesta.body).toEqual({
+        id: CERRADA.id,
+        tituloEs: 'Campaña Senkata',
+        tituloEn: null,
+        descripcionEs:
+          'Esterilización gratuita de perros y gatos en Senkata.',
+        descripcionEn:
+          'Free spay and neuter for dogs and cats in Senkata.',
+        lugar: 'Senkata',
+        fecha: '2025-03-15',
+        perros: 40,
+        gatos: 24,
+        machos: 30,
+        hembras: 34,
+        total: 64,
+        fotos: [
+          'https://cdn.test/campanas/senkata/1.webp',
+          'https://cdn.test/campanas/senkata/2.webp',
+        ],
+      });
       expect(Object.keys(respuesta.body).sort()).toEqual(CAMPOS_PUBLICOS);
-      expect(respuesta.body).toMatchObject({ id: CERRADA.id, total: 64 });
+      expect(JSON.stringify(respuesta.body)).not.toContain(ADMIN_ID);
+      expect(JSON.stringify(respuesta.body)).not.toContain('cerrada');
     });
 
     it('responde 404 para un borrador, igual que para un id inexistente', async () => {

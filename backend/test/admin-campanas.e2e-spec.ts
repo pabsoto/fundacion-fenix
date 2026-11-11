@@ -223,6 +223,150 @@ describe('administración de campañas (e2e)', () => {
         .expect(403);
       expect(campanas[0].tituloEs).toBe('Campaña existente');
     });
+
+    it('rechaza cerrar sin sesión administrativa (401)', async () => {
+      await servidor()
+        .post(`${URL_BASE}/${randomUUID()}/cerrar`)
+        .expect(401);
+    });
+
+    it('rechaza corregir cifras sin sesión administrativa (401)', async () => {
+      await servidor()
+        .post(`${URL_BASE}/${randomUUID()}/cifras`)
+        .send({
+          perrosMachos: 1,
+          perrosHembras: 1,
+          gatosMachos: 1,
+          gatosHembras: 1,
+        })
+        .expect(401);
+    });
+
+    it('rechaza cerrar sin token CSRF (403)', async () => {
+      const existente = crearCampana({ estado: 'publicada' });
+      campanas = [existente];
+
+      await servidor()
+        .post(`${URL_BASE}/${existente.id}/cerrar`)
+        .set('Cookie', COOKIE)
+        .expect(403);
+
+      expect(campanas[0].estado).toBe('publicada');
+    });
+
+    it('rechaza corregir cifras sin token CSRF (403)', async () => {
+      const existente = crearCampana({ estado: 'cerrada', esHistorico: true });
+      campanas = [existente];
+
+      await servidor()
+        .post(`${URL_BASE}/${existente.id}/cifras`)
+        .set('Cookie', COOKIE)
+        .send({
+          perrosMachos: 1,
+          perrosHembras: 1,
+          gatosMachos: 1,
+          gatosHembras: 1,
+        })
+        .expect(403);
+
+      expect(campanas[0].perrosMachos).toBe(0);
+    });
+  });
+
+  describe('cerrar y corregir cifras', () => {
+    it('cierra una campaña publicada y bloquea un segundo cierre', async () => {
+      const existente = crearCampana({ estado: 'publicada', perrosMachos: 2 });
+      campanas = [existente];
+
+      const respuesta = await servidor()
+        .post(`${URL_BASE}/${existente.id}/cerrar`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(200);
+
+      expect(respuesta.body).toMatchObject({
+        estado: 'cerrada',
+        esHistorico: false,
+      });
+      expect(auditorias).toHaveLength(1);
+      expect(auditorias[0]).toMatchObject({
+        accion: 'UPDATE',
+        administradorId: ADMIN_ID,
+        datosAntes: expect.objectContaining({ estado: 'publicada' }),
+        datosDespues: expect.objectContaining({
+          estado: 'cerrada',
+          es_historico: false,
+        }),
+      });
+
+      await servidor()
+        .post(`${URL_BASE}/${existente.id}/cerrar`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(409);
+      expect(auditorias).toHaveLength(1);
+    });
+
+    it('reemplaza las cifras corregidas de una campaña cerrada y las audita', async () => {
+      const existente = crearCampana({ estado: 'cerrada', esHistorico: true });
+      campanas = [existente];
+
+      const respuesta = await servidor()
+        .post(`${URL_BASE}/${existente.id}/cifras`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .send({
+          perrosMachos: 6,
+          perrosHembras: 4,
+          gatosMachos: 3,
+          gatosHembras: 2,
+        })
+        .expect(200);
+
+      expect(respuesta.body).toMatchObject({
+        estado: 'cerrada',
+        esHistorico: true,
+        perrosMachos: 6,
+        perrosHembras: 4,
+        gatosMachos: 3,
+        gatosHembras: 2,
+        totales: { total: 15 },
+      });
+      expect(auditorias).toHaveLength(1);
+      expect(auditorias[0]).toMatchObject({
+        accion: 'UPDATE',
+        administradorId: ADMIN_ID,
+        datosAntes: expect.objectContaining({ perros_machos: 0 }),
+        datosDespues: expect.objectContaining({ perros_machos: 6 }),
+      });
+    });
+
+    it('no permite cerrar borradores ni corregir campañas no cerradas', async () => {
+      const borradorCampana = crearCampana({ estado: 'borrador' });
+      const publicadaCampana = crearCampana({
+        id: randomUUID(),
+        estado: 'publicada',
+      });
+      campanas = [borradorCampana, publicadaCampana];
+
+      await servidor()
+        .post(`${URL_BASE}/${borradorCampana.id}/cerrar`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(409);
+      await servidor()
+        .post(`${URL_BASE}/${publicadaCampana.id}/cifras`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .send({
+          perrosMachos: 1,
+          perrosHembras: 1,
+          gatosMachos: 1,
+          gatosHembras: 1,
+        })
+        .expect(409);
+      expect(auditorias).toHaveLength(0);
+    });
   });
 
   describe('crear y recuperar', () => {

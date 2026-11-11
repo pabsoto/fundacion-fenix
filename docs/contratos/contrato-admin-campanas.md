@@ -80,6 +80,23 @@ misma transacción: si la auditoría falla, la campaña no se guarda.
 
 `PUT` conserva las cifras omitidas, las fotos y el autor original (`creado_por`).
 
+## Cierre y corrección de cifras
+
+`POST /api/admin/campanas/{id}/cerrar` cierra una campaña publicada (`estado = cerrada`) y
+registra el cambio en auditoría dentro de la transacción. No usa `esHistorico`,
+que solo admite una fila en la base. Borradores y campañas ya cerradas responden `409`; un cierre
+repetido no suma ni duplica cifras.
+
+`POST /api/admin/campanas/{id}/cifras` permite corregir una campaña cerrada.
+Requiere reemplazar los cuatro contadores base (`perrosMachos`,
+`perrosHembras`, `gatosMachos`, `gatosHembras`) por sus valores corregidos;
+cada uno debe ser un entero entre 0 y 100000. No acepta campañas que no estén cerradas.
+La corrección se audita con valores anteriores y nuevos. Los totales se derivan
+de los contadores guardados, por lo que la corrección reemplaza los valores y
+no se suma como una nueva campaña.
+
+Ambas rutas requieren sesión administrativa y `X-CSRF-Token`.
+
 ## Consulta de cifras por periodo
 
 `GET /api/admin/campanas/cifras?anio=2026&mes=11`
