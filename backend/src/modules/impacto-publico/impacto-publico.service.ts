@@ -125,9 +125,15 @@ export class ImpactoPublicoService {
   async obtenerEstadisticas(): Promise<EstadisticasPublicasDto> {
     try {
       const filas = await this.dataSource.query<EstadisticasFila[]>(
-        `select perros_machos, perros_hembras, gatos_machos, gatos_hembras,
-                total_perros, total_gatos
-           from public.v_contador_esterilizaciones`,
+        `select coalesce(sum(campana.perros_machos), 0) as perros_machos,
+                coalesce(sum(campana.perros_hembras), 0) as perros_hembras,
+                coalesce(sum(campana.gatos_machos), 0) as gatos_machos,
+                coalesce(sum(campana.gatos_hembras), 0) as gatos_hembras,
+                coalesce(sum(campana.perros_machos + campana.perros_hembras), 0) as total_perros,
+                coalesce(sum(campana.gatos_machos + campana.gatos_hembras), 0) as total_gatos
+           from public.campanas campana
+          where campana.estado = 'cerrada'
+            and campana.es_historico = true`,
       );
       const fila = filas[0];
 

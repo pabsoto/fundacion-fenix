@@ -20,6 +20,7 @@ import {
   CifrasPeriodoDto,
   ConsultaCifrasDto,
 } from './dto/consulta-cifras.dto.js';
+import { CorregirCifrasCampanaDto } from './dto/corregir-cifras-campana.dto.js';
 import { GuardarCampanaDto } from './dto/guardar-campana.dto.js';
 import { Campana } from './entities/campana.entity.js';
 
@@ -105,6 +106,88 @@ export class CampanasAdminService {
     }
     if (!campana) throw new NotFoundException('La campaña no existe');
     return this.aDto(campana);
+  }
+
+  async cerrar(id: string, administradorId: string): Promise<CampanaAdminDto> {
+    return this.ejecutar('No fue posible cerrar la campaña', async (manager) => {
+      const campanas = manager.getRepository(Campana);
+      const existente = await campanas.findOne({
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!existente) throw new NotFoundException('La campaña no existe');
+      if (existente.estado !== 'publicada') {
+        throw new ConflictException(
+          existente.estado === 'cerrada'
+            ? 'La campaña ya está cerrada'
+            : 'Solo se pueden cerrar campañas publicadas',
+        );
+      }
+
+      const datosAntes = this.aSnapshot(existente);
+      Object.assign(existente, {
+        estado: 'cerrada',
+        esHistorico: true,
+        actualizadoPorId: administradorId,
+        actualizadoEn: new Date(),
+      });
+      const guardada = await campanas.save(existente);
+      const datosDespues = this.aSnapshot(guardada);
+      await this.auditar(manager.getRepository(Auditoria), {
+        administradorId,
+        registroId: guardada.id,
+        accion: 'UPDATE',
+        camposModificados: Object.keys(datosDespues).filter(
+          (campo) => campo !== 'id' && datosAntes[campo] !== datosDespues[campo],
+        ),
+        datosAntes,
+        datosDespues,
+      });
+      return this.aDto(guardada);
+    });
+  }
+
+  async corregirCifras(
+    id: string,
+    entrada: CorregirCifrasCampanaDto,
+    administradorId: string,
+  ): Promise<CampanaAdminDto> {
+    return this.ejecutar(
+      'No fue posible corregir las cifras de la campaña',
+      async (manager) => {
+        const campanas = manager.getRepository(Campana);
+        const existente = await campanas.findOne({
+          where: { id },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!existente) throw new NotFoundException('La campaña no existe');
+        if (existente.estado !== 'cerrada' || !existente.esHistorico) {
+          throw new ConflictException(
+            'Solo se pueden corregir cifras de campañas cerradas',
+          );
+        }
+
+        const datosAntes = this.aSnapshot(existente);
+        Object.assign(existente, entrada, {
+          actualizadoPorId: administradorId,
+          actualizadoEn: new Date(),
+        });
+        const guardada = await campanas.save(existente);
+        const datosDespues = this.aSnapshot(guardada);
+        await this.auditar(manager.getRepository(Auditoria), {
+          administradorId,
+          registroId: guardada.id,
+          accion: 'UPDATE',
+          camposModificados: Object.keys(datosDespues).filter(
+            (campo) =>
+              campo !== 'id' && datosAntes[campo] !== datosDespues[campo],
+          ),
+          datosAntes,
+          datosDespues,
+        });
+        return this.aDto(guardada);
+      },
+    );
   }
 
   async crear(
@@ -290,6 +373,7 @@ export class CampanasAdminService {
       perros_hembras: campana.perrosHembras,
       gatos_machos: campana.gatosMachos,
       gatos_hembras: campana.gatosHembras,
+      es_historico: campana.esHistorico,
       creado_por: campana.creadoPorId,
       actualizado_por: campana.actualizadoPorId,
     };
