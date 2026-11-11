@@ -134,6 +134,12 @@
     ,"loading": "Consultando las campañas registradas…",
     "error": "No fue posible consultar las campañas en este momento."
   },
+  "gallery": {
+    "prev": "Foto anterior",
+    "next": "Foto siguiente",
+    "close": "Cerrar",
+    "counter": "{{n}} de {{total}}"
+  },
   "results": {
     "title": "Resultados",
     "subtitle": "Cada esterilización representa una vida con menos sufrimiento y un futuro con más esperanza.",

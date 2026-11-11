@@ -1,6 +1,6 @@
 import { Trans, useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
-import { Photo } from '@/components/ui/Photo';
+import { GaleriaFotos } from '@/components/ui/GaleriaFotos';
 import { formatCampaignLabel, formatNumber } from '@/lib/format';
 import { SECTION_IDS } from '@/lib/constants';
 import type { Campaign } from '@/types';
@@ -15,8 +15,6 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
   const placeTitle = campaign.city
     ? t('campaigns.place', { place: campaign.place, city: campaign.city })
     : campaign.place;
-  const photoSlots = [0, 1, 2];
-
   return (
     <div className="flex w-full flex-col items-start">
       <div className="rounded-t-btn bg-naranja px-6 py-2.5">
@@ -68,30 +66,13 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
           <p className="t-body-strong w-[168px] shrink-0 text-negro">
             {t('campaigns.photos_label')}
           </p>
-          <div className="flex min-w-0 flex-1 gap-3">
-            {photoSlots.map((i) => {
-              const src = campaign.photos[i];
-              if (src) {
-                return (
-                  <Photo
-                    key={i}
-                    src={src}
-                    alt={t('campaigns.photo_alt', { place: placeTitle, number: i + 1 })}
-                    radius="card"
-                    className="h-24 min-w-0 flex-1 object-cover"
-                  />
-                );
-              }
-              return (
-                <div
-                  key={i}
-                  className="flex h-24 min-w-0 flex-1 items-center justify-center rounded-card bg-linea"
-                >
-                  <span className="t-nav text-negro">{t('campaigns.photo_placeholder')}</span>
-                </div>
-              );
-            })}
-          </div>
+          <GaleriaFotos
+            fotos={campaign.photos}
+            textoAlt={(numero) =>
+              t('campaigns.photo_alt', { place: placeTitle, number: numero })
+            }
+            textoPendiente={t('campaigns.photo_placeholder')}
+          />
         </div>
 
         <div className="pt-5">

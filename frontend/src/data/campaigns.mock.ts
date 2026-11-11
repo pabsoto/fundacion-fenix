@@ -1,6 +1,9 @@
 // SAMPLE DATA
 import type { Campaign } from '@/types';
 
+const FOTO_HORIZONTAL = '/demo/foto-horizontal.png';
+const FOTO_VERTICAL = '/demo/foto-vertical.png';
+
 export const campaignsMock: Campaign[] = [
   {
     id: 'villa-adela-2025',
@@ -28,7 +31,7 @@ export const campaignsMock: Campaign[] = [
     cats: 27,
     males: 34,
     females: 38,
-    photos: [],
+    photos: [FOTO_HORIZONTAL],
   },
   {
     id: 'distrito-4-2024',
@@ -42,7 +45,7 @@ export const campaignsMock: Campaign[] = [
     cats: 33,
     males: 38,
     females: 47,
-    photos: [],
+    photos: [FOTO_HORIZONTAL, FOTO_VERTICAL, FOTO_HORIZONTAL],
   },
   {
     id: 'obrajes-2024',
@@ -56,7 +59,7 @@ export const campaignsMock: Campaign[] = [
     cats: 36,
     males: 42,
     females: 49,
-    photos: [],
+    photos: [FOTO_HORIZONTAL, FOTO_VERTICAL, FOTO_HORIZONTAL, FOTO_VERTICAL, FOTO_HORIZONTAL],
   },
   {
     id: 'ciudad-satelite-2024',
