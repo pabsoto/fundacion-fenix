@@ -36,6 +36,11 @@
   --size-switch-perilla: 20px;
   --shadow-modal-admin: 0 24px 60px -8px rgb(0 0 0 / 0.18);
   --shadow-panel-admin: 0 8px 10px -6px rgb(0 0 0 / 0.1), 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --shadow-desplegable-admin: 0 4px 24px rgb(0 0 0 / 0.08);
+  --radius-opcion-admin: 10px;
+  --size-opcion-admin: 40px;
+  --size-menu-anio: 176px;
+  --size-menu-mes: 288px;
 
   /* Medidas del panel tomadas de Figma (Animales, Registrar animal, Resumen). */
   --spacing-chip-admin: 14px;

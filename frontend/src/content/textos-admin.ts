@@ -57,12 +57,15 @@ export const textosAdmin = {
     nueva: '+ Nueva campaña',
     agregarFiltro: '+ Agregar filtro',
     filtros: {
+      filtrar: 'Filtrar',
       anio: 'Año',
       mes: 'Mes',
-      /** Año sin acotar. No está en Figma: el marco solo dice «+ Agregar filtro». */
-      todos: 'Todos',
+      todosLosAnios: 'Todos los años',
       todosLosMeses: 'Todos los meses',
-      limpiar: 'Limpiar',
+      limpiar: 'Limpiar filtros',
+      totalDe: (periodo: string) => `Total de ${periodo}`,
+      /** El marco de filtrado no está en el archivo: el texto sale del pedido. */
+      selecciona: 'Selecciona una campaña…',
       meses: [
         'Enero',
         'Febrero',

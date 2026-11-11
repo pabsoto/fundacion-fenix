@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Cat, Hash, PawPrint } from 'lucide-react';
+import { Cat, Hash, PawPrint, X } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import { listCampanas, subirFotosCampana } from '@/services/admin/campanas.service';
@@ -11,6 +11,7 @@ import {
 import type { CampanaConTotales, ContadoresCampana } from '@/types/admin';
 import { totalesDe } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
+import { SelectFiltro } from '@/components/admin/ui/SelectFiltro';
 import { PanelDetalle } from '@/components/admin/ui/PanelDetalle';
 import { TablaSeleccion, type ColumnaTabla } from '@/components/admin/ui/TablaSeleccion';
 import { Card } from '@/components/ui/Card';
@@ -80,6 +81,28 @@ function textoMostrando(visibles: number, total: number) {
   );
 }
 
+function nombrePeriodo(periodo: PeriodoCampanas, mesEnMayuscula: boolean): string {
+  const partes: string[] = [];
+  if (periodo.mes) {
+    const nombre = textosAdmin.campanas.filtros.meses[periodo.mes - 1] ?? '';
+    partes.push(mesEnMayuscula ? nombre : nombre.toLocaleLowerCase('es'));
+  }
+  if (periodo.anio) partes.push(String(periodo.anio));
+  return partes.join(' ');
+}
+
+function mesesConCampanas(lista: CampanaConTotales[], anio: number | null): Set<number> {
+  const meses = new Set<number>();
+  for (const campana of lista) {
+    if (!campana.fecha) continue;
+    const [anioFecha, mesFecha] = campana.fecha.split('-').map(Number);
+    if (!anioFecha || !mesFecha || mesFecha < 1 || mesFecha > 12) continue;
+    if (anio !== null && anioFecha !== anio) continue;
+    meses.add(mesFecha);
+  }
+  return meses;
+}
+
 const COLUMNAS: ColumnaTabla<CampanaConTotales>[] = [
   {
     id: 'campana',
@@ -135,13 +158,18 @@ const COLUMNAS: ColumnaTabla<CampanaConTotales>[] = [
   },
 ];
 
-function FilaAcumulada({ contadores }: { contadores: ContadoresCampana }) {
-  const textos = textosAdmin.campanas;
+function FilaAcumulada({
+  titulo,
+  contadores,
+}: {
+  titulo: string;
+  contadores: ContadoresCampana;
+}) {
   const total = totalesDe(contadores).total;
   return (
     <div role="row" className="flex h-fila-admin items-center px-3">
       <div role="cell" className="t-body-strong min-w-col-campana flex-1 text-negro">
-        {textos.totalAcumulado}
+        {titulo}
       </div>
       <div role="cell" className="w-col-fecha-admin shrink-0" />
       <div role="cell" className="t-fila w-col-contador shrink-0 text-right text-negro">
@@ -290,9 +318,12 @@ export function AdminCampanasPage() {
 
   function fijarPeriodo(siguiente: PeriodoCampanas) {
     periodoRef.current = siguiente;
+    const lista = cifrasDePeriodo(campanas, siguiente).campanas;
+    const sigue = seleccionId !== null && lista.some((campana) => campana.id === seleccionId);
+    const nuevo = sigue ? seleccionId : (lista[0]?.id ?? null);
+    if (nuevo !== seleccionId) setFotoActiva(0);
     setPeriodo(siguiente);
-    setSeleccionId((actual) => elegirId(cifrasDePeriodo(campanas, siguiente).campanas, actual));
-    setFotoActiva(0);
+    setSeleccionId(nuevo);
   }
 
   async function recargar(preferido?: string) {
@@ -385,59 +416,50 @@ export function AdminCampanasPage() {
               </div>
               <BotonPildora onClick={() => setModal('crear')}>{textos.nueva}</BotonPildora>
             </div>
-            <div className="flex h-(--size-control-admin) items-center gap-2 rounded-btn bg-crema-tono px-4">
-              <label htmlFor="filtro-anio-campanas" className="t-chip shrink-0 text-negro">
-                {textos.filtros.anio}
-              </label>
-              <select
-                id="filtro-anio-campanas"
-                value={periodo.anio === null ? '' : String(periodo.anio)}
-                onChange={(event) => {
-                  const valor = event.target.value;
-                  fijarPeriodo({
-                    ...periodo,
-                    anio: valor === '' ? null : Number(valor),
-                  });
-                }}
-                className="h-(--size-boton-admin) min-w-(--spacing-col-fecha-admin) cursor-pointer rounded-admin-control border border-linea bg-blanco px-3 t-control text-negro"
-              >
-                <option value="">{textos.filtros.todos}</option>
-                {anios.map((anio) => (
-                  <option key={anio} value={String(anio)}>
-                    {anio}
-                  </option>
-                ))}
-              </select>
-              <label htmlFor="filtro-mes-campanas" className="t-chip shrink-0 text-negro">
-                {textos.filtros.mes}
-              </label>
-              <select
-                id="filtro-mes-campanas"
-                value={periodo.mes === null ? '' : String(periodo.mes)}
-                onChange={(event) => {
-                  const valor = event.target.value;
-                  fijarPeriodo({
-                    ...periodo,
-                    mes: valor === '' ? null : Number(valor),
-                  });
-                }}
-                className="h-(--size-boton-admin) min-w-(--spacing-col-estado) cursor-pointer rounded-admin-control border border-linea bg-blanco px-3 t-control text-negro"
-              >
-                <option value="">{textos.filtros.todosLosMeses}</option>
-                {textos.filtros.meses.map((nombre, indice) => (
-                  <option key={nombre} value={String(indice + 1)}>
-                    {nombre}
-                  </option>
-                ))}
-              </select>
-              <BotonPildora
-                variante="ghost"
-                className="ml-auto"
-                disabled={!hayFiltro}
-                onClick={() => fijarPeriodo(PERIODO_TODOS)}
-              >
-                {textos.filtros.limpiar}
-              </BotonPildora>
+            <div className="flex h-(--size-control-admin) items-center justify-between gap-4 rounded-btn bg-crema-tono px-4">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <p className="t-small shrink-0 text-texto-secundario">{textos.filtros.filtrar}</p>
+                <SelectFiltro
+                  id="filtro-anio-campanas"
+                  etiqueta={textos.filtros.anio}
+                  valor={periodo.anio === null ? null : String(periodo.anio)}
+                  textoValor={periodo.anio === null ? null : String(periodo.anio)}
+                  todosEtiqueta={textos.filtros.todosLosAnios}
+                  opciones={anios.map((anio) => ({ valor: String(anio), etiqueta: String(anio) }))}
+                  disposicion="lista"
+                  onCambio={(valor) =>
+                    fijarPeriodo({ ...periodo, anio: valor === null ? null : Number(valor) })
+                  }
+                />
+                <SelectFiltro
+                  id="filtro-mes-campanas"
+                  etiqueta={textos.filtros.mes}
+                  valor={periodo.mes === null ? null : String(periodo.mes)}
+                  textoValor={
+                    periodo.mes === null ? null : (textos.filtros.meses[periodo.mes - 1] ?? null)
+                  }
+                  todosEtiqueta={textos.filtros.todosLosMeses}
+                  opciones={textosAdmin.resumen.meses.map((nombre, indice) => ({
+                    valor: String(indice + 1),
+                    etiqueta: nombre,
+                    atenuada: !mesesConCampanas(campanas, periodo.anio).has(indice + 1),
+                  }))}
+                  disposicion="cuadricula"
+                  onCambio={(valor) =>
+                    fijarPeriodo({ ...periodo, mes: valor === null ? null : Number(valor) })
+                  }
+                />
+              </div>
+              {hayFiltro ? (
+                <button
+                  type="button"
+                  onClick={() => fijarPeriodo(PERIODO_TODOS)}
+                  className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 px-2 py-1.5 t-chip text-negro"
+                >
+                  {textos.filtros.limpiar}
+                  <X className="size-3.5" aria-hidden="true" />
+                </button>
+              ) : null}
             </div>
             <TablaSeleccion
               etiqueta={textos.todas}
@@ -445,10 +467,21 @@ export function AdminCampanasPage() {
               filas={visibles}
               seleccionId={seleccionId}
               onSeleccionar={seleccionar}
-              pie={<FilaAcumulada contadores={cifras.contadores} />}
+              pie={
+                <FilaAcumulada
+                  titulo={
+                    hayFiltro
+                      ? textos.filtros.totalDe(nombrePeriodo(periodo, false))
+                      : textos.totalAcumulado
+                  }
+                  contadores={cifras.contadores}
+                />
+              }
             />
             <p className="t-small mt-auto px-3 text-negro">
-              {textoMostrando(visibles.length, campanas.length)}
+              {hayFiltro
+                ? `${textoMostrando(visibles.length, campanas.length)} · ${nombrePeriodo(periodo, true)}`
+                : textoMostrando(visibles.length, campanas.length)}
             </p>
           </div>
           {seleccionada ? (
@@ -513,7 +546,11 @@ export function AdminCampanasPage() {
                 },
               ]}
             />
-          ) : null}
+          ) : (
+            <aside className="flex w-panel-detalle shrink-0 items-center justify-center border-l border-linea p-7">
+              <p className="t-small text-center text-texto-secundario">{textos.filtros.selecciona}</p>
+            </aside>
+          )}
         </Card>
       ) : null}
 
