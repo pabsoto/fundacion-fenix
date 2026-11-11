@@ -51,6 +51,9 @@ function crearCampana(cambios: Partial<Campana> = {}): Campana {
     gatosMachos: 0,
     gatosHembras: 0,
     esHistorico: false,
+    eliminadoEn: null,
+    eliminadoPorId: null,
+    eliminadoPor: null,
     creadoPorId: null,
     creadoPor: null,
     actualizadoPorId: null,
@@ -66,13 +69,38 @@ describe('administración de campañas (e2e)', () => {
   let campanas: Campana[];
   let auditorias: Array<Partial<Auditoria>>;
   let administradorActivo: boolean;
+  const almacenamientoEliminar = vi.fn(async () => undefined);
 
   const buscarPorId = async ({ where }: { where: { id: string } }) =>
-    campanas.find((campana) => campana.id === where.id) ?? null;
+    campanas.find(
+      (campana) => campana.id === where.id && !campana.eliminadoEn,
+    ) ?? null;
+
+  /** Constructor de consultas falso: devuelve todas las campañas en memoria. */
+  const crearQb = () => {
+    const qb: Record<string, unknown> = {};
+    for (const metodo of [
+      'select',
+      'addSelect',
+      'where',
+      'andWhere',
+      'orderBy',
+      'addOrderBy',
+      'offset',
+      'limit',
+    ]) {
+      qb[metodo] = vi.fn(() => qb);
+    }
+    qb.getManyAndCount = vi.fn(async () => [[...campanas], campanas.length]);
+    qb.getRawOne = vi.fn(async () => ({}));
+    qb.getRawMany = vi.fn(async () => []);
+    return qb;
+  };
 
   const repositorioLectura = {
     find: vi.fn(async () => [...campanas]),
     findOne: vi.fn(buscarPorId),
+    createQueryBuilder: vi.fn(() => crearQb()),
   };
 
   const repositorioCampanasTransaccion = {
@@ -86,6 +114,11 @@ describe('administración de campañas (e2e)', () => {
       else campanas[indice] = campana;
       return campana;
     }),
+  };
+
+  const repositorioFotosTransaccion = {
+    find: vi.fn(async () => [{ ruta: 'campanas/a.webp' }]),
+    delete: vi.fn(async () => undefined),
   };
 
   const repositorioAuditoriaTransaccion = {
@@ -103,7 +136,9 @@ describe('administración de campañas (e2e)', () => {
     getRepository: vi.fn((entidad: unknown) =>
       entidad === Campana
         ? repositorioCampanasTransaccion
-        : repositorioAuditoriaTransaccion,
+        : entidad === FotoCampana
+          ? repositorioFotosTransaccion
+          : repositorioAuditoriaTransaccion,
     ),
   };
 
@@ -133,7 +168,7 @@ describe('administración de campañas (e2e)', () => {
       .overrideProvider(getRepositoryToken(FotoCampana))
       .useValue({ find: vi.fn(async () => []) })
       .overrideProvider(StorageService)
-      .useValue({ obtenerUrlPublica: vi.fn() })
+      .useValue({ obtenerUrlPublica: vi.fn(), eliminar: almacenamientoEliminar })
       .overrideProvider(SesionAdminService)
       .useValue({
         validar: vi.fn(async () => ({
@@ -414,9 +449,118 @@ describe('administración de campañas (e2e)', () => {
         .get(URL_BASE)
         .set('Cookie', COOKIE)
         .expect(200);
-      expect(listado.body).toEqual([
-        expect.objectContaining({ id: creada.body.id }),
-      ]);
+      expect(listado.body).toMatchObject({
+        total: 1,
+        pagina: 1,
+        limite: 10,
+        totalPaginas: 1,
+        items: [expect.objectContaining({ id: creada.body.id })],
+      });
+    });
+
+    it('rechaza un límite o una página fuera de rango (400)', async () => {
+      await servidor()
+        .get(`${URL_BASE}?limite=100`)
+        .set('Cookie', COOKIE)
+        .expect(400);
+      await servidor()
+        .get(`${URL_BASE}?pagina=0`)
+        .set('Cookie', COOKIE)
+        .expect(400);
+      await servidor()
+        .get(`${URL_BASE}?anio=1999`)
+        .set('Cookie', COOKIE)
+        .expect(400);
+    });
+  });
+
+  describe('eliminar', () => {
+    it('rechaza eliminar sin sesión (401) y sin token CSRF (403)', async () => {
+      const existente = crearCampana();
+      campanas = [existente];
+
+      await servidor().delete(`${URL_BASE}/${existente.id}`).expect(401);
+      await servidor()
+        .delete(`${URL_BASE}/${existente.id}`)
+        .set('Cookie', COOKIE)
+        .expect(403);
+      expect(campanas).toHaveLength(1);
+    });
+
+    it('elimina un borrador (borrado lógico), lo audita y limpia Storage (204)', async () => {
+      const existente = crearCampana({ estado: 'borrador' });
+      campanas = [existente];
+
+      await servidor()
+        .delete(`${URL_BASE}/${existente.id}`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(204);
+
+      expect(campanas[0]).toMatchObject({
+        id: existente.id,
+        eliminadoPorId: ADMIN_ID,
+        eliminadoEn: expect.any(Date),
+      });
+      expect(auditorias).toHaveLength(1);
+      expect(auditorias[0]).toMatchObject({
+        accion: 'DELETE',
+        administradorId: ADMIN_ID,
+        datosDespues: null,
+      });
+      expect(almacenamientoEliminar).toHaveBeenCalledWith('campanas/a.webp');
+    });
+
+    it('una campaña eliminada ya no se puede obtener ni eliminar de nuevo (404)', async () => {
+      const existente = crearCampana({ estado: 'publicada' });
+      campanas = [existente];
+
+      await servidor()
+        .delete(`${URL_BASE}/${existente.id}`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(204);
+      await servidor()
+        .get(`${URL_BASE}/${existente.id}`)
+        .set('Cookie', COOKIE)
+        .expect(404);
+      await servidor()
+        .delete(`${URL_BASE}/${existente.id}`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(404);
+    });
+
+    it('responde 404 si la campaña no existe', async () => {
+      await servidor()
+        .delete(`${URL_BASE}/${randomUUID()}`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(404);
+    });
+
+    it('responde 409 con una campaña cerrada o histórica', async () => {
+      const cerrada = crearCampana({ estado: 'cerrada' });
+      const historica = crearCampana({ estado: 'publicada', esHistorico: true });
+      campanas = [cerrada, historica];
+
+      for (const campana of [cerrada, historica]) {
+        await servidor()
+          .delete(`${URL_BASE}/${campana.id}`)
+          .set('Cookie', COOKIE)
+          .set('X-CSRF-Token', CSRF)
+          .expect(409);
+      }
+      expect(campanas).toHaveLength(2);
+      expect(auditorias).toHaveLength(0);
+    });
+
+    it('responde 400 si el id no es un UUID', async () => {
+      await servidor()
+        .delete(`${URL_BASE}/no-es-uuid`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(400);
     });
   });
 

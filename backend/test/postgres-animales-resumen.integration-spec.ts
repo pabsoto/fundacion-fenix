@@ -6,6 +6,7 @@ import { CrearEsquemaBase1729000000000 } from '../src/database/migrations/172900
 import { CrearTablaSesionesAdmin1730000000000 } from '../src/database/migrations/1730000000000-CrearTablaSesionesAdmin.js';
 import { CrearTablaFotosCampana1731000000000 } from '../src/database/migrations/1731000000000-CrearTablaFotosCampana.js';
 import { CrearTablaAnimales1732000000000 } from '../src/database/migrations/1732000000000-CrearTablaAnimales.js';
+import { AgregarBorradoLogicoCampanas1733000000000 } from '../src/database/migrations/1733000000000-AgregarBorradoLogicoCampanas.js';
 import { ResumenAdminService } from '../src/modules/admin/resumen-admin.service.js';
 import { AnimalesAdminService } from '../src/modules/animales/animales-admin.service.js';
 import { Animal } from '../src/modules/animales/entities/animal.entity.js';
@@ -33,6 +34,7 @@ function conexion(base: string, completa: boolean): DataSource {
             CrearTablaSesionesAdmin1730000000000,
             CrearTablaFotosCampana1731000000000,
             CrearTablaAnimales1732000000000,
+            AgregarBorradoLogicoCampanas1733000000000,
           ],
         }
       : {}),
@@ -198,7 +200,7 @@ describe.skipIf(!URL_PRUEBAS)(
         await expect(animales.obtener(animal.id)).rejects.toBeInstanceOf(
           NotFoundException,
         );
-        const lista = await animales.listar();
+        const { items: lista } = await animales.listar({ limite: 50 });
         expect(lista.find((item) => item.id === animal.id)).toBeUndefined();
         const [fila] = await base.query(
           `SELECT eliminado_en, eliminado_por FROM public.animales WHERE id = $1`,

@@ -10,7 +10,7 @@ import {
   UnsupportedMediaTypeException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { StorageService } from '../storage/storage.service.js';
 import { FotoCampanaDto } from './dto/foto-campana.dto.js';
 import { Campana } from './entities/campana.entity.js';
@@ -231,7 +231,9 @@ export class FotosCampanaService {
   private async exigirCampanaEditable(campanaId: string): Promise<void> {
     let campana: Campana | null;
     try {
-      campana = await this.campanas.findOne({ where: { id: campanaId } });
+      campana = await this.campanas.findOne({
+        where: { id: campanaId, eliminadoEn: IsNull() },
+      });
     } catch {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',

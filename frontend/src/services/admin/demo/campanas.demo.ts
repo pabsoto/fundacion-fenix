@@ -3,7 +3,16 @@
 import { validarImagenes } from '@/schemas/imagen';
 import { CAMPANAS_EJEMPLO } from '@/services/admin/demo/datos-ejemplo';
 import { esperarMock, NoEncontradoError } from '@/services/admin/demo/latencia';
-import { totalesDe, type Campana, type CampanaConTotales, type CampanaEntrada } from '@/types/admin';
+import { aniosDeCampanas, cifrasDePeriodo, mesesDeCampanas } from '@/services/admin/cifras-campanas';
+import {
+  TAMANO_PAGINA_ADMIN,
+  totalesDe,
+  type Campana,
+  type CampanaConTotales,
+  type CampanaEntrada,
+  type ConsultaCampanas,
+  type PaginaCampanas,
+} from '@/types/admin';
 
 const campanas: Campana[] = structuredClone(CAMPANAS_EJEMPLO);
 
@@ -24,9 +33,42 @@ function presentar(campana: Campana): CampanaConTotales {
   };
 }
 
-export async function listCampanasDemo(): Promise<CampanaConTotales[]> {
+/** Misma respuesta que el API: filtra por año y mes, pagina y suma todo el filtro. */
+export async function listCampanasDemo(consulta: ConsultaCampanas = {}): Promise<PaginaCampanas> {
+  await esperarMock();
+  const ordenadas = [...campanas].sort(porFechaDesc);
+  const periodo = { anio: consulta.anio ?? null, mes: consulta.mes ?? null };
+  const filtro = cifrasDePeriodo(ordenadas, periodo);
+  const pagina = consulta.pagina ?? 1;
+  const limite = consulta.limite ?? TAMANO_PAGINA_ADMIN;
+  const desde = (pagina - 1) * limite;
+  return {
+    items: filtro.campanas.slice(desde, desde + limite).map(presentar),
+    total: filtro.campanas.length,
+    pagina,
+    limite,
+    totalPaginas: Math.max(1, Math.ceil(filtro.campanas.length / limite)),
+    contadores: filtro.contadores,
+    totales: filtro.totales,
+    anios: aniosDeCampanas(ordenadas),
+    meses: mesesDeCampanas(ordenadas, periodo.anio),
+  };
+}
+
+/** Todas las campañas, sin paginar. Solo para armar el resumen de la demo. */
+export async function listTodasCampanasDemo(): Promise<CampanaConTotales[]> {
   await esperarMock();
   return [...campanas].sort(porFechaDesc).map(presentar);
+}
+
+/** Igual que el API: no se eliminan las campañas cerradas. */
+export async function deleteCampanaDemo(id: string): Promise<void> {
+  await esperarMock();
+  const indice = campanas.findIndex((item) => item.id === id);
+  const campana = indice < 0 ? undefined : campanas[indice];
+  if (!campana) throw new NoEncontradoError();
+  if (campana.estado === 'cerrada') throw new Error('Reabre la campaña antes de eliminarla');
+  campanas.splice(indice, 1);
 }
 
 export async function getCampanaDemo(id: string): Promise<CampanaConTotales> {

@@ -13,7 +13,7 @@ describe('AdminCampanasPage', () => {
   it('filtra por año y mes, deja en gris un mes vacío y limpia', async () => {
     render(<AdminCampanasPage />);
 
-    expect(await screen.findByText('Mostrando 4 de 4 jornadas', {}, { timeout: 2000 })).toBeTruthy();
+    expect(await screen.findByText('Mostrando 1–4 de 4 jornadas', {}, { timeout: 2000 })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Limpiar filtros' })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Año' }));
@@ -24,7 +24,7 @@ describe('AdminCampanasPage', () => {
     fireEvent.click(screen.getByRole('option', { name: '2024' }));
 
     expect(screen.getByRole('button', { name: 'Año: 2024' })).toBeTruthy();
-    expect(screen.getByText('Mostrando 3 de 4 jornadas · 2024')).toBeTruthy();
+    expect(await screen.findByText('Mostrando 1–3 de 3 jornadas · 2024')).toBeTruthy();
     expect(screen.getByText('Total de 2024')).toBeTruthy();
     expect(screen.queryByText('Jornada Villa Adela')).toBeNull();
     expect(screen.getByText('234')).toBeTruthy();
@@ -34,13 +34,13 @@ describe('AdminCampanasPage', () => {
     expect(enero.className).toContain('text-placeholder');
     fireEvent.click(enero);
 
+    expect(await screen.findByText('Mostrando 0 jornadas · Enero 2024')).toBeTruthy();
     expect(screen.getByText('Todavía no hay registros.')).toBeTruthy();
-    expect(screen.getByText('Mostrando 0 de 4 jornadas · Enero 2024')).toBeTruthy();
     expect(screen.getByText('Total de enero 2024')).toBeTruthy();
     expect(screen.getByText('Selecciona una campaña…')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
-    expect(screen.getByText('Mostrando 4 de 4 jornadas')).toBeTruthy();
+    expect(await screen.findByText('Mostrando 1–4 de 4 jornadas')).toBeTruthy();
     expect(screen.getByText('Total acumulado')).toBeTruthy();
     expect(screen.getByText('310')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Limpiar filtros' })).toBeNull();
@@ -48,7 +48,7 @@ describe('AdminCampanasPage', () => {
 
   it('cierra una campaña publicada con confirmación y permite reabrirla', async () => {
     render(<AdminCampanasPage />);
-    await screen.findByText('Mostrando 4 de 4 jornadas', {}, { timeout: 2000 });
+    await screen.findByText('Mostrando 1–4 de 4 jornadas', {}, { timeout: 2000 });
 
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar campaña' }));
     const dialogo = screen.getByRole('dialog', { name: 'Cerrar campaña' });
@@ -70,5 +70,38 @@ describe('AdminCampanasPage', () => {
 
     expect(await screen.findByText('Campaña reabierta.', {}, { timeout: 2000 })).toBeTruthy();
     expect(await screen.findByRole('button', { name: 'Cerrar campaña' }, { timeout: 2000 })).toBeTruthy();
+  });
+
+  it('elimina una campaña solo después de confirmar en un modal', async () => {
+    render(<AdminCampanasPage />);
+    await screen.findByText('Mostrando 1–4 de 4 jornadas', {}, { timeout: 2000 });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar jornada' }));
+    const edicion = screen.getByRole('dialog', { name: 'Editar campaña' });
+    fireEvent.click(within(edicion).getByRole('button', { name: 'Eliminar campaña' }));
+
+    const confirmacion = screen.getByRole('dialog', { name: 'Eliminar campaña' });
+    expect(confirmacion.textContent).toContain('Vas a eliminar');
+    expect(confirmacion.textContent).toContain('Esta acción no se puede deshacer.');
+
+    // Cancelar no borra nada.
+    fireEvent.click(within(confirmacion).getByRole('button', { name: 'Cancelar' }));
+    expect(screen.queryByRole('dialog', { name: 'Eliminar campaña' })).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Editar campaña' })).toBeTruthy();
+
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Editar campaña' })).getByRole('button', {
+        name: 'Eliminar campaña',
+      }),
+    );
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Eliminar campaña' })).getByRole('button', {
+        name: 'Eliminar campaña',
+      }),
+    );
+
+    expect(await screen.findByText('Campaña eliminada.', {}, { timeout: 2000 })).toBeTruthy();
+    expect(await screen.findByText('Mostrando 1–3 de 3 jornadas', {}, { timeout: 2000 })).toBeTruthy();
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

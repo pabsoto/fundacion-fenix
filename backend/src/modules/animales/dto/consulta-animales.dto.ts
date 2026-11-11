@@ -1,8 +1,13 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsOptional } from 'class-validator';
+import {
+  ConsultaPaginaDto,
+  DatosPaginaDto,
+} from '../../../common/dto/pagina.dto.js';
+import { AnimalDto } from './animal.dto.js';
 
-export class ConsultaAnimalesDto {
+export class ConsultaAnimalesDto extends ConsultaPaginaDto {
   @ApiPropertyOptional({ type: Boolean })
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => {
@@ -12,4 +17,9 @@ export class ConsultaAnimalesDto {
   })
   @IsBoolean()
   adoptado?: boolean;
+}
+
+export class PaginaAnimalesDto extends DatosPaginaDto {
+  @ApiProperty({ type: AnimalDto, isArray: true })
+  readonly items: AnimalDto[];
 }

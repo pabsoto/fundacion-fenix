@@ -26,12 +26,12 @@ describe('AdminAnimalesPage', () => {
       { timeout: 2000 },
     );
     expect(seleccionada.textContent).toContain('Max');
-    expect(screen.getByText('Mostrando 8 de 8 animales')).toBeTruthy();
+    expect(screen.getByText('Mostrando 1–8 de 8 animales')).toBeTruthy();
     expect(screen.getByText('12 mar 2025')).toBeTruthy();
     expect(screen.getByText('En su adopción')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'En la fundación' }));
-    expect(screen.getByText('Mostrando 4 de 8 animales')).toBeTruthy();
+    expect(await screen.findByText('Mostrando 1–4 de 4 animales')).toBeTruthy();
     const detalle = screen.getByRole('complementary');
     expect(detalle.textContent).toContain('Apolo');
     expect(detalle.textContent).toContain('Al ingresar');

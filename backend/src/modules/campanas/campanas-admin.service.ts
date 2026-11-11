@@ -3,6 +3,7 @@ import {
   ConflictException,
   HttpException,
   Injectable,
+  Logger,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
@@ -12,6 +13,7 @@ import {
   DataSource,
   EntityManager,
   In,
+  IsNull,
   QueryFailedError,
   Repository,
 } from 'typeorm';
@@ -25,6 +27,15 @@ import {
   CifrasPeriodoDto,
   ConsultaCifrasDto,
 } from './dto/consulta-cifras.dto.js';
+import {
+  datosDePagina,
+  resolverPagina,
+} from '../../common/dto/pagina.dto.js';
+import {
+  ConsultaCampanasDto,
+  ContadoresCampanaDto,
+  PaginaCampanasDto,
+} from './dto/consulta-campanas.dto.js';
 import { CorregirCifrasCampanaDto } from './dto/corregir-cifras-campana.dto.js';
 import { GuardarCampanaDto } from './dto/guardar-campana.dto.js';
 import { StorageService } from '../storage/storage.service.js';
@@ -41,6 +52,8 @@ const CODIGOS_DATOS_INVALIDOS = new Set([
 
 @Injectable()
 export class CampanasAdminService {
+  private readonly logger = new Logger(CampanasAdminService.name);
+
   constructor(
     @InjectRepository(Campana)
     private readonly repositorio: Repository<Campana>,
@@ -50,15 +63,79 @@ export class CampanasAdminService {
     private readonly storage: StorageService,
   ) {}
 
-  async listar(): Promise<CampanaAdminDto[]> {
+  async listar(
+    consulta: ConsultaCampanasDto = {},
+  ): Promise<PaginaCampanasDto> {
+    const { pagina, limite, desde } = resolverPagina(consulta);
     try {
-      const campanas = await this.repositorio.find({
-        order: {
-          fecha: { direction: 'DESC', nulls: 'LAST' },
-          creadoEn: 'DESC',
-        },
-      });
-      return await this.aDtos(campanas);
+      const filtrada = () => {
+        const qb = this.repositorio
+          .createQueryBuilder('c')
+          .where('c.eliminadoEn IS NULL');
+        if (consulta.anio !== undefined) {
+          qb.andWhere('EXTRACT(YEAR FROM c.fecha) = :anio', {
+            anio: consulta.anio,
+          });
+        }
+        if (consulta.mes !== undefined) {
+          qb.andWhere('EXTRACT(MONTH FROM c.fecha) = :mes', {
+            mes: consulta.mes,
+          });
+        }
+        return qb;
+      };
+
+      const [campanas, total] = await filtrada()
+        .orderBy('c.fecha', 'DESC', 'NULLS LAST')
+        .addOrderBy('c.creadoEn', 'DESC')
+        .addOrderBy('c.id', 'ASC')
+        .offset(desde)
+        .limit(limite)
+        .getManyAndCount();
+
+      const suma = await filtrada()
+        .select('COALESCE(SUM(c.perrosMachos), 0)', 'perrosMachos')
+        .addSelect('COALESCE(SUM(c.perrosHembras), 0)', 'perrosHembras')
+        .addSelect('COALESCE(SUM(c.gatosMachos), 0)', 'gatosMachos')
+        .addSelect('COALESCE(SUM(c.gatosHembras), 0)', 'gatosHembras')
+        .getRawOne<Record<keyof ContadoresCampanaDto, string | number>>();
+      const contadores: ContadoresCampanaDto = {
+        perrosMachos: Number(suma?.perrosMachos ?? 0),
+        perrosHembras: Number(suma?.perrosHembras ?? 0),
+        gatosMachos: Number(suma?.gatosMachos ?? 0),
+        gatosHembras: Number(suma?.gatosHembras ?? 0),
+      };
+
+      const aniosRaw = await this.repositorio
+        .createQueryBuilder('c')
+        .select('DISTINCT CAST(EXTRACT(YEAR FROM c.fecha) AS integer)', 'valor')
+        .where('c.fecha IS NOT NULL')
+        .andWhere('c.eliminadoEn IS NULL')
+        .orderBy('valor', 'DESC')
+        .getRawMany<{ valor: number | string }>();
+
+      const mesesQb = this.repositorio
+        .createQueryBuilder('c')
+        .select('DISTINCT CAST(EXTRACT(MONTH FROM c.fecha) AS integer)', 'valor')
+        .where('c.fecha IS NOT NULL')
+        .andWhere('c.eliminadoEn IS NULL');
+      if (consulta.anio !== undefined) {
+        mesesQb.andWhere('EXTRACT(YEAR FROM c.fecha) = :anio', {
+          anio: consulta.anio,
+        });
+      }
+      const mesesRaw = await mesesQb
+        .orderBy('valor', 'ASC')
+        .getRawMany<{ valor: number | string }>();
+
+      return {
+        items: await this.aDtos(campanas),
+        ...datosDePagina(total, pagina, limite),
+        contadores,
+        totales: this.calcularTotales(contadores),
+        anios: aniosRaw.map((fila) => Number(fila.valor)),
+        meses: mesesRaw.map((fila) => Number(fila.valor)),
+      };
     } catch {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
@@ -80,7 +157,11 @@ export class CampanasAdminService {
     let detalle: CampanaAdminDto[];
     try {
       campanas = await this.repositorio.find({
-        where: { fecha: Between(desde, hasta), ...(estado && { estado }) },
+        where: {
+          fecha: Between(desde, hasta),
+          eliminadoEn: IsNull(),
+          ...(estado && { estado }),
+        },
         order: { fecha: 'ASC', creadoEn: 'ASC' },
       });
       detalle = await this.aDtos(campanas);
@@ -111,7 +192,9 @@ export class CampanasAdminService {
     let campana: Campana | null;
     let fotos: FotoCampanaAdminDto[] = [];
     try {
-      campana = await this.repositorio.findOne({ where: { id } });
+      campana = await this.repositorio.findOne({
+        where: { id, eliminadoEn: IsNull() },
+      });
       if (campana) fotos = (await this.urlsDeFotos([id])).get(id) ?? [];
     } catch {
       throw new ServiceUnavailableException(
@@ -132,7 +215,7 @@ export class CampanasAdminService {
       async (manager) => {
         const campanas = manager.getRepository(Campana);
         const existente = await campanas.findOne({
-          where: { id },
+          where: { id, eliminadoEn: IsNull() },
           lock: { mode: 'pessimistic_write' },
         });
         if (!existente) throw new NotFoundException('La campaña no existe');
@@ -208,7 +291,7 @@ export class CampanasAdminService {
       async (manager) => {
         const campanas = manager.getRepository(Campana);
         const existente = await campanas.findOne({
-          where: { id },
+          where: { id, eliminadoEn: IsNull() },
           lock: { mode: 'pessimistic_write' },
         });
         if (!existente) throw new NotFoundException('La campaña no existe');
@@ -241,6 +324,72 @@ export class CampanasAdminService {
       },
     );
     return this.aDto(actualizada, await this.fotosSinFallar(id));
+  }
+
+  /**
+   * Borrado lógico de una campaña que aún no cuenta en el contador público
+   * (borrador o publicada): deja de aparecer en el panel y en el sitio, pero el
+   * registro se conserva para auditarlo. Sus fotografías se borran de la base y
+   * de Storage porque la campaña ya no se muestra.
+   */
+  async eliminar(id: string, administradorId: string): Promise<void> {
+    const rutas = await this.ejecutar(
+      'No fue posible eliminar la campaña',
+      async (manager) => {
+        const campanas = manager.getRepository(Campana);
+        const existente = await campanas.findOne({
+          where: { id, eliminadoEn: IsNull() },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!existente) throw new NotFoundException('La campaña no existe');
+        if (existente.esHistorico) {
+          throw new ConflictException(
+            'La campaña histórica no se puede eliminar',
+          );
+        }
+        if (existente.estado === 'cerrada') {
+          throw new ConflictException('Reabre la campaña antes de eliminarla');
+        }
+
+        const datosAntes = this.aSnapshot(existente);
+        const fotos = manager.getRepository(FotoCampana);
+        const rutasFotos = (await fotos.find({ where: { campanaId: id } })).map(
+          (foto) => foto.ruta,
+        );
+        await fotos.delete({ campanaId: id });
+
+        const ahora = new Date();
+        Object.assign(existente, {
+          eliminadoEn: ahora,
+          eliminadoPorId: administradorId,
+          actualizadoPorId: administradorId,
+          actualizadoEn: ahora,
+        });
+        await campanas.save(existente);
+
+        await this.auditar(manager.getRepository(Auditoria), {
+          administradorId,
+          registroId: id,
+          accion: 'DELETE',
+          camposModificados: Object.keys(datosAntes).filter(
+            (campo) => campo !== 'id',
+          ),
+          datosAntes,
+          datosDespues: null,
+        });
+        return rutasFotos;
+      },
+    );
+
+    // Después de confirmar el borrado: si Storage falla, queda registrado.
+    for (const ruta of rutas) {
+      await this.storage.eliminar(ruta).catch((error: unknown) => {
+        this.logger.error(
+          `Limpieza pendiente de Supabase Storage para ${ruta}`,
+          error instanceof Error ? error.message : 'Error de Storage',
+        );
+      });
+    }
   }
 
   /**
@@ -315,7 +464,7 @@ export class CampanasAdminService {
     const actualizada = await this.ejecutar(mensajeFallo, async (manager) => {
       const campanas = manager.getRepository(Campana);
       const existente = await campanas.findOne({
-        where: { id },
+        where: { id, eliminadoEn: IsNull() },
         lock: { mode: 'pessimistic_write' },
       });
       if (!existente) throw new NotFoundException('La campaña no existe');

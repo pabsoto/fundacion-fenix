@@ -32,9 +32,37 @@ además la cabecera `X-CSRF-Token` obtenida mediante `GET /api/auth/me`.
 
 ## `GET /api/admin/campanas`
 
-Lista todas las campañas, incluidos los borradores, ordenadas por `fecha`
-descendente (las campañas sin fecha al final). Responde `200` con un arreglo
-del modelo anterior.
+Lista las campañas, incluidos los borradores, ordenadas por `fecha`
+descendente (las campañas sin fecha al final). La paginación y los filtros
+se resuelven en el backend.
+
+Parámetros opcionales: `pagina` (≥ 1, por defecto 1), `limite` (1–50, por
+defecto 10), `anio` (2000–2100) y `mes` (1–12). `anio` y `mes` son
+independientes; sin ninguno de los dos también se incluyen las campañas sin
+fecha. `400` si algún parámetro no es válido.
+
+Responde `200` con:
+
+```json
+{
+  "items": [ /* campañas de la página, con el modelo anterior */ ],
+  "total": 23,
+  "pagina": 1,
+  "limite": 10,
+  "totalPaginas": 3,
+  "contadores": { "perrosMachos": 0, "perrosHembras": 0, "gatosMachos": 0, "gatosHembras": 0 },
+  "totales": { "perros": 0, "gatos": 0, "machos": 0, "hembras": 0, "total": 0 },
+  "anios": [2026, 2025],
+  "meses": [3, 11]
+}
+```
+
+- `contadores` y `totales` suman **todas** las campañas del filtro, no solo las
+  de la página (alimentan la fila acumulada).
+- `anios`: años con campañas, del más reciente al más antiguo (selector de año).
+- `meses`: meses con campañas en el `anio` pedido, o en cualquier año si no se
+  filtra por año (para atenuar los meses vacíos).
+- Una página fuera de rango devuelve `items: []` con el `total` real.
 
 ## `GET /api/admin/campanas/{id}`
 
@@ -111,6 +139,21 @@ Suma las cifras de las campañas cuya `fecha` cae en el periodo; las campañas
 sin fecha no se cuentan. Responde `200` con `{ periodo, totales, campanas }`; un
 periodo sin campañas devuelve totales en 0 y `campanas: []`. Responde `400` si
 algún parámetro no es válido.
+
+## `DELETE /api/admin/campanas/{id}`
+
+Elimina (lógicamente) una campaña. Lleva `X-CSRF-Token`. Responde `204` sin cuerpo.
+
+- Solo se eliminan borradores y campañas `publicada`. Una campaña `cerrada`
+  responde `409` («Reabre la campaña antes de eliminarla») y la campaña
+  histórica también `409`.
+- Es un **borrado lógico** (migración `1733000000000-AgregarBorradoLogicoCampanas`):
+  la fila se conserva con `eliminado_en` y `eliminado_por`, y deja de aparecer en
+  el panel (listado, detalle, cifras), en el sitio público, en el resumen y en las
+  vistas de contadores. Sus fotos sí se borran (base y Storage). Queda un
+  registro `DELETE` en la auditoría con los datos anteriores.
+- `404` si no existe, `400` si `id` no es UUID, `401`, `403` y `503` como el
+  resto de rutas.
 
 ## Fotos
 

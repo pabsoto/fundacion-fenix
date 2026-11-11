@@ -92,6 +92,10 @@ export const textosAdmin = {
     },
     totalAcumulado: 'Total acumulado',
     mostrando: 'Mostrando 4 de 4 jornadas',
+    mostrandoRango: (desde: number, hasta: number, total: number) =>
+      total === 0
+        ? 'Mostrando 0 jornadas'
+        : `Mostrando ${cifra(desde)}–${cifra(hasta)} de ${cifra(total)} jornadas`,
     foto: 'Foto',
     agregarFoto: '+',
     editarJornada: 'Editar jornada',
@@ -104,6 +108,15 @@ export const textosAdmin = {
     },
     cerrarCampana: 'Cerrar campaña',
     reabrirCampana: 'Reabrir campaña',
+    eliminar: {
+      boton: 'Eliminar campaña',
+      titulo: 'Eliminar campaña',
+      cuerpo: (titulo: string) => `Vas a eliminar «${titulo}». Sus fotos se borrarán.`,
+      accion: 'Eliminar campaña',
+      eliminada: 'Campaña eliminada.',
+      /** El API rechaza eliminar campañas cerradas o la histórica. */
+      noPermitida: 'Esta campaña no se puede eliminar. Si está cerrada, reábrela primero.',
+    },
     cierre: {
       tituloCerrar: 'Cerrar campaña',
       tituloReabrir: 'Reabrir campaña',
@@ -172,6 +185,10 @@ export const textosAdmin = {
     },
     sinAdoptante: '—',
     mostrando: 'Mostrando 8 de 8 animales',
+    mostrandoRango: (desde: number, hasta: number, total: number) =>
+      total === 0
+        ? 'Mostrando 0 animales'
+        : `Mostrando ${cifra(desde)}–${cifra(hasta)} de ${cifra(total)} animales`,
     alIngresar: 'Al ingresar',
     enSuAdopcion: 'En su adopción',
     editarRegistro: 'Editar registro',
@@ -216,6 +233,12 @@ export const textosAdmin = {
     guardar: 'Guardar animal',
     guardarCambios: 'Guardar cambios',
     eliminar: 'Eliminar animal',
+  },
+  paginacion: {
+    etiqueta: 'Paginación',
+    anterior: 'Anterior',
+    siguiente: 'Siguiente',
+    pagina: (pagina: number, total: number) => `Página ${cifra(pagina)} de ${cifra(total)}`,
   },
   estado: {
     adoptado: 'Adoptado',

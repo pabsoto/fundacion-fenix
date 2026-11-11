@@ -9,6 +9,7 @@ import {
 import {
   cerrarCampana,
   createCampana,
+  deleteCampana,
   listCampanas,
   quitarFotoCampana,
   reabrirCampana,
@@ -54,11 +55,63 @@ const apiCampana = {
   fotos: [{ id: 'f1', url: 'https://fotos/1.webp', orden: 1 }],
 };
 
-describe('campanas con la API real', () => {
-  it('lista con cookie, toma las fotos del API admin y marca las cerradas como no editables', async () => {
-    fetchMock.mockResolvedValue(respuesta([apiCampana]));
+function paginaApi<T>(items: T[], extra: Record<string, unknown> = {}) {
+  return {
+    items,
+    total: items.length,
+    pagina: 1,
+    limite: 10,
+    totalPaginas: 1,
+    contadores: { perrosMachos: 0, perrosHembras: 0, gatosMachos: 0, gatosHembras: 0 },
+    totales: { perros: 0, gatos: 0, machos: 0, hembras: 0, total: 0 },
+    anios: [],
+    meses: [],
+    ...extra,
+  };
+}
 
-    const [campana] = await listCampanas();
+describe('campanas con la API real', () => {
+  it('pide la página con sus filtros y devuelve cifras, años y meses del backend', async () => {
+    fetchMock.mockResolvedValue(
+      respuesta(paginaApi([apiCampana], { total: 23, pagina: 2, totalPaginas: 3, anios: [2026], meses: [3] })),
+    );
+
+    const pagina = await listCampanas({ pagina: 2, anio: 2026, mes: 3 });
+
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain('/admin/campanas?');
+    const parametros = new URL(url).searchParams;
+    expect(Object.fromEntries(parametros)).toEqual({ pagina: '2', limite: '10', anio: '2026', mes: '3' });
+    expect(pagina).toMatchObject({ total: 23, pagina: 2, totalPaginas: 3, anios: [2026], meses: [3] });
+    expect(pagina.items).toHaveLength(1);
+  });
+
+  it('sin filtros solo envía pagina y limite', async () => {
+    fetchMock.mockResolvedValue(respuesta(paginaApi([])));
+
+    await listCampanas();
+
+    const parametros = new URL(String(fetchMock.mock.calls[0]?.[0])).searchParams;
+    expect([...parametros.keys()].sort()).toEqual(['limite', 'pagina']);
+  });
+
+  it('elimina con DELETE y el CSRF', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+
+    await deleteCampana('c1');
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/\/admin\/campanas\/c1$/);
+    expect(init.method).toBe('DELETE');
+    expect(new Headers(init.headers).get('X-CSRF-Token')).toBe('token-csrf');
+  });
+
+  it('lista con cookie, toma las fotos del API admin y marca las cerradas como no editables', async () => {
+    fetchMock.mockResolvedValue(respuesta(paginaApi([apiCampana])));
+
+    const {
+      items: [campana],
+    } = await listCampanas();
 
     expect(campana).toMatchObject({
       id: 'c1',
@@ -74,9 +127,11 @@ describe('campanas con la API real', () => {
   });
 
   it('muestra un borrador como editable y con su estado', async () => {
-    fetchMock.mockResolvedValue(respuesta([{ ...apiCampana, estado: 'borrador', fotos: [] }]));
+    fetchMock.mockResolvedValue(respuesta(paginaApi([{ ...apiCampana, estado: 'borrador', fotos: [] }])));
 
-    const [campana] = await listCampanas();
+    const {
+      items: [campana],
+    } = await listCampanas();
 
     expect(campana).toMatchObject({ estado: 'borrador', editable: true, fotos: [] });
   });
@@ -169,11 +224,14 @@ describe('animales con la API real', () => {
   };
 
   it('filtra con ?adoptado=, traduce edad y fechas y no pide fotos que no existen', async () => {
-    fetchMock.mockResolvedValue(respuesta([apiAnimal]));
+    fetchMock.mockResolvedValue(respuesta(paginaApi([apiAnimal])));
 
-    const [animal] = await listAnimales('en-la-fundacion');
+    const {
+      items: [animal],
+    } = await listAnimales({ filtro: 'en-la-fundacion', pagina: 2 });
 
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/admin/animales?adoptado=false');
+    const parametros = new URL(String(fetchMock.mock.calls[0]?.[0])).searchParams;
+    expect(Object.fromEntries(parametros)).toEqual({ adoptado: 'false', pagina: '2', limite: '10' });
     expect(animal).toMatchObject({
       nombre: 'Max',
       edad: { valor: 3, unidad: 'años' },
@@ -188,10 +246,12 @@ describe('animales con la API real', () => {
     fetchMock.mockImplementation(async (url: string) =>
       url.includes('/fotos/animal')
         ? respuesta({ animalId: 'a1', url: 'https://fotos/max.webp', expiraEnSegundos: 300 })
-        : respuesta([{ ...apiAnimal, tieneFotoAnimal: true }]),
+        : respuesta(paginaApi([{ ...apiAnimal, tieneFotoAnimal: true }])),
     );
 
-    const [animal] = await listAnimales();
+    const {
+      items: [animal],
+    } = await listAnimales();
 
     expect(animal?.fotoIngreso).toBe('https://fotos/max.webp');
     const urls = fetchMock.mock.calls.map(([url]) => String(url));

@@ -19,10 +19,12 @@ import {
 } from '@/services/admin/demo/animales.demo';
 import {
   estaAdoptado,
+  TAMANO_PAGINA_ADMIN,
   type Animal,
   type AnimalEntrada,
+  type ConsultaAnimales,
   type Especie,
-  type FiltroAnimales,
+  type Pagina,
   type Sexo,
 } from '@/types/admin';
 
@@ -115,15 +117,23 @@ function cuerpoApi(entrada: AnimalEntrada) {
   };
 }
 
+/**
+ * Una página de animales. El backend filtra por estado de adopción y pagina;
+ * las fotos solo se piden de los animales de la página.
+ */
 export async function listAnimales(
-  filtro: FiltroAnimales = 'todos',
+  { filtro = 'todos', pagina = 1, limite = TAMANO_PAGINA_ADMIN }: ConsultaAnimales = {},
   { conFotos = true }: OpcionesLista = {},
-): Promise<Animal[]> {
-  if (DEMO_SHOWCASE) return listAnimalesDemo(filtro);
-  const consulta =
-    filtro === 'adoptados' ? '?adoptado=true' : filtro === 'en-la-fundacion' ? '?adoptado=false' : '';
-  const lista = await pedirJson<ApiAnimal[]>(`/admin/animales${consulta}`);
-  return Promise.all(lista.map((animal) => desdeApi(animal, conFotos)));
+): Promise<Pagina<Animal>> {
+  if (DEMO_SHOWCASE) return listAnimalesDemo({ filtro, pagina, limite });
+  const parametros = new URLSearchParams({ pagina: String(pagina), limite: String(limite) });
+  if (filtro === 'adoptados') parametros.set('adoptado', 'true');
+  if (filtro === 'en-la-fundacion') parametros.set('adoptado', 'false');
+  const respuesta = await pedirJson<Pagina<ApiAnimal>>(`/admin/animales?${parametros.toString()}`);
+  return {
+    ...respuesta,
+    items: await Promise.all(respuesta.items.map((animal) => desdeApi(animal, conFotos))),
+  };
 }
 
 export async function getAnimal(id: string): Promise<Animal> {

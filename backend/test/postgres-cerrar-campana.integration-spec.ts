@@ -6,6 +6,7 @@ import { CrearEsquemaBase1729000000000 } from '../src/database/migrations/172900
 import { CrearTablaSesionesAdmin1730000000000 } from '../src/database/migrations/1730000000000-CrearTablaSesionesAdmin.js';
 import { CrearTablaFotosCampana1731000000000 } from '../src/database/migrations/1731000000000-CrearTablaFotosCampana.js';
 import { CrearTablaAnimales1732000000000 } from '../src/database/migrations/1732000000000-CrearTablaAnimales.js';
+import { AgregarBorradoLogicoCampanas1733000000000 } from '../src/database/migrations/1733000000000-AgregarBorradoLogicoCampanas.js';
 import { CampanasAdminService } from '../src/modules/campanas/campanas-admin.service.js';
 import { Campana } from '../src/modules/campanas/entities/campana.entity.js';
 import { FotoCampana } from '../src/modules/campanas/entities/foto-campana.entity.js';
@@ -30,6 +31,7 @@ function conexion(base: string, completa: boolean): DataSource {
             CrearTablaSesionesAdmin1730000000000,
             CrearTablaFotosCampana1731000000000,
             CrearTablaAnimales1732000000000,
+            AgregarBorradoLogicoCampanas1733000000000,
           ],
         }
       : {}),

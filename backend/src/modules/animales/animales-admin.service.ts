@@ -10,7 +10,15 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { Auditoria } from '../auditoria/entities/auditoria.entity.js';
 import { StorageService } from '../storage/storage.service.js';
+import {
+  datosDePagina,
+  resolverPagina,
+} from '../../common/dto/pagina.dto.js';
 import { AnimalDto } from './dto/animal.dto.js';
+import {
+  ConsultaAnimalesDto,
+  PaginaAnimalesDto,
+} from './dto/consulta-animales.dto.js';
 import { RegistrarAnimalDto } from './dto/registrar-animal.dto.js';
 import { Animal } from './entities/animal.entity.js';
 
@@ -25,16 +33,26 @@ export class AnimalesAdminService {
     private readonly storage: StorageService,
   ) {}
 
-  async listar(adoptado?: boolean): Promise<AnimalDto[]> {
+  async listar(
+    consulta: ConsultaAnimalesDto = {},
+  ): Promise<PaginaAnimalesDto> {
+    const { pagina, limite, desde } = resolverPagina(consulta);
     try {
-      const animales = await this.repositorio.find({
+      const [animales, total] = await this.repositorio.findAndCount({
         where: {
           eliminadoEn: IsNull(),
-          ...(adoptado !== undefined && { adoptado }),
+          ...(consulta.adoptado !== undefined && {
+            adoptado: consulta.adoptado,
+          }),
         },
-        order: { creadoEn: 'DESC' },
+        order: { creadoEn: 'DESC', id: 'ASC' },
+        skip: desde,
+        take: limite,
       });
-      return animales.map((animal) => this.aDto(animal));
+      return {
+        items: animales.map((animal) => this.aDto(animal)),
+        ...datosDePagina(total, pagina, limite),
+      };
     } catch {
       throw new ServiceUnavailableException(
         'Los animales no están disponibles temporalmente',

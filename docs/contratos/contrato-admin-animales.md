@@ -29,14 +29,17 @@ no viajan en el JSON y `fechaAdopcion` no tiene campo en el formulario.
 `null` o `{ valor, unidad }` con `unidad` `años` o `meses`. Adoptado significa
 que `adoptadoPor` tiene texto.
 
-## `listAnimales(filtro?)`
+## `listAnimales({ filtro?, pagina?, limite? })`
 
 `GET /api/admin/animales`. `filtro` opcional: `todos` (sin query), `adoptados`
-(`?adoptado=true`) o `en-la-fundacion` (`?adoptado=false`). La pantalla filtra
-en el cliente y pide la lista completa.
+(`?adoptado=true`) o `en-la-fundacion` (`?adoptado=false`). `pagina` (≥ 1, por
+defecto 1) y `limite` (1–50, por defecto 10) paginan en el backend; el filtro
+también se aplica en el backend. Orden: más recientes primero.
 
-Responde `200` con el arreglo del modelo. `400` si `adoptado` no es booleano.
-`401` sin sesión. `403` cuenta desactivada. `503` si PostgreSQL no responde.
+Responde `200` con `{ items, total, pagina, limite, totalPaginas }`, donde
+`items` es el arreglo del modelo y `total` cuenta todos los animales del filtro.
+`400` si `adoptado` no es booleano o `pagina`/`limite` no son válidos. `401` sin
+sesión. `403` cuenta desactivada. `503` si PostgreSQL no responde.
 
 ## `getAnimal(id)`
 

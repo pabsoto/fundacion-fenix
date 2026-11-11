@@ -3,15 +3,12 @@ import { Cat, Eye, Hash, PawPrint, X } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import { listCampanas, subirFotosCampana } from '@/services/admin/campanas.service';
-import {
-  aniosDeCampanas,
-  cifrasDePeriodo,
-  type PeriodoCampanas,
-} from '@/services/admin/cifras-campanas';
-import type { CampanaConTotales, ContadoresCampana } from '@/types/admin';
-import { totalesDe } from '@/types/admin';
+import type { PeriodoCampanas } from '@/services/admin/cifras-campanas';
+import type { CampanaConTotales, ContadoresCampana, PaginaCampanas } from '@/types/admin';
+import { TAMANO_PAGINA_ADMIN, totalesDe } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
 import { MarcaEstado } from '@/components/admin/ui/MarcaEstado';
+import { Paginacion } from '@/components/admin/ui/Paginacion';
 import { SelectFiltro } from '@/components/admin/ui/SelectFiltro';
 import { PanelDetalle } from '@/components/admin/ui/PanelDetalle';
 import { TablaSeleccion, type ColumnaTabla } from '@/components/admin/ui/TablaSeleccion';
@@ -76,11 +73,10 @@ function celdaNumero(valor: number) {
 
 const PERIODO_TODOS: PeriodoCampanas = { anio: null, mes: null };
 
-function textoMostrando(visibles: number, total: number) {
-  return textosAdmin.campanas.mostrando.replace(
-    '4 de 4',
-    `${formatNumber(visibles, 'es')} de ${formatNumber(total, 'es')}`,
-  );
+function textoMostrando(datos: PaginaCampanas) {
+  const desde = (datos.pagina - 1) * datos.limite + 1;
+  const hasta = desde + datos.items.length - 1;
+  return textosAdmin.campanas.mostrandoRango(desde, hasta, datos.total);
 }
 
 function nombrePeriodo(periodo: PeriodoCampanas, mesEnMayuscula: boolean): string {
@@ -91,18 +87,6 @@ function nombrePeriodo(periodo: PeriodoCampanas, mesEnMayuscula: boolean): strin
   }
   if (periodo.anio) partes.push(String(periodo.anio));
   return partes.join(' ');
-}
-
-function mesesConCampanas(lista: CampanaConTotales[], anio: number | null): Set<number> {
-  const meses = new Set<number>();
-  for (const campana of lista) {
-    if (!campana.fecha) continue;
-    const [anioFecha, mesFecha] = campana.fecha.split('-').map(Number);
-    if (!anioFecha || !mesFecha || mesFecha < 1 || mesFecha > 12) continue;
-    if (anio !== null && anioFecha !== anio) continue;
-    meses.add(mesFecha);
-  }
-  return meses;
 }
 
 const COLUMNAS: ColumnaTabla<CampanaConTotales>[] = [
@@ -273,7 +257,9 @@ export function AdminCampanasPage() {
   const textos = textosAdmin.campanas;
   const [carga, setCarga] = useState<Carga>('cargando');
   const [intento, setIntento] = useState(0);
-  const [campanas, setCampanas] = useState<CampanaConTotales[]>([]);
+  const [datos, setDatos] = useState<PaginaCampanas | null>(null);
+  const [pagina, setPagina] = useState(1);
+  const [cambiando, setCambiando] = useState(false);
   const [seleccionId, setSeleccionId] = useState<string | null>(null);
   const [fotoActiva, setFotoActiva] = useState(0);
   const [modal, setModal] = useState<CampanaConTotales | null | 'crear'>(null);
@@ -282,28 +268,41 @@ export function AdminCampanasPage() {
   const [fotoPendiente, setFotoPendiente] = useState<FotoPendiente | null>(null);
   const [reintentandoFoto, setReintentandoFoto] = useState(false);
   const [periodo, setPeriodo] = useState<PeriodoCampanas>(PERIODO_TODOS);
-  const periodoRef = useRef(periodo);
+  /** Campaña que se debe seleccionar al terminar la próxima carga (la recién guardada). */
+  const preferidoRef = useRef<string | undefined>(undefined);
 
+  // El backend filtra por periodo, pagina y suma las cifras del filtro completo.
   useEffect(() => {
     let vivo = true;
-    listCampanas()
-      .then((lista) => {
+    listCampanas({
+      pagina,
+      limite: TAMANO_PAGINA_ADMIN,
+      anio: periodo.anio ?? undefined,
+      mes: periodo.mes ?? undefined,
+    })
+      .then((respuesta) => {
         if (!vivo) return;
-        setCampanas(lista);
-        setSeleccionId((actual) =>
-          elegirId(cifrasDePeriodo(lista, periodoRef.current).campanas, actual),
-        );
+        // Tras eliminar la última campaña de una página, se retrocede a una que exista.
+        if (respuesta.items.length === 0 && pagina > 1) {
+          setPagina(Math.max(1, respuesta.totalPaginas));
+          return;
+        }
+        setDatos(respuesta);
+        setSeleccionId((actual) => elegirId(respuesta.items, actual, preferidoRef.current));
+        preferidoRef.current = undefined;
         setFotoActiva(0);
         setCarga('listo');
+        setCambiando(false);
       })
       .catch(() => {
         if (!vivo) return;
         setCarga('error');
+        setCambiando(false);
       });
     return () => {
       vivo = false;
     };
-  }, [intento]);
+  }, [intento, pagina, periodo.anio, periodo.mes]);
 
   function seleccionar(id: string) {
     setSeleccionId(id);
@@ -316,9 +315,8 @@ export function AdminCampanasPage() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const cifras = cifrasDePeriodo(campanas, periodo);
-  const visibles = cifras.campanas;
-  const anios = aniosDeCampanas(campanas);
+  const visibles = datos?.items ?? [];
+  const anios = datos?.anios ?? [];
   const seleccionada = visibles.find((campana) => campana.id === seleccionId) ?? null;
   const hayFiltro = periodo.anio !== null || periodo.mes !== null;
 
@@ -328,23 +326,20 @@ export function AdminCampanasPage() {
   }
 
   function fijarPeriodo(siguiente: PeriodoCampanas) {
-    periodoRef.current = siguiente;
-    const lista = cifrasDePeriodo(campanas, siguiente).campanas;
-    const sigue = seleccionId !== null && lista.some((campana) => campana.id === seleccionId);
-    const nuevo = sigue ? seleccionId : (lista[0]?.id ?? null);
-    if (nuevo !== seleccionId) setFotoActiva(0);
+    setCambiando(true);
+    setPagina(1);
     setPeriodo(siguiente);
-    setSeleccionId(nuevo);
   }
 
-  async function recargar(preferido?: string) {
-    const lista = await listCampanas();
-    setCampanas(lista);
-    setSeleccionId((actual) =>
-      elegirId(cifrasDePeriodo(lista, periodoRef.current).campanas, actual, preferido),
-    );
-    setFotoActiva(0);
-    setCarga('listo');
+  function irAPagina(siguiente: number) {
+    setCambiando(true);
+    setPagina(siguiente);
+  }
+
+  /** Vuelve a pedir la página actual. `preferido` queda seleccionada si sigue en ella. */
+  function recargar(preferido?: string) {
+    preferidoRef.current = preferido;
+    setIntento((valor) => valor + 1);
   }
 
   async function reintentarFoto() {
@@ -354,7 +349,7 @@ export function AdminCampanasPage() {
       await subirFotosCampana(fotoPendiente.id, fotoPendiente.archivos);
       const id = fotoPendiente.id;
       setFotoPendiente(null);
-      await recargar(id);
+      recargar(id);
       setToast(textosAdmin.supuestos.guardado);
     } catch {
       /* El aviso sigue visible para volver a intentar la subida. */
@@ -415,14 +410,14 @@ export function AdminCampanasPage() {
         </Card>
       ) : null}
 
-      {carga === 'listo' ? (
+      {carga === 'listo' && datos ? (
         <Card radius="admin" elevated="panel" className="flex items-stretch">
           <div className="flex min-w-0 flex-1 flex-col gap-3 px-3 py-4">
             <div className="flex h-(--size-control-admin) items-center justify-between gap-4 px-3">
               <div className="flex min-w-0 items-center gap-2.5">
                 <h2 className="t-barra text-negro">{textos.todas}</h2>
                 <p className="t-small text-negro">
-                  {formatNumber(visibles.length, 'es')} {textos.jornadas}
+                  {formatNumber(datos.total, 'es')} {textos.jornadas}
                 </p>
               </div>
               <BotonPildora onClick={() => setModal('crear')}>{textos.nueva}</BotonPildora>
@@ -453,7 +448,7 @@ export function AdminCampanasPage() {
                   opciones={textosAdmin.resumen.meses.map((nombre, indice) => ({
                     valor: String(indice + 1),
                     etiqueta: nombre,
-                    atenuada: !mesesConCampanas(campanas, periodo.anio).has(indice + 1),
+                    atenuada: !datos.meses.includes(indice + 1),
                   }))}
                   disposicion="cuadricula"
                   onCambio={(valor) =>
@@ -488,17 +483,25 @@ export function AdminCampanasPage() {
                       ? textos.filtros.totalDe(nombrePeriodo(periodo, false))
                       : textos.totalAcumulado
                   }
-                  contadores={cifras.contadores}
+                  contadores={datos.contadores}
                 />
               }
             />
               </div>
             </div>
-            <p className="t-small mt-auto px-3 text-negro">
-              {hayFiltro
-                ? `${textoMostrando(visibles.length, campanas.length)} · ${nombrePeriodo(periodo, true)}`
-                : textoMostrando(visibles.length, campanas.length)}
-            </p>
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-3 px-3">
+              <p className="t-small text-negro">
+                {hayFiltro
+                  ? `${textoMostrando(datos)} · ${nombrePeriodo(periodo, true)}`
+                  : textoMostrando(datos)}
+              </p>
+              <Paginacion
+                pagina={datos.pagina}
+                totalPaginas={datos.totalPaginas}
+                onCambiar={irAPagina}
+                deshabilitado={cambiando}
+              />
+            </div>
           </div>
           {seleccionada ? (
             <PanelDetalle
@@ -610,8 +613,7 @@ export function AdminCampanasPage() {
           onHecho={(id) => {
             setToast(cierre.accion === 'cerrar' ? textos.cierre.cerrada : textos.cierre.reabierta);
             setCierre(null);
-            setIntento((valor) => valor + 1);
-            setSeleccionId(id);
+            recargar(id);
           }}
         />
       ) : null}
@@ -622,11 +624,20 @@ export function AdminCampanasPage() {
           campana={modal === 'crear' ? null : modal}
           onCerrar={() => setModal(null)}
           onGuardada={(id, fotosFallidas) => {
+            const eraNueva = modal === 'crear';
             setModal(null);
             setFotoPendiente(fotosFallidas ? { id, archivos: fotosFallidas } : null);
             setToast(fotosFallidas ? null : textosAdmin.supuestos.guardado);
-            setIntento((valor) => valor + 1);
-            setSeleccionId(id);
+            // Una campaña nueva puede quedar en cualquier página: se vuelve a la primera.
+            if (eraNueva) setPagina(1);
+            recargar(id);
+          }}
+          onEliminada={() => {
+            setModal(null);
+            setFotoPendiente(null);
+            setToast(textos.eliminar.eliminada);
+            setSeleccionId(null);
+            recargar();
           }}
         />
       ) : null}
