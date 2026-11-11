@@ -504,4 +504,132 @@ describe('administración de campañas (e2e)', () => {
       expect(auditorias).toHaveLength(0);
     });
   });
+
+  describe('cerrar y reabrir', () => {
+    const publicadaConCifras = () =>
+      crearCampana({
+        estado: 'publicada',
+        lugar: 'Villa Adela, El Alto',
+        fecha: '2026-11-21',
+        perrosMachos: 4,
+        gatosHembras: 6,
+      });
+
+    it.each(['cerrar', 'reabrir'])('rechaza %s sin sesión (401)', async (accion) => {
+      await servidor().post(`${URL_BASE}/${randomUUID()}/${accion}`).expect(401);
+    });
+
+    it.each(['cerrar', 'reabrir'])(
+      'rechaza %s sin token CSRF (403)',
+      async (accion) => {
+        const existente = publicadaConCifras();
+        campanas = [existente];
+        await servidor()
+          .post(`${URL_BASE}/${existente.id}/${accion}`)
+          .set('Cookie', COOKIE)
+          .expect(403);
+        expect(campanas[0].estado).toBe('publicada');
+      },
+    );
+
+    it('cierra una campaña publicada, la audita y responde 200', async () => {
+      const existente = publicadaConCifras();
+      campanas = [existente];
+
+      const respuesta = await servidor()
+        .post(`${URL_BASE}/${existente.id}/cerrar`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(200);
+
+      expect(respuesta.body).toMatchObject({
+        id: existente.id,
+        estado: 'cerrada',
+        totales: { total: 10 },
+      });
+      expect(campanas[0]).toMatchObject({
+        estado: 'cerrada',
+        actualizadoPorId: ADMIN_ID,
+      });
+      expect(auditorias[0]).toMatchObject({
+        accion: 'UPDATE',
+        datosAntes: expect.objectContaining({ estado: 'publicada' }),
+        datosDespues: expect.objectContaining({ estado: 'cerrada' }),
+      });
+    });
+
+    it('responde 409 al cerrar un borrador', async () => {
+      const borradorExistente = crearCampana();
+      campanas = [borradorExistente];
+
+      await servidor()
+        .post(`${URL_BASE}/${borradorExistente.id}/cerrar`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(409);
+      expect(auditorias).toHaveLength(0);
+    });
+
+    it('responde 400 al cerrar una campaña sin esterilizaciones', async () => {
+      const vacia = crearCampana({
+        estado: 'publicada',
+        lugar: 'Senkata',
+        fecha: '2026-03-15',
+      });
+      campanas = [vacia];
+
+      await servidor()
+        .post(`${URL_BASE}/${vacia.id}/cerrar`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(400);
+      expect(campanas[0].estado).toBe('publicada');
+    });
+
+    it('responde 404 si la campaña no existe', async () => {
+      await servidor()
+        .post(`${URL_BASE}/${randomUUID()}/cerrar`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(404);
+    });
+
+    it('reabre una campaña cerrada y vuelve a permitir editarla', async () => {
+      const cerrada = { ...publicadaConCifras(), estado: 'cerrada' } as Campana;
+      campanas = [cerrada];
+
+      await servidor()
+        .post(`${URL_BASE}/${cerrada.id}/reabrir`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(200);
+      expect(campanas[0].estado).toBe('publicada');
+
+      await servidor()
+        .put(`${URL_BASE}/${cerrada.id}`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .send(publicada)
+        .expect(200);
+    });
+
+    it('responde 409 al reabrir una campaña que no está cerrada', async () => {
+      const existente = publicadaConCifras();
+      campanas = [existente];
+
+      await servidor()
+        .post(`${URL_BASE}/${existente.id}/reabrir`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(409);
+    });
+
+    it('responde 400 si el id no es un UUID', async () => {
+      await servidor()
+        .post(`${URL_BASE}/no-es-uuid/cerrar`)
+        .set('Cookie', COOKIE)
+        .set('X-CSRF-Token', CSRF)
+        .expect(400);
+    });
+  });
 });

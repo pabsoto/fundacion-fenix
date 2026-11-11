@@ -102,6 +102,20 @@ export const textosAdmin = {
       borrador: 'Borrador',
       cerrada: 'Cerrada',
     },
+    cerrarCampana: 'Cerrar campaña',
+    reabrirCampana: 'Reabrir campaña',
+    cierre: {
+      tituloCerrar: 'Cerrar campaña',
+      tituloReabrir: 'Reabrir campaña',
+      cuerpoCerrar: (titulo: string, total: string) =>
+        `Las ${total} esterilizaciones de «${titulo}» se sumarán al contador público y la jornada dejará de poder editarse. Podrás reabrirla si necesitas corregirla.`,
+      cuerpoReabrir: (titulo: string) =>
+        `«${titulo}» volverá a poder editarse y sus cifras dejarán de contar en el contador público hasta que la cierres de nuevo.`,
+      confirmarCerrar: 'Cerrar campaña',
+      confirmarReabrir: 'Reabrir campaña',
+      cerrada: 'Campaña cerrada.',
+      reabierta: 'Campaña reabierta.',
+    },
   },
   nuevaCampana: {
     titulo: 'Nueva campaña',

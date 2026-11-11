@@ -1,11 +1,13 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import type { EstadoCampana } from '../campanas/entities/campana.entity.js';
+import { StorageService } from '../storage/storage.service.js';
 import { CampanaPublicaDto } from './dto/campana-publica.dto.js';
 import { EstadisticasPublicasDto } from './dto/estadisticas-publicas.dto.js';
 
@@ -45,7 +47,12 @@ interface EstadisticasFila {
 
 @Injectable()
 export class ImpactoPublicoService {
-  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
+  private readonly logger = new Logger(ImpactoPublicoService.name);
+
+  constructor(
+    @InjectDataSource() private readonly dataSource: DataSource,
+    private readonly storage: StorageService,
+  ) {}
 
   async listarCampanas(anio?: number): Promise<CampanaPublicaDto[]> {
     const parametros: unknown[] = [];
@@ -84,8 +91,8 @@ export class ImpactoPublicoService {
                 resumen.total_hembras,
                 resumen.total_esterilizaciones,
                 coalesce(
-                  (select array_agg(foto.ruta_archivo order by foto.orden)
-                     from public.campana_fotos foto
+                  (select array_agg(foto.ruta order by foto.orden)
+                     from public.fotos_campana foto
                     where foto.campana_id = campana.id),
                   array[]::text[]
                 ) as fotos
@@ -118,8 +125,24 @@ export class ImpactoPublicoService {
       machos: Number(fila.total_machos),
       hembras: Number(fila.total_hembras),
       total: Number(fila.total_esterilizaciones),
-      fotos: fila.fotos ?? [],
+      fotos: this.urlsDeFotos(fila.id, fila.fotos ?? []),
     };
+  }
+
+  /**
+   * Las fotos se guardan como rutas de Storage (las sube el panel). Si el
+   * almacenamiento no está disponible, la campaña se muestra sin fotos en
+   * lugar de dejar de publicarse.
+   */
+  private urlsDeFotos(campanaId: string, rutas: string[]): string[] {
+    try {
+      return rutas.map((ruta) => this.storage.obtenerUrlPublica(ruta));
+    } catch (error) {
+      this.logger.warn(
+        `No se pudieron resolver las fotos de la campaña ${campanaId}: ${String(error)}`,
+      );
+      return [];
+    }
   }
 
   async obtenerEstadisticas(): Promise<EstadisticasPublicasDto> {

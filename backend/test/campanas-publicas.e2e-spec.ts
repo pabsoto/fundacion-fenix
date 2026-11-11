@@ -7,6 +7,7 @@ import { App } from 'supertest/types.js';
 import { vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApplication } from '../src/config/configure-application.js';
+import { StorageService } from '../src/modules/storage/storage.service.js';
 
 const URL_BASE = '/api/public/campanas';
 const ADMIN_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -154,6 +155,10 @@ describe('API pública de campañas (e2e)', () => {
         options: { type: 'postgres' },
         query,
       })
+      .overrideProvider(StorageService)
+      .useValue({
+        obtenerUrlPublica: (ruta: string) => `https://cdn.test/${ruta}`,
+      })
       .compile();
 
     app = modulo.createNestApplication();
@@ -236,7 +241,7 @@ describe('API pública de campañas (e2e)', () => {
           machos: 30,
           hembras: 34,
           total: 64,
-          fotos: ['campanas/senkata/1.webp'],
+          fotos: ['https://cdn.test/campanas/senkata/1.webp'],
         },
       ]);
     });

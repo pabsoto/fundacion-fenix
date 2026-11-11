@@ -411,4 +411,109 @@ describe('CampanasAdminService', () => {
     expect(campana.id).toBe(CAMPANA_ID);
     expect(campana.fotos).toEqual([]);
   });
+
+  describe('cerrar y reabrir', () => {
+    const publicada = () =>
+      crearCampana({
+        estado: 'publicada',
+        lugar: 'Villa Adela, El Alto',
+        fecha: '2026-11-21',
+      });
+
+    it('cierra una campaña publicada y la audita', async () => {
+      findOneTransaccion.mockResolvedValue(publicada());
+
+      const resultado = await servicio.cerrar(CAMPANA_ID, ADMIN_ID);
+
+      expect(resultado.estado).toBe('cerrada');
+      expect(guardar.mock.calls[0][0]).toMatchObject({
+        estado: 'cerrada',
+        actualizadoPorId: ADMIN_ID,
+      });
+      expect(crearAuditoria).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accion: 'UPDATE',
+          registroId: CAMPANA_ID,
+          camposModificados: expect.arrayContaining(['estado']),
+        }),
+      );
+    });
+
+    it('no cierra un borrador', async () => {
+      findOneTransaccion.mockResolvedValue(crearCampana());
+
+      await expect(servicio.cerrar(CAMPANA_ID, ADMIN_ID)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+      expect(guardar).not.toHaveBeenCalled();
+    });
+
+    it('no vuelve a cerrar una campaña ya cerrada', async () => {
+      findOneTransaccion.mockResolvedValue(crearCampana({ estado: 'cerrada' }));
+
+      await expect(servicio.cerrar(CAMPANA_ID, ADMIN_ID)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+      expect(guardar).not.toHaveBeenCalled();
+    });
+
+    it('exige al menos una esterilización para cerrar', async () => {
+      findOneTransaccion.mockResolvedValue(
+        Object.assign(publicada(), {
+          perrosMachos: 0,
+          perrosHembras: 0,
+          gatosMachos: 0,
+          gatosHembras: 0,
+        }),
+      );
+
+      await expect(servicio.cerrar(CAMPANA_ID, ADMIN_ID)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(guardar).not.toHaveBeenCalled();
+    });
+
+    it('responde 404 al cerrar una campaña inexistente', async () => {
+      findOneTransaccion.mockResolvedValue(null);
+
+      await expect(servicio.cerrar(CAMPANA_ID, ADMIN_ID)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it('reabre una campaña cerrada dejándola publicada', async () => {
+      findOneTransaccion.mockResolvedValue(
+        crearCampana({
+          estado: 'cerrada',
+          lugar: 'Villa Adela, El Alto',
+          fecha: '2026-11-21',
+        }),
+      );
+
+      const resultado = await servicio.reabrir(CAMPANA_ID, ADMIN_ID);
+
+      expect(resultado.estado).toBe('publicada');
+      expect(guardar.mock.calls[0][0]).toMatchObject({ estado: 'publicada' });
+    });
+
+    it('no reabre una campaña que no está cerrada', async () => {
+      findOneTransaccion.mockResolvedValue(publicada());
+
+      await expect(
+        servicio.reabrir(CAMPANA_ID, ADMIN_ID),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(guardar).not.toHaveBeenCalled();
+    });
+
+    it('no reabre la campaña histórica', async () => {
+      findOneTransaccion.mockResolvedValue(
+        crearCampana({ estado: 'cerrada', esHistorico: true }),
+      );
+
+      await expect(
+        servicio.reabrir(CAMPANA_ID, ADMIN_ID),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(guardar).not.toHaveBeenCalled();
+    });
+  });
 });

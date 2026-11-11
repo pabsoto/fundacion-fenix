@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { AdminCampanasPage } from '@/pages/admin/AdminCampanasPage';
 
 // DEMO: estas pruebas usan los datos simulados del panel.
@@ -44,5 +44,31 @@ describe('AdminCampanasPage', () => {
     expect(screen.getByText('Total acumulado')).toBeTruthy();
     expect(screen.getByText('310')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Limpiar filtros' })).toBeNull();
+  });
+
+  it('cierra una campaña publicada con confirmación y permite reabrirla', async () => {
+    render(<AdminCampanasPage />);
+    await screen.findByText('Mostrando 4 de 4 jornadas', {}, { timeout: 2000 });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar campaña' }));
+    const dialogo = screen.getByRole('dialog', { name: 'Cerrar campaña' });
+    expect(dialogo.textContent).toContain('se sumarán al contador público');
+
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Cerrar campaña' }));
+
+    expect(await screen.findByText('Campaña cerrada.', {}, { timeout: 2000 })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Reabrir campaña' }, { timeout: 2000 })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Cerrar campaña' })).toBeNull();
+    expect(screen.getByText('Esta jornada está cerrada y no se puede editar.')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reabrir campaña' }));
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Reabrir campaña' })).getByRole('button', {
+        name: 'Reabrir campaña',
+      }),
+    );
+
+    expect(await screen.findByText('Campaña reabierta.', {}, { timeout: 2000 })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Cerrar campaña' }, { timeout: 2000 })).toBeTruthy();
   });
 });

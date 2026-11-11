@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAnimal, listAnimales } from '@/services/admin/animales.service';
-import { createCampana, listCampanas, subirFotosCampana } from '@/services/admin/campanas.service';
+import {
+  cerrarCampana,
+  createCampana,
+  listCampanas,
+  reabrirCampana,
+  subirFotosCampana,
+} from '@/services/admin/campanas.service';
 import { fijarCsrfAdmin } from '@/services/admin/cliente-admin';
 import type { AnimalEntrada, CampanaEntrada } from '@/types/admin';
 
@@ -208,5 +214,36 @@ describe('animales con la API real', () => {
       edad: 3,
       edadUnidad: 'anios',
     });
+  });
+});
+
+describe('cierre de campañas con la API real', () => {
+  it('cierra con POST, el token CSRF y devuelve la campaña cerrada', async () => {
+    fetchMock.mockResolvedValue(respuesta({ ...apiCampana, estado: 'cerrada' }));
+
+    const campana = await cerrarCampana('c1');
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/\/admin\/campanas\/c1\/cerrar$/);
+    expect(init.method).toBe('POST');
+    expect(new Headers(init.headers).get('X-CSRF-Token')).toBe('token-csrf');
+    expect(campana).toMatchObject({ estado: 'cerrada', editable: false });
+  });
+
+  it('reabre con POST y deja la campaña editable', async () => {
+    fetchMock.mockResolvedValue(respuesta({ ...apiCampana, estado: 'publicada' }));
+
+    const campana = await reabrirCampana('c1');
+
+    expect(String(fetchMock.mock.calls[0]?.[0])).toMatch(/\/admin\/campanas\/c1\/reabrir$/);
+    expect(campana).toMatchObject({ estado: 'publicada', editable: true });
+  });
+
+  it('propaga el mensaje del API cuando no se puede cerrar', async () => {
+    fetchMock.mockResolvedValue(
+      respuesta({ message: 'Registra al menos una esterilización antes de cerrar la campaña' }, 400),
+    );
+
+    await expect(cerrarCampana('c1')).rejects.toThrow(/al menos una esterilización/);
   });
 });

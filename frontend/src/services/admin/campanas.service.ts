@@ -8,9 +8,11 @@ import {
   soloFecha,
 } from '@/services/admin/cliente-admin';
 import {
+  cerrarCampanaDemo,
   createCampanaDemo,
   getCampanaDemo,
   listCampanasDemo,
+  reabrirCampanaDemo,
   subirFotosCampanaDemo,
   updateCampanaDemo,
 } from '@/services/admin/demo/campanas.demo';
@@ -95,6 +97,21 @@ export async function updateCampana(
     cuerpoApi(entrada),
   );
   return desdeApi(actualizada);
+}
+
+/**
+ * Cierra una campaña publicada: sus cifras pasan al contador público y deja
+ * de editarse. El API exige al menos una esterilización.
+ */
+export async function cerrarCampana(id: string): Promise<CampanaConTotales> {
+  if (DEMO_SHOWCASE) return cerrarCampanaDemo(id);
+  return desdeApi(await enviarJson<ApiCampanaAdmin>('POST', `/admin/campanas/${id}/cerrar`, {}));
+}
+
+/** Devuelve una campaña cerrada a publicada para poder corregirla. */
+export async function reabrirCampana(id: string): Promise<CampanaConTotales> {
+  if (DEMO_SHOWCASE) return reabrirCampanaDemo(id);
+  return desdeApi(await enviarJson<ApiCampanaAdmin>('POST', `/admin/campanas/${id}/reabrir`, {}));
 }
 
 /** Sube las fotos una por una (JPG, PNG o WebP, 5 MB) después de guardar la campaña. */

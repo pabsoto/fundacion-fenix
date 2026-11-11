@@ -17,6 +17,7 @@ import { PanelDetalle } from '@/components/admin/ui/PanelDetalle';
 import { TablaSeleccion, type ColumnaTabla } from '@/components/admin/ui/TablaSeleccion';
 import { Card } from '@/components/ui/Card';
 import { CampanaFormModal } from '@/pages/admin/CampanaFormModal';
+import { CierreCampanaModal, type AccionCierre } from '@/pages/admin/CierreCampanaModal';
 
 type Carga = 'cargando' | 'listo' | 'error';
 type FotoPendiente = { id: string; archivos: File[] };
@@ -277,6 +278,7 @@ export function AdminCampanasPage() {
   const [fotoActiva, setFotoActiva] = useState(0);
   const [modal, setModal] = useState<CampanaConTotales | null | 'crear'>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [cierre, setCierre] = useState<{ campana: CampanaConTotales; accion: AccionCierre } | null>(null);
   const [fotoPendiente, setFotoPendiente] = useState<FotoPendiente | null>(null);
   const [reintentandoFoto, setReintentandoFoto] = useState(false);
   const [periodo, setPeriodo] = useState<PeriodoCampanas>(PERIODO_TODOS);
@@ -521,9 +523,22 @@ export function AdminCampanasPage() {
                   >
                     {textos.editarJornada}
                   </BotonPildora>
-                  {seleccionada.editable ? null : (
-                    <p className="t-small text-center text-negro">{textosAdmin.supuestos.campanaCerrada}</p>
-                  )}
+                  {seleccionada.estado === 'publicada' ? (
+                    <BotonPildora onClick={() => setCierre({ campana: seleccionada, accion: 'cerrar' })}>
+                      {textos.cerrarCampana}
+                    </BotonPildora>
+                  ) : null}
+                  {seleccionada.estado === 'cerrada' ? (
+                    <>
+                      <p className="t-small text-center text-negro">{textosAdmin.supuestos.campanaCerrada}</p>
+                      <BotonPildora
+                        variante="ghost"
+                        onClick={() => setCierre({ campana: seleccionada, accion: 'reabrir' })}
+                      >
+                        {textos.reabrirCampana}
+                      </BotonPildora>
+                    </>
+                  ) : null}
                 </div>
               }
               filas={[
@@ -585,6 +600,20 @@ export function AdminCampanasPage() {
         >
           {toast}
         </p>
+      ) : null}
+
+      {cierre ? (
+        <CierreCampanaModal
+          campana={cierre.campana}
+          accion={cierre.accion}
+          onCerrar={() => setCierre(null)}
+          onHecho={(id) => {
+            setToast(cierre.accion === 'cerrar' ? textos.cierre.cerrada : textos.cierre.reabierta);
+            setCierre(null);
+            setIntento((valor) => valor + 1);
+            setSeleccionId(id);
+          }}
+        />
       ) : null}
 
       {modal ? (

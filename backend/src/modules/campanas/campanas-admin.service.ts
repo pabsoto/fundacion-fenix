@@ -23,7 +23,7 @@ import {
 } from './dto/consulta-cifras.dto.js';
 import { GuardarCampanaDto } from './dto/guardar-campana.dto.js';
 import { StorageService } from '../storage/storage.service.js';
-import { Campana } from './entities/campana.entity.js';
+import { Campana, type EstadoCampana } from './entities/campana.entity.js';
 import { FotoCampana } from './entities/foto-campana.entity.js';
 
 const TABLA = 'campanas';
@@ -192,6 +192,108 @@ export class CampanasAdminService {
         return guardada;
       },
     );
+    return this.aDto(actualizada, await this.fotosSinFallar(id));
+  }
+
+  /**
+   * Cierra una campaña publicada: desde ese momento sus cifras cuentan en el
+   * contador público y deja de editarse desde el formulario.
+   */
+  async cerrar(
+    id: string,
+    administradorId: string,
+  ): Promise<CampanaAdminDto> {
+    return this.cambiarEstado(
+      id,
+      administradorId,
+      'cerrada',
+      'No fue posible cerrar la campaña',
+      (existente) => {
+        if (existente.estado === 'cerrada') {
+          throw new ConflictException('La campaña ya está cerrada');
+        }
+        if (existente.estado !== 'publicada') {
+          throw new ConflictException(
+            'Solo se puede cerrar una campaña publicada',
+          );
+        }
+        const total =
+          existente.perrosMachos +
+          existente.perrosHembras +
+          existente.gatosMachos +
+          existente.gatosHembras;
+        if (total <= 0) {
+          throw new BadRequestException(
+            'Registra al menos una esterilización antes de cerrar la campaña',
+          );
+        }
+      },
+    );
+  }
+
+  /**
+   * Vuelve a publicar una campaña cerrada para poder corregirla. Sus cifras
+   * dejan de contar en el contador público hasta que se cierre de nuevo.
+   */
+  async reabrir(
+    id: string,
+    administradorId: string,
+  ): Promise<CampanaAdminDto> {
+    return this.cambiarEstado(
+      id,
+      administradorId,
+      'publicada',
+      'No fue posible reabrir la campaña',
+      (existente) => {
+        if (existente.estado !== 'cerrada') {
+          throw new ConflictException('La campaña no está cerrada');
+        }
+        if (existente.esHistorico) {
+          throw new ConflictException(
+            'La campaña histórica siempre permanece cerrada',
+          );
+        }
+      },
+    );
+  }
+
+  private async cambiarEstado(
+    id: string,
+    administradorId: string,
+    estado: EstadoCampana,
+    mensajeFallo: string,
+    validar: (existente: Campana) => void,
+  ): Promise<CampanaAdminDto> {
+    const actualizada = await this.ejecutar(mensajeFallo, async (manager) => {
+      const campanas = manager.getRepository(Campana);
+      const existente = await campanas.findOne({
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!existente) throw new NotFoundException('La campaña no existe');
+      validar(existente);
+
+      const datosAntes = this.aSnapshot(existente);
+      Object.assign(existente, {
+        estado,
+        actualizadoPorId: administradorId,
+        actualizadoEn: new Date(),
+      });
+      const guardada = await campanas.save(existente);
+      const datosDespues = this.aSnapshot(guardada);
+
+      await this.auditar(manager.getRepository(Auditoria), {
+        administradorId,
+        registroId: guardada.id,
+        accion: 'UPDATE',
+        camposModificados: Object.keys(datosDespues).filter(
+          (campo) => campo !== 'id' && datosAntes[campo] !== datosDespues[campo],
+        ),
+        datosAntes,
+        datosDespues,
+      });
+      return guardada;
+    });
     return this.aDto(actualizada, await this.fotosSinFallar(id));
   }
 

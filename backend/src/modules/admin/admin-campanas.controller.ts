@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Header,
+  HttpCode,
   Param,
   ParseUUIDPipe,
   Post,
@@ -193,6 +194,75 @@ export class AdminCampanasController {
     @Req() request: PeticionConSesion,
   ): Promise<CampanaAdminDto> {
     return this.campanas.actualizar(id, entrada, this.administradorId(request));
+  }
+
+  @Post(':id/cerrar')
+  @HttpCode(200)
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Cerrar una campaña',
+    description:
+      'Pasa una campaña publicada a cerrada: sus cifras empiezan a contar en el contador público y deja de editarse. Exige al menos una esterilización. Registra la auditoría en la misma transacción.',
+  })
+  @ApiOkResponse({ type: CampanaAdminDto })
+  @ApiBadRequestResponse({
+    description:
+      'El identificador no es válido o la campaña no tiene esterilizaciones registradas.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta está desactivada o el token CSRF es inválido.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'La campaña no existe.',
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'La campaña ya está cerrada o todavía no está publicada.',
+    type: ErrorResponseDto,
+  })
+  cerrar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: PeticionConSesion,
+  ): Promise<CampanaAdminDto> {
+    return this.campanas.cerrar(id, this.administradorId(request));
+  }
+
+  @Post(':id/reabrir')
+  @HttpCode(200)
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Reabrir una campaña cerrada',
+    description:
+      'Devuelve una campaña cerrada a publicada para corregirla. Sus cifras dejan de contar en el contador público hasta que se cierre otra vez. Registra la auditoría en la misma transacción.',
+  })
+  @ApiOkResponse({ type: CampanaAdminDto })
+  @ApiBadRequestResponse({
+    description: 'El identificador no es un UUID.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta está desactivada o el token CSRF es inválido.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'La campaña no existe.',
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'La campaña no está cerrada o es la campaña histórica.',
+    type: ErrorResponseDto,
+  })
+  reabrir(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: PeticionConSesion,
+  ): Promise<CampanaAdminDto> {
+    return this.campanas.reabrir(id, this.administradorId(request));
   }
 
   @Post(':id/fotos')

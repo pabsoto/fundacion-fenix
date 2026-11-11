@@ -18,7 +18,7 @@ function presentar(campana: Campana): CampanaConTotales {
   return {
     ...structuredClone(campana),
     totales: totalesDe(campana),
-    editable: true,
+    editable: campana.estado !== 'cerrada',
   };
 }
 
@@ -68,4 +68,29 @@ export async function subirFotosCampanaDemo(
   const campana: Campana = { ...actual, fotos: [...actual.fotos, ...urls] };
   campanas[indice] = campana;
   return presentar(campana);
+}
+
+export async function cerrarCampanaDemo(id: string): Promise<CampanaConTotales> {
+  await esperarMock();
+  const indice = campanas.findIndex((item) => item.id === id);
+  const actual = indice < 0 ? undefined : campanas[indice];
+  if (!actual) throw new NoEncontradoError();
+  if (actual.estado !== 'publicada') {
+    throw new Error('Solo se puede cerrar una campaña publicada');
+  }
+  if (totalesDe(actual).total <= 0) {
+    throw new Error('Registra al menos una esterilización antes de cerrar la campaña');
+  }
+  campanas[indice] = { ...actual, estado: 'cerrada' };
+  return presentar(campanas[indice]);
+}
+
+export async function reabrirCampanaDemo(id: string): Promise<CampanaConTotales> {
+  await esperarMock();
+  const indice = campanas.findIndex((item) => item.id === id);
+  const actual = indice < 0 ? undefined : campanas[indice];
+  if (!actual) throw new NoEncontradoError();
+  if (actual.estado !== 'cerrada') throw new Error('La campaña no está cerrada');
+  campanas[indice] = { ...actual, estado: 'publicada' };
+  return presentar(campanas[indice]);
 }
