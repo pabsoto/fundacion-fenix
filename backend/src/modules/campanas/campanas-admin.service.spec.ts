@@ -15,7 +15,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Auditoria } from '../auditoria/entities/auditoria.entity.js';
 import { CampanasAdminService } from './campanas-admin.service.js';
 import { GuardarCampanaDto } from './dto/guardar-campana.dto.js';
+import { StorageService } from '../storage/storage.service.js';
 import { Campana } from './entities/campana.entity.js';
+import { FotoCampana } from './entities/foto-campana.entity.js';
 
 const ADMIN_ID = '11111111-1111-1111-1111-111111111111';
 const OTRO_ADMIN = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -81,9 +83,14 @@ describe('CampanasAdminService', () => {
     ) => operacion(manager),
   );
 
+  const findFotos = vi.fn(async () => [] as unknown[]);
+  const obtenerUrlPublica = vi.fn((ruta: string) => `https://fotos/${ruta}`);
+
   const servicio = new CampanasAdminService(
     { find, findOne } as unknown as Repository<Campana>,
     { transaction } as unknown as DataSource,
+    { find: findFotos } as unknown as Repository<FotoCampana>,
+    { obtenerUrlPublica } as unknown as StorageService,
   );
 
   beforeEach(() => {
@@ -361,5 +368,47 @@ describe('CampanasAdminService', () => {
     await expect(servicio.listar()).rejects.toBeInstanceOf(
       ServiceUnavailableException,
     );
+  });
+
+  it('incluye las fotos de cada campaña, en orden, con una sola consulta', async () => {
+    const otraId = '33333333-3333-3333-3333-333333333333';
+    find.mockResolvedValue([
+      crearCampana(),
+      crearCampana({ id: otraId, tituloEs: 'Sin fotos' }),
+    ]);
+    findFotos.mockResolvedValue([
+      { campanaId: CAMPANA_ID, ruta: 'c/1.webp', orden: 1 },
+      { campanaId: CAMPANA_ID, ruta: 'c/2.webp', orden: 2 },
+    ]);
+
+    const lista = await servicio.listar();
+
+    expect(findFotos).toHaveBeenCalledTimes(1);
+    expect(lista[0].fotos).toEqual([
+      'https://fotos/c/1.webp',
+      'https://fotos/c/2.webp',
+    ]);
+    expect(lista[1].fotos).toEqual([]);
+  });
+
+  it('devuelve las fotos de una campaña al obtenerla', async () => {
+    findOne.mockResolvedValue(crearCampana());
+    findFotos.mockResolvedValue([
+      { campanaId: CAMPANA_ID, ruta: 'c/1.webp', orden: 1 },
+    ]);
+
+    const campana = await servicio.obtener(CAMPANA_ID);
+
+    expect(campana.fotos).toEqual(['https://fotos/c/1.webp']);
+  });
+
+  it('responde la campaña actualizada aunque falle la consulta de fotos', async () => {
+    findOneTransaccion.mockResolvedValue(crearCampana());
+    findFotos.mockRejectedValue(new Error('storage caído'));
+
+    const campana = await servicio.actualizar(CAMPANA_ID, entrada, ADMIN_ID);
+
+    expect(campana.id).toBe(CAMPANA_ID);
+    expect(campana.fotos).toEqual([]);
   });
 });

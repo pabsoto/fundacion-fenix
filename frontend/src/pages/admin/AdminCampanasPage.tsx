@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Cat, Hash, PawPrint, X } from 'lucide-react';
+import { Cat, Eye, Hash, PawPrint, X } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import { listCampanas, subirFotosCampana } from '@/services/admin/campanas.service';
@@ -11,6 +11,7 @@ import {
 import type { CampanaConTotales, ContadoresCampana } from '@/types/admin';
 import { totalesDe } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
+import { MarcaEstado } from '@/components/admin/ui/MarcaEstado';
 import { SelectFiltro } from '@/components/admin/ui/SelectFiltro';
 import { PanelDetalle } from '@/components/admin/ui/PanelDetalle';
 import { TablaSeleccion, type ColumnaTabla } from '@/components/admin/ui/TablaSeleccion';
@@ -109,12 +110,20 @@ const COLUMNAS: ColumnaTabla<CampanaConTotales>[] = [
     encabezado: textosAdmin.campanas.columnas.campana,
     crece: true,
     className: 'min-w-col-campana',
-    celda: (campana) => (
-      <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="t-fila truncate text-negro">{campana.titulo}</span>
-        {campana.lugar ? <span className="t-small truncate text-negro">{campana.lugar}</span> : null}
-      </span>
-    ),
+    celda: (campana) => {
+      const detalle = [
+        campana.estado === 'borrador' ? textosAdmin.campanas.estados.borrador : null,
+        campana.lugar,
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      return (
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <span className="t-fila truncate text-negro">{campana.titulo}</span>
+          {detalle ? <span className="t-small truncate text-negro">{detalle}</span> : null}
+        </span>
+      );
+    },
   },
   {
     id: 'fecha',
@@ -543,6 +552,16 @@ export function AdminCampanasPage() {
                   icono: <Cat className={icono} aria-hidden="true" />,
                   etiqueta: textos.columnas.gatosHembras,
                   valor: formatNumber(seleccionada.gatosHembras, 'es'),
+                },
+                {
+                  id: 'estado',
+                  icono: <Eye className={icono} aria-hidden="true" />,
+                  etiqueta: textos.estado,
+                  valor: (
+                    <MarcaEstado activo={seleccionada.estado === 'publicada'}>
+                      {textos.estados[seleccionada.estado]}
+                    </MarcaEstado>
+                  ),
                 },
               ]}
             />

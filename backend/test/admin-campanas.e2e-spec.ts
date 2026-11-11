@@ -14,6 +14,8 @@ import { Auditoria } from '../src/modules/auditoria/entities/auditoria.entity.js
 import { CookieSesionService } from '../src/modules/auth/services/cookie-sesion.service.js';
 import { SesionAdminService } from '../src/modules/auth/services/sesion-admin.service.js';
 import { Campana } from '../src/modules/campanas/entities/campana.entity.js';
+import { FotoCampana } from '../src/modules/campanas/entities/foto-campana.entity.js';
+import { StorageService } from '../src/modules/storage/storage.service.js';
 
 const ADMIN_ID = '11111111-1111-1111-1111-111111111111';
 const COOKIE = 'fenix_session=sesion-valida';
@@ -128,6 +130,10 @@ describe('administración de campañas (e2e)', () => {
       .useValue(dataSource)
       .overrideProvider(getRepositoryToken(Campana))
       .useValue(repositorioLectura)
+      .overrideProvider(getRepositoryToken(FotoCampana))
+      .useValue({ find: vi.fn(async () => []) })
+      .overrideProvider(StorageService)
+      .useValue({ obtenerUrlPublica: vi.fn() })
       .overrideProvider(SesionAdminService)
       .useValue({
         validar: vi.fn(async () => ({

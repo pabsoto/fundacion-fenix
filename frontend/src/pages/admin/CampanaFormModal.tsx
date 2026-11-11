@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
+import { capacidadesAdmin } from '@/services/admin/capacidades';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import { validarCampana, type CampanaFormulario, type ErroresCampana } from '@/schemas/campana';
@@ -7,6 +8,7 @@ import { guardarCampana, subirFotosCampana } from '@/services/admin/campanas.ser
 import type { CampanaConTotales } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
 import { CampoTexto } from '@/components/admin/ui/CampoTexto';
+import { Interruptor } from '@/components/admin/ui/Interruptor';
 import { ModalAdmin } from '@/components/admin/ui/ModalAdmin';
 import { ZonaFotos, type FotoExistente } from '@/components/admin/ui/ZonaFotos';
 
@@ -26,6 +28,7 @@ const VACIO: CampanaFormulario = {
   lugar: '',
   fecha: '',
   descripcion: '',
+  publicada: true,
   perrosMachos: '',
   perrosHembras: '',
   gatosMachos: '',
@@ -40,6 +43,7 @@ function formularioDe(campana: CampanaConTotales | null): CampanaFormulario {
     lugar: campana.lugar ?? '',
     fecha: campana.fecha ?? '',
     descripcion: campana.descripcion ?? '',
+    publicada: campana.estado !== 'borrador',
     perrosMachos: String(campana.perrosMachos),
     perrosHembras: String(campana.perrosHembras),
     gatosMachos: String(campana.gatosMachos),
@@ -193,7 +197,7 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
           <div className="w-fecha-campo shrink-0">
             <CampoTexto
               id={`${formId}-fecha`}
-              etiqueta={textos.fecha}
+              etiqueta={formulario.publicada ? textos.fecha : textos.fechaOpcional}
               tipo="date"
               idioma="es"
               valor={formulario.fecha}
@@ -283,6 +287,17 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
           </div>
           <ChevronDown className="size-5 shrink-0 text-negro" aria-hidden="true" />
         </div>
+        <Interruptor
+          id={`${formId}-publicada`}
+          etiqueta={textos.publicada}
+          nota={textos.publicadaNota}
+          activo={formulario.publicada}
+          onChange={(activo) => {
+            if (guardando) return;
+            setFormulario((actual) => ({ ...actual, publicada: activo }));
+            if (!activo) setErrores((actual) => ({ ...actual, lugar: undefined, fecha: undefined }));
+          }}
+        />
         <div className="flex flex-col gap-2">
           <p className="t-chip text-negro">{textos.fotos}</p>
           <ZonaFotos
@@ -293,8 +308,11 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
             archivos={formulario.fotos}
             onArchivos={(fotos) => setFormulario((actual) => ({ ...actual, fotos }))}
             existentes={existentes}
-            onQuitarExistente={(clave) =>
-              setGuardadas((actuales) => actuales.filter((foto) => foto.clave !== clave))
+            onQuitarExistente={
+              capacidadesAdmin.quitarFotoCampana
+                ? (clave) =>
+                    setGuardadas((actuales) => actuales.filter((foto) => foto.clave !== clave))
+                : undefined
             }
             nota={textos.notaFotos}
           />

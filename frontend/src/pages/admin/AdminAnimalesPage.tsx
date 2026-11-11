@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Calendar, Cat, Heart, MapPin, Mars, PawPrint, User, Venus } from 'lucide-react';
+import { capacidadesAdmin } from '@/services/admin/capacidades';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import {
@@ -140,7 +141,7 @@ const COLUMNAS: ColumnaTabla<Animal>[] = [
     encabezado: textosAdmin.animales.columnas.estado,
     className: 'w-col-estado',
     celda: (animal) => (
-      <MarcaEstado adoptado={estaAdoptado(animal)}>
+      <MarcaEstado activo={estaAdoptado(animal)}>
         {estaAdoptado(animal) ? textosAdmin.estado.adoptado : textosAdmin.estado.enLaFundacion}
       </MarcaEstado>
     ),
@@ -200,7 +201,7 @@ function filasDetalle(animal: Animal): FilaDetalle[] {
       icono: <Heart className={icono} aria-hidden="true" />,
       etiqueta: textos.columnas.estado,
       valor: (
-        <MarcaEstado adoptado={adoptado}>
+        <MarcaEstado activo={adoptado}>
           {adoptado ? textosAdmin.estado.adoptado : textosAdmin.estado.enLaFundacion}
         </MarcaEstado>
       ),
@@ -451,9 +452,11 @@ export function AdminAnimalesPage() {
                   : []),
               ]}
               accion={
-                <BotonPildora variante="ghost" onClick={() => setModal(seleccionado)}>
-                  {textos.editarRegistro}
-                </BotonPildora>
+                capacidadesAdmin.editarAnimal ? (
+                  <BotonPildora variante="ghost" onClick={() => setModal(seleccionado)}>
+                    {textos.editarRegistro}
+                  </BotonPildora>
+                ) : undefined
               }
               filas={filasDetalle(seleccionado)}
             />

@@ -4,9 +4,9 @@ import { totalesDe, type ContadoresCampana, type TotalesCampana } from '@/types/
  * Periodo del filtro de campañas.
  * `anio` null es «Todos» y `mes` null es «Todos los meses».
  *
- * TODO(backend): al integrar, sustituir esta función por
- * GET /api/admin/campanas/cifras?anio=&mes=. Ese endpoint exige `anio`
- * y no incluye las campañas sin fecha ni en el año completo.
+ * Se calcula en el cliente con la lista de campañas, que ya es real. No se usa
+ * GET /api/admin/campanas/cifras?anio=&mes= porque exige `anio` y deja fuera las
+ * campañas sin fecha, que el filtro «Todos» sí debe incluir.
  */
 export type PeriodoCampanas = {
   anio: number | null;

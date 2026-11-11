@@ -1,6 +1,9 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { AdminAnimalesPage } from '@/pages/admin/AdminAnimalesPage';
+
+// DEMO: estas pruebas usan los datos simulados del panel.
+vi.mock('@/lib/demo', () => ({ DEMO_SHOWCASE: true }));
 
 afterEach(() => {
   cleanup();

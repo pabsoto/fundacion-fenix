@@ -11,6 +11,7 @@ import {
   Between,
   DataSource,
   EntityManager,
+  In,
   QueryFailedError,
   Repository,
 } from 'typeorm';
@@ -21,7 +22,9 @@ import {
   ConsultaCifrasDto,
 } from './dto/consulta-cifras.dto.js';
 import { GuardarCampanaDto } from './dto/guardar-campana.dto.js';
+import { StorageService } from '../storage/storage.service.js';
 import { Campana } from './entities/campana.entity.js';
+import { FotoCampana } from './entities/foto-campana.entity.js';
 
 const TABLA = 'campanas';
 
@@ -37,6 +40,9 @@ export class CampanasAdminService {
     @InjectRepository(Campana)
     private readonly repositorio: Repository<Campana>,
     @InjectDataSource() private readonly dataSource: DataSource,
+    @InjectRepository(FotoCampana)
+    private readonly fotos: Repository<FotoCampana>,
+    private readonly storage: StorageService,
   ) {}
 
   async listar(): Promise<CampanaAdminDto[]> {
@@ -47,7 +53,7 @@ export class CampanasAdminService {
           creadoEn: 'DESC',
         },
       });
-      return campanas.map((campana) => this.aDto(campana));
+      return await this.aDtos(campanas);
     } catch {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
@@ -66,11 +72,13 @@ export class CampanasAdminService {
     const hasta = `${anio}-${mesTexto ?? '12'}-${String(ultimoDia).padStart(2, '0')}`;
 
     let campanas: Campana[];
+    let detalle: CampanaAdminDto[];
     try {
       campanas = await this.repositorio.find({
         where: { fecha: Between(desde, hasta), ...(estado && { estado }) },
         order: { fecha: 'ASC', creadoEn: 'ASC' },
       });
+      detalle = await this.aDtos(campanas);
     } catch {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
@@ -90,27 +98,30 @@ export class CampanasAdminService {
     return {
       periodo: { anio, mes: mes ?? null },
       totales: this.calcularTotales(suma),
-      campanas: campanas.map((campana) => this.aDto(campana)),
+      campanas: detalle,
     };
   }
 
   async obtener(id: string): Promise<CampanaAdminDto> {
     let campana: Campana | null;
+    let fotos: string[] = [];
     try {
       campana = await this.repositorio.findOne({ where: { id } });
+      if (campana) fotos = (await this.urlsDeFotos([id])).get(id) ?? [];
     } catch {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
       );
     }
     if (!campana) throw new NotFoundException('La campaña no existe');
-    return this.aDto(campana);
+    return this.aDto(campana, fotos);
   }
 
   async crear(
     entrada: GuardarCampanaDto,
     administradorId: string,
   ): Promise<CampanaAdminDto> {
+    // Una campaña nueva todavía no tiene fotografías.
     return this.ejecutar('No fue posible crear la campaña', async (manager) => {
       const campanas = manager.getRepository(Campana);
       const ahora = new Date();
@@ -144,7 +155,7 @@ export class CampanasAdminService {
     entrada: GuardarCampanaDto,
     administradorId: string,
   ): Promise<CampanaAdminDto> {
-    return this.ejecutar(
+    const actualizada = await this.ejecutar(
       'No fue posible actualizar la campaña',
       async (manager) => {
         const campanas = manager.getRepository(Campana);
@@ -178,8 +189,41 @@ export class CampanasAdminService {
           datosAntes,
           datosDespues,
         });
-        return this.aDto(guardada);
+        return guardada;
       },
+    );
+    return this.aDto(actualizada, await this.fotosSinFallar(id));
+  }
+
+  /** La escritura ya se guardó: si las fotos fallan, se responde sin ellas. */
+  private async fotosSinFallar(id: string): Promise<string[]> {
+    try {
+      return (await this.urlsDeFotos([id])).get(id) ?? [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** Una sola consulta para todas las campañas, ordenadas como la galería. */
+  private async urlsDeFotos(ids: string[]): Promise<Map<string, string[]>> {
+    const urls = new Map<string, string[]>();
+    if (ids.length === 0) return urls;
+    const fotos = await this.fotos.find({
+      where: { campanaId: In(ids) },
+      order: { orden: 'ASC' },
+    });
+    for (const foto of fotos) {
+      const lista = urls.get(foto.campanaId) ?? [];
+      lista.push(this.storage.obtenerUrlPublica(foto.ruta));
+      urls.set(foto.campanaId, lista);
+    }
+    return urls;
+  }
+
+  private async aDtos(campanas: Campana[]): Promise<CampanaAdminDto[]> {
+    const urls = await this.urlsDeFotos(campanas.map((campana) => campana.id));
+    return campanas.map((campana) =>
+      this.aDto(campana, urls.get(campana.id) ?? []),
     );
   }
 
@@ -240,7 +284,7 @@ export class CampanasAdminService {
     };
   }
 
-  private aDto(campana: Campana): CampanaAdminDto {
+  private aDto(campana: Campana, fotos: string[] = []): CampanaAdminDto {
     return {
       id: campana.id,
       tituloEs: campana.tituloEs,
@@ -256,6 +300,7 @@ export class CampanasAdminService {
       gatosHembras: campana.gatosHembras,
       totales: this.calcularTotales(campana),
       esHistorico: campana.esHistorico,
+      fotos,
       creadoEn: new Date(campana.creadoEn).toISOString(),
       actualizadoEn: new Date(campana.actualizadoEn).toISOString(),
     };

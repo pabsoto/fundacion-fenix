@@ -84,6 +84,9 @@ export class AnimalesAdminService {
           const datosDespues: Record<string, unknown> = {
             ...this.aDto(guardado),
           };
+          // Indicadores de solo lectura: no son datos guardados del animal.
+          delete datosDespues.tieneFotoAnimal;
+          delete datosDespues.tieneFotoEntrega;
           const auditorias = manager.getRepository(Auditoria);
           await auditorias.save(
             auditorias.create({
@@ -150,6 +153,8 @@ export class AnimalesAdminService {
       nombreAdoptante: animal.nombreAdoptante,
       direccionAdoptante: animal.direccionAdoptante,
       fechaAdopcion: animal.fechaAdopcion,
+      tieneFotoAnimal: animal.fotoAnimalRuta !== null,
+      tieneFotoEntrega: animal.fotoEntregaRuta !== null,
       creadoEn: new Date(animal.creadoEn).toISOString(),
       actualizadoEn: new Date(animal.actualizadoEn).toISOString(),
     };

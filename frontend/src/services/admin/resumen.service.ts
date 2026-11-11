@@ -151,8 +151,8 @@ export function calcularResumen(
   };
 }
 
-// TODO(backend): no existe GET /api/admin/resumen. Se calcula aquí con las listas.
+// Falta GET /api/admin/resumen en el backend: se calcula aquí con las listas reales.
 export async function getResumen(): Promise<Resumen> {
-  const [campanas, animales] = await Promise.all([listCampanas(), listAnimales()]);
+  const [campanas, animales] = await Promise.all([listCampanas(), listAnimales('todos', { conFotos: false })]);
   return calcularResumen(campanas, animales);
 }

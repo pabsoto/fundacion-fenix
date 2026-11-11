@@ -67,6 +67,13 @@ export class CampanaAdminDto {
   @ApiProperty({ example: false })
   readonly esHistorico: boolean;
 
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    description: 'URLs públicas de las fotografías, en el orden de la galería.',
+  })
+  readonly fotos: string[];
+
   @ApiProperty({ format: 'date-time' })
   readonly creadoEn: string;
 

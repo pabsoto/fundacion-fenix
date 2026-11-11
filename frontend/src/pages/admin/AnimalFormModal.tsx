@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import { Calendar, Lock, MapPin, Trash2, User } from 'lucide-react';
+import { capacidadesAdmin } from '@/services/admin/capacidades';
 import { textosAdmin } from '@/content/textos-admin';
 import {
   validarAnimal,
@@ -258,7 +259,7 @@ export function AnimalFormModal({
         onCerrar={cerrar}
         pie={
           <>
-            {edicion ? (
+            {edicion && capacidadesAdmin.eliminarAnimal ? (
               <BotonPildora
                 variante="ghost"
                 className="mr-auto gap-2"
@@ -399,10 +400,14 @@ export function AnimalFormModal({
               archivos={formulario.fotoIngreso ? [formulario.fotoIngreso] : []}
               onArchivos={(archivos) => actualizar('fotoIngreso', archivos[0] ?? null)}
               existentes={ingresoExistente}
-              onQuitarExistente={() => {
-                setFotoIngresoUrl(null);
-                setQuitarIngreso(true);
-              }}
+              onQuitarExistente={
+                capacidadesAdmin.quitarFotoAnimal
+                  ? () => {
+                      setFotoIngresoUrl(null);
+                      setQuitarIngreso(true);
+                    }
+                  : undefined
+              }
             />
             {errores.fotoIngreso ? (
               <p className="t-small text-naranja" role="alert">
@@ -460,10 +465,14 @@ export function AnimalFormModal({
                   archivos={formulario.fotoAdopcion ? [formulario.fotoAdopcion] : []}
                   onArchivos={(archivos) => actualizar('fotoAdopcion', archivos[0] ?? null)}
                   existentes={adopcionExistente}
-                  onQuitarExistente={() => {
-                    setFotoAdopcionUrl(null);
-                    setQuitarAdopcion(true);
-                  }}
+                  onQuitarExistente={
+                    capacidadesAdmin.quitarFotoAnimal
+                      ? () => {
+                          setFotoAdopcionUrl(null);
+                          setQuitarAdopcion(true);
+                        }
+                      : undefined
+                  }
                 />
                 {errores.fotoAdopcion ? (
                   <p className="t-small text-naranja" role="alert">
