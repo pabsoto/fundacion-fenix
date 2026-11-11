@@ -42,6 +42,10 @@ import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
 import { CampanasAdminService } from '../campanas/campanas-admin.service.js';
 import { CampanaAdminDto } from '../campanas/dto/campana-admin.dto.js';
+import {
+  ConsultaCampanasDto,
+  PaginaCampanasDto,
+} from '../campanas/dto/consulta-campanas.dto.js';
 import { CorregirCifrasCampanaDto } from '../campanas/dto/corregir-cifras-campana.dto.js';
 import {
   CifrasPeriodoDto,
@@ -86,16 +90,21 @@ export class AdminCampanasController {
   @Header('Cache-Control', 'no-store')
   @ApiSecurity('cookieAuth')
   @ApiOperation({
-    summary: 'Listar todas las campañas',
-    description: 'Incluye borradores. Ordena por fecha descendente.',
+    summary: 'Listar campañas (paginado)',
+    description:
+      'Incluye borradores. Ordena por fecha descendente. Filtra por `anio` y `mes` y pagina con `pagina`/`limite` (10 por página por defecto, máximo 50). Sin filtro de fecha incluye las campañas sin fecha. Además de la página devuelve las cifras de todo el filtro (`contadores`, `totales`) y los años y meses con campañas para los selectores.',
   })
-  @ApiOkResponse({ type: CampanaAdminDto, isArray: true })
+  @ApiOkResponse({ type: PaginaCampanasDto })
+  @ApiBadRequestResponse({
+    description: 'La página, el límite, el año o el mes no son válidos.',
+    type: ErrorResponseDto,
+  })
   @ApiForbiddenResponse({
     description: 'La cuenta administrativa está desactivada.',
     type: ErrorResponseDto,
   })
-  listar(): Promise<CampanaAdminDto[]> {
-    return this.campanas.listar();
+  listar(@Query() consulta: ConsultaCampanasDto): Promise<PaginaCampanasDto> {
+    return this.campanas.listar(consulta);
   }
 
   @Get('cifras')
@@ -229,6 +238,40 @@ export class AdminCampanasController {
     @Req() request: PeticionConSesion,
   ): Promise<CampanaAdminDto> {
     return this.campanas.actualizar(id, entrada, this.administradorId(request));
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Eliminar una campaña',
+    description:
+      'Borra la campaña, sus fotografías (también de Storage) y deja el registro en la auditoría. Solo se pueden eliminar borradores y campañas publicadas: las cerradas deben reabrirse antes y la campaña histórica no se elimina.',
+  })
+  @ApiNoContentResponse({ description: 'La campaña se eliminó.' })
+  @ApiBadRequestResponse({
+    description: 'El identificador no es un UUID.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta está desactivada o el token CSRF es inválido.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'La campaña no existe.',
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'La campaña está cerrada o es la campaña histórica.',
+    type: ErrorResponseDto,
+  })
+  eliminar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: PeticionConSesion,
+  ): Promise<void> {
+    return this.campanas.eliminar(id, this.administradorId(request));
   }
 
   @Post(':id/cerrar')

@@ -70,6 +70,16 @@ export class Campana {
   })
   actualizadoPor: Administrador | null;
 
+  @Column({ name: 'eliminado_por', type: 'uuid', nullable: true })
+  eliminadoPorId: string | null;
+
+  @ManyToOne(() => Administrador, { nullable: true, onDelete: 'RESTRICT' })
+  @JoinColumn({
+    name: 'eliminado_por',
+    foreignKeyConstraintName: 'campanas_eliminado_por_fkey',
+  })
+  eliminadoPor: Administrador | null;
+
   @Column({ name: 'creado_en', type: 'timestamptz', default: () => 'now()' })
   creadoEn: Date;
 
@@ -79,4 +89,8 @@ export class Campana {
     default: () => 'now()',
   })
   actualizadoEn: Date;
+
+  /** Borrado lógico: una campaña con fecha aquí ya no existe para el panel ni el sitio. */
+  @Column({ name: 'eliminado_en', type: 'timestamptz', nullable: true })
+  eliminadoEn: Date | null;
 }

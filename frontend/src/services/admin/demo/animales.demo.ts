@@ -5,9 +5,11 @@ import { ANIMALES_EJEMPLO } from '@/services/admin/demo/datos-ejemplo';
 import { esperarMock, NoEncontradoError } from '@/services/admin/demo/latencia';
 import {
   estaAdoptado,
+  TAMANO_PAGINA_ADMIN,
   type Animal,
   type AnimalEntrada,
-  type FiltroAnimales,
+  type ConsultaAnimales,
+  type Pagina,
 } from '@/types/admin';
 
 const animales: Animal[] = structuredClone(ANIMALES_EJEMPLO);
@@ -25,15 +27,34 @@ function exigir(id: string): { indice: number; animal: Animal } {
   return { indice, animal };
 }
 
-export async function listAnimalesDemo(filtro: FiltroAnimales = 'todos'): Promise<Animal[]> {
+function filtrados({ filtro = 'todos' }: ConsultaAnimales): Animal[] {
+  return animales.filter((animal) => {
+    if (filtro === 'adoptados') return estaAdoptado(animal);
+    if (filtro === 'en-la-fundacion') return !estaAdoptado(animal);
+    return true;
+  });
+}
+
+/** Misma respuesta que el API: filtra y pagina. */
+export async function listAnimalesDemo(consulta: ConsultaAnimales = {}): Promise<Pagina<Animal>> {
   await esperarMock();
-  return animales
-    .filter((animal) => {
-      if (filtro === 'adoptados') return estaAdoptado(animal);
-      if (filtro === 'en-la-fundacion') return !estaAdoptado(animal);
-      return true;
-    })
-    .map(copiar);
+  const lista = filtrados(consulta);
+  const pagina = consulta.pagina ?? 1;
+  const limite = consulta.limite ?? TAMANO_PAGINA_ADMIN;
+  const desde = (pagina - 1) * limite;
+  return {
+    items: lista.slice(desde, desde + limite).map(copiar),
+    total: lista.length,
+    pagina,
+    limite,
+    totalPaginas: Math.max(1, Math.ceil(lista.length / limite)),
+  };
+}
+
+/** Todos los animales, sin paginar. Solo para armar el resumen de la demo. */
+export async function listTodosAnimalesDemo(): Promise<Animal[]> {
+  await esperarMock();
+  return animales.map(copiar);
 }
 
 export async function getAnimalDemo(id: string): Promise<Animal> {

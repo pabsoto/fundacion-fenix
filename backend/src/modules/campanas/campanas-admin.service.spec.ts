@@ -8,6 +8,7 @@ import {
   Between,
   DataSource,
   EntityManager,
+  IsNull,
   QueryFailedError,
   Repository,
 } from 'typeorm';
@@ -48,6 +49,9 @@ function crearCampana(cambios: Partial<Campana> = {}): Campana {
     gatosMachos: 1,
     gatosHembras: 2,
     esHistorico: false,
+    eliminadoEn: null,
+    eliminadoPorId: null,
+    eliminadoPor: null,
     creadoPorId: OTRO_ADMIN,
     creadoPor: null,
     actualizadoPorId: OTRO_ADMIN,
@@ -58,8 +62,54 @@ function crearCampana(cambios: Partial<Campana> = {}): Campana {
   });
 }
 
+/** Constructor de consultas de TypeORM falso: encadena y resuelve lo configurado. */
+function crearQb(resultados: {
+  paginaCampanas?: [Campana[], number];
+  suma?: Record<string, string | number>;
+  anios?: number[];
+  meses?: number[];
+}) {
+  const llamadas: { metodo: string; args: unknown[] }[] = [];
+  let esMeses = false;
+  const qb: Record<string, unknown> = {};
+  for (const metodo of [
+    'select',
+    'addSelect',
+    'where',
+    'andWhere',
+    'orderBy',
+    'addOrderBy',
+    'offset',
+    'limit',
+  ]) {
+    qb[metodo] = vi.fn((...args: unknown[]) => {
+      llamadas.push({ metodo, args });
+      if (
+        metodo === 'select' &&
+        typeof args[0] === 'string' &&
+        args[0].includes('MONTH')
+      ) {
+        esMeses = true;
+      }
+      return qb;
+    });
+  }
+  qb.getManyAndCount = vi.fn(async () => resultados.paginaCampanas ?? [[], 0]);
+  qb.getRawOne = vi.fn(async () => resultados.suma);
+  qb.getRawMany = vi.fn(async () =>
+    (esMeses ? (resultados.meses ?? []) : (resultados.anios ?? [])).map(
+      (valor) => ({ valor }),
+    ),
+  );
+  return { qb, llamadas };
+}
+
 describe('CampanasAdminService', () => {
   const find = vi.fn();
+  const createQueryBuilder = vi.fn();
+  const eliminarFotos = vi.fn(async () => undefined);
+  const findFotosTransaccion = vi.fn(async () => [] as unknown[]);
+  const eliminarArchivo = vi.fn(async () => undefined);
   const findOne = vi.fn();
   const findOneTransaccion = vi.fn();
   const crear = vi.fn((datos: Partial<Campana>) =>
@@ -72,8 +122,14 @@ describe('CampanasAdminService', () => {
   const manager = {
     getRepository: vi.fn((entidad: unknown) =>
       entidad === Campana
-        ? { findOne: findOneTransaccion, create: crear, save: guardar }
-        : { create: crearAuditoria, save: guardarAuditoria },
+        ? {
+            findOne: findOneTransaccion,
+            create: crear,
+            save: guardar,
+          }
+        : entidad === FotoCampana
+          ? { find: findFotosTransaccion, delete: eliminarFotos }
+          : { create: crearAuditoria, save: guardarAuditoria },
     ),
   } as unknown as EntityManager;
   const transaction = vi.fn(
@@ -87,10 +143,13 @@ describe('CampanasAdminService', () => {
   const obtenerUrlPublica = vi.fn((ruta: string) => `https://fotos/${ruta}`);
 
   const servicio = new CampanasAdminService(
-    { find, findOne } as unknown as Repository<Campana>,
+    { find, findOne, createQueryBuilder } as unknown as Repository<Campana>,
     { transaction } as unknown as DataSource,
     { find: findFotos } as unknown as Repository<FotoCampana>,
-    { obtenerUrlPublica } as unknown as StorageService,
+    {
+      obtenerUrlPublica,
+      eliminar: eliminarArchivo,
+    } as unknown as StorageService,
   );
 
   beforeEach(() => {
@@ -377,7 +436,10 @@ describe('CampanasAdminService', () => {
 
     expect(find).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { fecha: Between('2026-02-01', '2026-02-28') },
+        where: {
+          fecha: Between('2026-02-01', '2026-02-28'),
+          eliminadoEn: IsNull(),
+        },
       }),
     );
     expect(resultado.periodo).toEqual({ anio: 2026, mes: 2 });
@@ -403,6 +465,7 @@ describe('CampanasAdminService', () => {
       expect.objectContaining({
         where: {
           fecha: Between('2028-01-01', '2028-12-31'),
+          eliminadoEn: IsNull(),
           estado: 'cerrada',
         },
       }),
@@ -417,7 +480,10 @@ describe('CampanasAdminService', () => {
     await servicio.consultarCifras({ anio: 2028, mes: 2 });
     expect(find).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { fecha: Between('2028-02-01', '2028-02-29') },
+        where: {
+          fecha: Between('2028-02-01', '2028-02-29'),
+          eliminadoEn: IsNull(),
+        },
       }),
     );
   });
@@ -453,32 +519,184 @@ describe('CampanasAdminService', () => {
   });
 
   it('no expone detalles de PostgreSQL al listar', async () => {
-    find.mockRejectedValue(new Error('host secreto'));
+    createQueryBuilder.mockImplementation(() => {
+      throw new Error('host secreto');
+    });
 
     await expect(servicio.listar()).rejects.toBeInstanceOf(
       ServiceUnavailableException,
     );
   });
 
+  it('pagina con 10 por página por defecto e incluye cifras, años y meses del filtro', async () => {
+    const { qb, llamadas } = crearQb({
+      paginaCampanas: [[crearCampana()], 23],
+      suma: {
+        perrosMachos: '30',
+        perrosHembras: '40',
+        gatosMachos: '10',
+        gatosHembras: 20,
+      },
+      anios: [2026, 2025],
+      meses: [3, 11],
+    });
+    createQueryBuilder.mockReturnValue(qb);
+
+    const pagina = await servicio.listar({ pagina: 3 });
+
+    expect(llamadas).toContainEqual({ metodo: 'offset', args: [20] });
+    expect(llamadas).toContainEqual({ metodo: 'limit', args: [10] });
+    expect(pagina).toMatchObject({
+      total: 23,
+      pagina: 3,
+      limite: 10,
+      totalPaginas: 3,
+      anios: [2026, 2025],
+      meses: [3, 11],
+      contadores: {
+        perrosMachos: 30,
+        perrosHembras: 40,
+        gatosMachos: 10,
+        gatosHembras: 20,
+      },
+      totales: { perros: 70, gatos: 30, machos: 40, hembras: 60, total: 100 },
+    });
+    expect(pagina.items).toHaveLength(1);
+  });
+
+  it('filtra por año y mes en la base de datos', async () => {
+    const { qb, llamadas } = crearQb({});
+    createQueryBuilder.mockReturnValue(qb);
+
+    await servicio.listar({ anio: 2026, mes: 11, limite: 5 });
+
+    expect(llamadas).toContainEqual({
+      metodo: 'andWhere',
+      args: ['EXTRACT(YEAR FROM c.fecha) = :anio', { anio: 2026 }],
+    });
+    expect(llamadas).toContainEqual({
+      metodo: 'andWhere',
+      args: ['EXTRACT(MONTH FROM c.fecha) = :mes', { mes: 11 }],
+    });
+    expect(llamadas).toContainEqual({ metodo: 'limit', args: [5] });
+  });
+
+  it('sin resultados devuelve una sola página y ceros', async () => {
+    const { qb } = crearQb({ suma: {} });
+    createQueryBuilder.mockReturnValue(qb);
+
+    const pagina = await servicio.listar();
+
+    expect(pagina).toMatchObject({
+      items: [],
+      total: 0,
+      totalPaginas: 1,
+      totales: { total: 0 },
+    });
+  });
+
   it('incluye las fotos de cada campaña, en orden, con una sola consulta', async () => {
     const otraId = '33333333-3333-3333-3333-333333333333';
-    find.mockResolvedValue([
-      crearCampana(),
-      crearCampana({ id: otraId, tituloEs: 'Sin fotos' }),
-    ]);
+    const { qb } = crearQb({
+      paginaCampanas: [
+        [crearCampana(), crearCampana({ id: otraId, tituloEs: 'Sin fotos' })],
+        2,
+      ],
+    });
+    createQueryBuilder.mockReturnValue(qb);
     findFotos.mockResolvedValue([
       { id: 'f1', campanaId: CAMPANA_ID, ruta: 'c/1.webp', orden: 1 },
       { id: 'f2', campanaId: CAMPANA_ID, ruta: 'c/2.webp', orden: 2 },
     ]);
 
-    const lista = await servicio.listar();
+    const { items } = await servicio.listar();
 
     expect(findFotos).toHaveBeenCalledTimes(1);
-    expect(lista[0].fotos).toEqual([
+    expect(items[0].fotos).toEqual([
       { id: 'f1', url: 'https://fotos/c/1.webp', orden: 1 },
       { id: 'f2', url: 'https://fotos/c/2.webp', orden: 2 },
     ]);
-    expect(lista[1].fotos).toEqual([]);
+    expect(items[1].fotos).toEqual([]);
+  });
+
+  describe('eliminar', () => {
+    it('la marca como eliminada (borrado lógico), la audita y limpia sus fotos', async () => {
+      findOneTransaccion.mockResolvedValue(crearCampana());
+      findFotosTransaccion.mockResolvedValue([
+        { ruta: 'campanas/a.webp' },
+        { ruta: 'campanas/b.webp' },
+      ]);
+
+      await servicio.eliminar(CAMPANA_ID, ADMIN_ID);
+
+      expect(crearAuditoria).toHaveBeenCalledWith(
+        expect.objectContaining({
+          administradorId: ADMIN_ID,
+          tabla: 'campanas',
+          registroId: CAMPANA_ID,
+          accion: 'DELETE',
+          datosDespues: null,
+        }),
+      );
+      expect(guardar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: CAMPANA_ID,
+          eliminadoPorId: ADMIN_ID,
+          eliminadoEn: expect.any(Date),
+        }),
+      );
+      expect(eliminarFotos).toHaveBeenCalledWith({ campanaId: CAMPANA_ID });
+      expect(eliminarArchivo).toHaveBeenCalledWith('campanas/a.webp');
+      expect(eliminarArchivo).toHaveBeenCalledWith('campanas/b.webp');
+    });
+
+    it('responde 404 si la campaña no existe', async () => {
+      findOneTransaccion.mockResolvedValue(null);
+
+      await expect(
+        servicio.eliminar(CAMPANA_ID, ADMIN_ID),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(guardar).not.toHaveBeenCalled();
+    });
+
+    it('rechaza eliminar una campaña cerrada', async () => {
+      findOneTransaccion.mockResolvedValue(crearCampana({ estado: 'cerrada' }));
+
+      await expect(
+        servicio.eliminar(CAMPANA_ID, ADMIN_ID),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(guardar).not.toHaveBeenCalled();
+    });
+
+    it('rechaza eliminar la campaña histórica', async () => {
+      findOneTransaccion.mockResolvedValue(
+        crearCampana({ esHistorico: true, estado: 'publicada' }),
+      );
+
+      await expect(
+        servicio.eliminar(CAMPANA_ID, ADMIN_ID),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(guardar).not.toHaveBeenCalled();
+    });
+
+    it('no revierte el borrado si Storage falla', async () => {
+      findOneTransaccion.mockResolvedValue(crearCampana());
+      findFotosTransaccion.mockResolvedValue([{ ruta: 'campanas/a.webp' }]);
+      eliminarArchivo.mockRejectedValueOnce(new Error('storage'));
+
+      await expect(
+        servicio.eliminar(CAMPANA_ID, ADMIN_ID),
+      ).resolves.toBeUndefined();
+      expect(guardar).toHaveBeenCalled();
+    });
+
+    it('responde 503 sin detalles si la base de datos falla', async () => {
+      findOneTransaccion.mockRejectedValue(new Error('host secreto'));
+
+      await expect(
+        servicio.eliminar(CAMPANA_ID, ADMIN_ID),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+    });
   });
 
   it('devuelve las fotos de una campaña al obtenerla', async () => {

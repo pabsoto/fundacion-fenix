@@ -162,6 +162,7 @@ describe('application bootstrap (e2e)', () => {
     expect(document.paths['/api/admin/campanas']).toHaveProperty('post');
     expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('get');
     expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('put');
+    expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('delete');
     expect(document.paths['/api/admin/campanas/{id}/cerrar']).toHaveProperty('post');
     expect(document.paths['/api/admin/campanas/{id}/reabrir']).toHaveProperty('post');
     expect(document.paths['/api/public/campanas/{id}']).toHaveProperty('get');

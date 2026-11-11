@@ -50,7 +50,8 @@ export class ResumenAdminService {
         this.dataSource.query<FilaCampanas[]>(
           `select coalesce(sum(perros_machos + perros_hembras + gatos_machos + gatos_hembras), 0)::int as total,
                   count(*)::int as jornadas
-             from public.campanas`,
+             from public.campanas
+            where eliminado_en is null`,
         ),
         this.dataSource.query<FilaAnimales[]>(
           `select count(*)::int as registrados,

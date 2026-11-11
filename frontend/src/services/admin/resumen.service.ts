@@ -1,7 +1,7 @@
 import { DEMO_SHOWCASE } from '@/lib/demo';
-import { listAnimales } from '@/services/admin/animales.service';
-import { listCampanas } from '@/services/admin/campanas.service';
 import { pedirJson } from '@/services/admin/cliente-admin';
+import { listTodosAnimalesDemo } from '@/services/admin/demo/animales.demo';
+import { listTodasCampanasDemo } from '@/services/admin/demo/campanas.demo';
 import {
   estaAdoptado,
   type Animal,
@@ -156,6 +156,6 @@ export function calcularResumen(
 export async function getResumen(): Promise<Resumen> {
   if (!DEMO_SHOWCASE) return pedirJson<Resumen>('/admin/resumen');
   // DEMO: con datos simulados el resumen se arma en el navegador con las listas de ejemplo.
-  const [campanas, animales] = await Promise.all([listCampanas(), listAnimales('todos', { conFotos: false })]);
+  const [campanas, animales] = await Promise.all([listTodasCampanasDemo(), listTodosAnimalesDemo()]);
   return calcularResumen(campanas, animales);
 }

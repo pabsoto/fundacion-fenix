@@ -4,6 +4,7 @@ import { CrearEsquemaBase1729000000000 } from '../src/database/migrations/172900
 import { CrearTablaSesionesAdmin1730000000000 } from '../src/database/migrations/1730000000000-CrearTablaSesionesAdmin.js';
 import { CrearTablaFotosCampana1731000000000 } from '../src/database/migrations/1731000000000-CrearTablaFotosCampana.js';
 import { CrearTablaAnimales1732000000000 } from '../src/database/migrations/1732000000000-CrearTablaAnimales.js';
+import { AgregarBorradoLogicoCampanas1733000000000 } from '../src/database/migrations/1733000000000-AgregarBorradoLogicoCampanas.js';
 
 const URL_PRUEBAS = process.env.TEST_DATABASE_URL;
 const CA_PRUEBAS = process.env.TEST_DATABASE_CA_CERT_PATH;
@@ -13,6 +14,7 @@ const MIGRACIONES = [
   CrearTablaSesionesAdmin1730000000000,
   CrearTablaFotosCampana1731000000000,
   CrearTablaAnimales1732000000000,
+  AgregarBorradoLogicoCampanas1733000000000,
 ];
 
 const TABLAS = [

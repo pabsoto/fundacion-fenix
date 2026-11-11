@@ -4,9 +4,9 @@ import { totalesDe, type ContadoresCampana, type TotalesCampana } from '@/types/
  * Periodo del filtro de campañas.
  * `anio` null es «Todos» y `mes` null es «Todos los meses».
  *
- * Se calcula en el cliente con la lista de campañas, que ya es real. No se usa
- * GET /api/admin/campanas/cifras?anio=&mes= porque exige `anio` y deja fuera las
- * campañas sin fecha, que el filtro «Todos» sí debe incluir.
+ * Con la API real el filtro lo resuelve el backend (`GET /admin/campanas?anio=&mes=`).
+ * Estas funciones solo las usa la demo (`services/admin/demo/campanas.demo.ts`)
+ * para devolver la misma forma de respuesta con datos simulados.
  */
 export type PeriodoCampanas = {
   anio: number | null;
@@ -51,6 +51,21 @@ export function aniosDeCampanas(campanas: readonly { fecha: string | null }[]): 
     if (partes) anios.add(partes.anio);
   }
   return [...anios].sort((a, b) => b - a);
+}
+
+/** Meses (1-12) con campañas en el año dado, o en cualquier año si `anio` es null. */
+export function mesesDeCampanas(
+  campanas: readonly { fecha: string | null }[],
+  anio: number | null,
+): number[] {
+  const meses = new Set<number>();
+  for (const campana of campanas) {
+    const partes = partesFecha(campana.fecha);
+    if (!partes) continue;
+    if (anio !== null && partes.anio !== anio) continue;
+    meses.add(partes.mes);
+  }
+  return [...meses].sort((a, b) => a - b);
 }
 
 function esTodos(periodo: PeriodoCampanas): boolean {

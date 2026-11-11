@@ -16,6 +16,7 @@ import { estaAdoptado, type Animal, type Especie, type Sexo, type UnidadEdad } f
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
 import { CampoTexto } from '@/components/admin/ui/CampoTexto';
 import { ChipFiltro } from '@/components/admin/ui/ChipFiltro';
+import { ConfirmarEliminarModal } from '@/components/admin/ui/ConfirmarEliminarModal';
 import { Interruptor } from '@/components/admin/ui/Interruptor';
 import { ModalAdmin } from '@/components/admin/ui/ModalAdmin';
 import { ZonaFotos, type FotoExistente } from '@/components/admin/ui/ZonaFotos';
@@ -476,36 +477,14 @@ export function AnimalFormModal({
         </form>
       </ModalAdmin>
       {confirmar ? (
-        <ModalAdmin
-          abierto
+        <ConfirmarEliminarModal
           titulo={textosAdmin.supuestos.confirmarEliminarTitulo}
-          onCerrar={() => {
-            if (!borrando) setConfirmar(false);
-          }}
-          pie={
-            <>
-              <BotonPildora
-                variante="ghost"
-                disabled={borrando}
-                onClick={() => setConfirmar(false)}
-              >
-                {textosAdmin.supuestos.cancelar}
-              </BotonPildora>
-              <BotonPildora disabled={borrando} aria-busy={borrando} onClick={() => void eliminar()}>
-                {borrando
-                  ? textosAdmin.supuestos.guardando
-                  : textosAdmin.supuestos.confirmarEliminarAccion}
-              </BotonPildora>
-            </>
-          }
-        >
-          <p className="t-control text-negro">{textosAdmin.supuestos.confirmarEliminar}</p>
-          {errorBorrado ? (
-            <p className="t-small mt-3 text-naranja" role="alert">
-              {errorBorrado}
-            </p>
-          ) : null}
-        </ModalAdmin>
+          accion={textosAdmin.supuestos.confirmarEliminarAccion}
+          borrando={borrando}
+          error={errorBorrado}
+          onCancelar={() => setConfirmar(false)}
+          onConfirmar={() => void eliminar()}
+        />
       ) : null}
     </>
   );

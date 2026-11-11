@@ -42,7 +42,10 @@ import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
 import { AnimalesAdminService } from '../animales/animales-admin.service.js';
 import { AnimalDto } from '../animales/dto/animal.dto.js';
-import { ConsultaAnimalesDto } from '../animales/dto/consulta-animales.dto.js';
+import {
+  ConsultaAnimalesDto,
+  PaginaAnimalesDto,
+} from '../animales/dto/consulta-animales.dto.js';
 import { FotoAnimalDto } from '../animales/dto/foto-animal.dto.js';
 import { RegistrarAnimalDto } from '../animales/dto/registrar-animal.dto.js';
 import {
@@ -84,12 +87,12 @@ export class AdminAnimalesController {
   @ApiOperation({
     summary: 'Listar animales',
     description:
-      'Incluye adoptados y no adoptados. Use `adoptado` para filtrar.',
+      'Incluye adoptados y no adoptados. Use `adoptado` para filtrar y `pagina`/`limite` para paginar (10 por página por defecto, máximo 50).',
   })
-  @ApiOkResponse({ type: AnimalDto, isArray: true })
+  @ApiOkResponse({ type: PaginaAnimalesDto })
   @ApiBadRequestResponse({ type: ErrorResponseDto })
-  listar(@Query() consulta: ConsultaAnimalesDto): Promise<AnimalDto[]> {
-    return this.animales.listar(consulta.adoptado);
+  listar(@Query() consulta: ConsultaAnimalesDto): Promise<PaginaAnimalesDto> {
+    return this.animales.listar(consulta);
   }
 
   @Get(':id')

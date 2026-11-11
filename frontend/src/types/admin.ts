@@ -76,6 +76,42 @@ export type CampanaConTotales = Campana & {
   editable: boolean;
 };
 
+/** Filas por página en las tablas del panel. Debe coincidir con el límite por defecto del API. */
+export const TAMANO_PAGINA_ADMIN = 10;
+
+/** Página que devuelve el API: la paginación y los filtros se resuelven en el backend. */
+export type Pagina<T> = {
+  items: T[];
+  /** Total de registros del filtro, no solo de la página. */
+  total: number;
+  pagina: number;
+  limite: number;
+  totalPaginas: number;
+};
+
+export type PaginaCampanas = Pagina<CampanaConTotales> & {
+  /** Suma de todas las campañas del filtro (alimenta la fila acumulada). */
+  contadores: ContadoresCampana;
+  totales: TotalesCampana;
+  /** Años con campañas, del más reciente al más antiguo. */
+  anios: number[];
+  /** Meses (1-12) con campañas en el año filtrado, o en cualquier año. */
+  meses: number[];
+};
+
+export type ConsultaCampanas = {
+  pagina?: number;
+  limite?: number;
+  anio?: number;
+  mes?: number;
+};
+
+export type ConsultaAnimales = {
+  filtro?: FiltroAnimales;
+  pagina?: number;
+  limite?: number;
+};
+
 export type PuntoMensual = {
   anio: number;
   mes: number;

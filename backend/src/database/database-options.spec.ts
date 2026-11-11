@@ -113,6 +113,8 @@ describe('database configuration', () => {
         'creado_por',
         'descripcion_en',
         'descripcion_es',
+        'eliminado_en',
+        'eliminado_por',
         'es_historico',
         'estado',
         'fecha',
@@ -242,7 +244,7 @@ describe('database configuration', () => {
             clave.nombre !== 'fotos_campana_campana_id_fkey',
         )
         .map((clave) => clave.onDelete),
-    ).toEqual(Array(11).fill('RESTRICT'));
+    ).toEqual(Array(12).fill('RESTRICT'));
 
     expect(
       dataSource.entityMetadatas

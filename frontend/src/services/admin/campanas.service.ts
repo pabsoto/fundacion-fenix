@@ -11,6 +11,7 @@ import {
 import {
   cerrarCampanaDemo,
   createCampanaDemo,
+  deleteCampanaDemo,
   getCampanaDemo,
   listCampanasDemo,
   quitarFotoCampanaDemo,
@@ -18,7 +19,14 @@ import {
   subirFotosCampanaDemo,
   updateCampanaDemo,
 } from '@/services/admin/demo/campanas.demo';
-import type { CampanaConTotales, CampanaEntrada, EstadoCampana } from '@/types/admin';
+import {
+  TAMANO_PAGINA_ADMIN,
+  type CampanaConTotales,
+  type CampanaEntrada,
+  type ConsultaCampanas,
+  type EstadoCampana,
+  type PaginaCampanas,
+} from '@/types/admin';
 
 type ApiCampanaAdmin = {
   id: string;
@@ -34,6 +42,8 @@ type ApiCampanaAdmin = {
   totales: CampanaConTotales['totales'];
   fotos: ApiFotoAdmin[];
 };
+
+type ApiPaginaCampanas = Omit<PaginaCampanas, 'items'> & { items: ApiCampanaAdmin[] };
 
 type ApiFotoCampana = { id: string; url: string };
 
@@ -74,10 +84,20 @@ function cuerpoApi(entrada: CampanaEntrada) {
   };
 }
 
-export async function listCampanas(): Promise<CampanaConTotales[]> {
-  if (DEMO_SHOWCASE) return listCampanasDemo();
-  const lista = await pedirJson<ApiCampanaAdmin[]>('/admin/campanas');
-  return lista.map(desdeApi);
+/**
+ * Una página de campañas. El backend filtra por año y mes, pagina y suma las
+ * cifras de todo el filtro (`contadores`, `totales`).
+ */
+export async function listCampanas(consulta: ConsultaCampanas = {}): Promise<PaginaCampanas> {
+  if (DEMO_SHOWCASE) return listCampanasDemo(consulta);
+  const parametros = new URLSearchParams({
+    pagina: String(consulta.pagina ?? 1),
+    limite: String(consulta.limite ?? TAMANO_PAGINA_ADMIN),
+  });
+  if (consulta.anio !== undefined) parametros.set('anio', String(consulta.anio));
+  if (consulta.mes !== undefined) parametros.set('mes', String(consulta.mes));
+  const pagina = await pedirJson<ApiPaginaCampanas>(`/admin/campanas?${parametros.toString()}`);
+  return { ...pagina, items: pagina.items.map(desdeApi) };
 }
 
 export async function getCampana(id: string): Promise<CampanaConTotales> {
@@ -111,6 +131,15 @@ export async function updateCampana(
 export async function cerrarCampana(id: string): Promise<CampanaConTotales> {
   if (DEMO_SHOWCASE) return cerrarCampanaDemo(id);
   return desdeApi(await enviarJson<ApiCampanaAdmin>('POST', `/admin/campanas/${id}/cerrar`, {}));
+}
+
+/**
+ * Elimina una campaña con sus fotos. El API rechaza (409) las cerradas y la
+ * histórica: hay que reabrirlas antes.
+ */
+export async function deleteCampana(id: string): Promise<void> {
+  if (DEMO_SHOWCASE) return deleteCampanaDemo(id);
+  await borrar(`/admin/campanas/${id}`);
 }
 
 /** Devuelve una campaña cerrada a publicada para poder corregirla. */

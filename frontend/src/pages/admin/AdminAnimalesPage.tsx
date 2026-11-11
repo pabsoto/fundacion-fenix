@@ -7,10 +7,19 @@ import {
   quitarFotoAnimal,
   subirFotoAnimal,
 } from '@/services/admin/animales.service';
-import { estaAdoptado, type Animal, type Especie, type FiltroAnimales, type Sexo } from '@/types/admin';
+import {
+  estaAdoptado,
+  TAMANO_PAGINA_ADMIN,
+  type Animal,
+  type Especie,
+  type FiltroAnimales,
+  type Pagina,
+  type Sexo,
+} from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
 import { ChipFiltro } from '@/components/admin/ui/ChipFiltro';
 import { MarcaEstado } from '@/components/admin/ui/MarcaEstado';
+import { Paginacion } from '@/components/admin/ui/Paginacion';
 import { PanelDetalle, type FilaDetalle } from '@/components/admin/ui/PanelDetalle';
 import { TablaSeleccion, type ColumnaTabla } from '@/components/admin/ui/TablaSeleccion';
 import { Card } from '@/components/ui/Card';
@@ -33,12 +42,6 @@ const MESES_CORTOS = [
   'nov',
   'dic',
 ] as const;
-
-function filtrar(lista: Animal[], filtro: FiltroAnimales): Animal[] {
-  if (filtro === 'adoptados') return lista.filter((animal) => estaAdoptado(animal));
-  if (filtro === 'en-la-fundacion') return lista.filter((animal) => !estaAdoptado(animal));
-  return lista;
-}
 
 function elegirId(lista: Animal[], actual: string | null, preferido?: string) {
   if (preferido && lista.some((animal) => animal.id === preferido)) return preferido;
@@ -74,11 +77,10 @@ function fechaCorta(iso: string | null): string {
   return `${dia} ${nombre} ${anio}`;
 }
 
-function textoMostrando(visibles: number, total: number) {
-  return textosAdmin.animales.mostrando.replace(
-    '8 de 8',
-    `${formatNumber(visibles, 'es')} de ${formatNumber(total, 'es')}`,
-  );
+function textoMostrando(datos: Pagina<Animal>) {
+  const desde = (datos.pagina - 1) * datos.limite + 1;
+  const hasta = desde + datos.items.length - 1;
+  return textosAdmin.animales.mostrandoRango(desde, hasta, datos.total);
 }
 
 function fuenteVisible(valor: string | null): string | null {
@@ -240,7 +242,9 @@ export function AdminAnimalesPage() {
   const textos = textosAdmin.animales;
   const [carga, setCarga] = useState<Carga>('cargando');
   const [intento, setIntento] = useState(0);
-  const [animales, setAnimales] = useState<Animal[]>([]);
+  const [datos, setDatos] = useState<Pagina<Animal> | null>(null);
+  const [pagina, setPagina] = useState(1);
+  const [cambiando, setCambiando] = useState(false);
   const [filtro, setFiltro] = useState<FiltroAnimales>('todos');
   const [seleccionId, setSeleccionId] = useState<string | null>(null);
   const [modal, setModal] = useState<Animal | null | 'crear'>(null);
@@ -249,25 +253,35 @@ export function AdminAnimalesPage() {
     null,
   );
   const [reintentandoFoto, setReintentandoFoto] = useState(false);
-  const filtroRef = useRef(filtro);
+  /** Animal que se debe seleccionar al terminar la próxima carga (el recién guardado). */
+  const preferidoRef = useRef<string | undefined>(undefined);
 
+  // El backend filtra por estado y pagina; las fotos solo se piden de la página visible.
   useEffect(() => {
     let vivo = true;
-    listAnimales()
-      .then((lista) => {
+    listAnimales({ filtro, pagina, limite: TAMANO_PAGINA_ADMIN })
+      .then((respuesta) => {
         if (!vivo) return;
-        setAnimales(lista);
-        setSeleccionId((actual) => elegirId(filtrar(lista, filtroRef.current), actual));
+        // Tras eliminar el último animal de una página, se retrocede a una que exista.
+        if (respuesta.items.length === 0 && pagina > 1) {
+          setPagina(Math.max(1, respuesta.totalPaginas));
+          return;
+        }
+        setDatos(respuesta);
+        setSeleccionId((actual) => elegirId(respuesta.items, actual, preferidoRef.current));
+        preferidoRef.current = undefined;
         setCarga('listo');
+        setCambiando(false);
       })
       .catch(() => {
         if (!vivo) return;
         setCarga('error');
+        setCambiando(false);
       });
     return () => {
       vivo = false;
     };
-  }, [intento]);
+  }, [intento, pagina, filtro]);
 
   useEffect(() => {
     if (!toast) return;
@@ -275,14 +289,25 @@ export function AdminAnimalesPage() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const visibles = filtrar(animales, filtro);
+  const visibles = datos?.items ?? [];
   const seleccionado = visibles.find((animal) => animal.id === seleccionId) ?? null;
 
   function elegirFiltro(siguiente: FiltroAnimales) {
-    const lista = filtrar(animales, siguiente);
-    filtroRef.current = siguiente;
+    if (siguiente === filtro) return;
+    setCambiando(true);
+    setPagina(1);
     setFiltro(siguiente);
-    setSeleccionId((actual) => elegirId(lista, actual));
+  }
+
+  function irAPagina(siguiente: number) {
+    setCambiando(true);
+    setPagina(siguiente);
+  }
+
+  /** Vuelve a pedir la página actual. `preferido` queda seleccionado si sigue en ella. */
+  function recargar(preferido?: string) {
+    preferidoRef.current = preferido;
+    setIntento((valor) => valor + 1);
   }
 
   async function reintentarFoto() {
@@ -333,8 +358,7 @@ export function AdminAnimalesPage() {
       setFotoPendiente(siguiente);
     } else {
       setFotoPendiente(null);
-      setSeleccionId(pendiente.id);
-      setIntento((valor) => valor + 1);
+      recargar(pendiente.id);
       setToast(textosAdmin.supuestos.guardado);
     }
     setReintentandoFoto(false);
@@ -397,14 +421,14 @@ export function AdminAnimalesPage() {
         </Card>
       ) : null}
 
-      {carga === 'listo' ? (
+      {carga === 'listo' && datos ? (
         <Card radius="admin" elevated="panel" className="flex items-stretch">
           <div className="flex min-w-0 flex-1 flex-col gap-3 px-3 py-4">
             <div className="flex h-(--size-control-admin) items-center justify-between gap-4 px-3">
               <div className="flex min-w-0 items-center gap-2.5">
                 <h2 className="t-barra text-negro">{textos.todos}</h2>
                 <p className="t-small text-negro">
-                  {formatNumber(visibles.length, 'es')} {textos.registros}
+                  {formatNumber(datos.total, 'es')} {textos.registros}
                 </p>
               </div>
               <BotonPildora onClick={() => setModal('crear')}>{textos.registrar}</BotonPildora>
@@ -430,7 +454,15 @@ export function AdminAnimalesPage() {
               seleccionId={seleccionId}
               onSeleccionar={setSeleccionId}
             />
-            <p className="t-small px-3 text-negro">{textoMostrando(visibles.length, animales.length)}</p>
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-3 px-3">
+              <p className="t-small text-negro">{textoMostrando(datos)}</p>
+              <Paginacion
+                pagina={datos.pagina}
+                totalPaginas={datos.totalPaginas}
+                onCambiar={irAPagina}
+                deshabilitado={cambiando}
+              />
+            </div>
           </div>
           {seleccionado ? (
             <PanelDetalle
@@ -479,15 +511,16 @@ export function AdminAnimalesPage() {
             setModal(null);
             setFotoPendiente(fotos ? { ...fotos, id } : null);
             setToast(fotos ? null : textosAdmin.supuestos.guardado);
-            setSeleccionId(id);
-            setIntento((valor) => valor + 1);
+            // Un animal nuevo aparece primero (orden por fecha de creación).
+            if (modal === 'crear') setPagina(1);
+            recargar(id);
           }}
           onEliminado={() => {
             setModal(null);
             setFotoPendiente(null);
             setToast(textosAdmin.supuestos.guardado);
             setSeleccionId(null);
-            setIntento((valor) => valor + 1);
+            recargar();
           }}
         />
       ) : null}

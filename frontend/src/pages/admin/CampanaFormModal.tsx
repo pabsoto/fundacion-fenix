@@ -1,9 +1,10 @@
 import { useId, useState } from 'react';
-import { Calendar, ChevronDown } from 'lucide-react';
+import { Calendar, ChevronDown, Trash2 } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import { validarCampana, type CampanaFormulario, type ErroresCampana } from '@/schemas/campana';
 import {
+  deleteCampana,
   guardarCampana,
   quitarFotoCampana,
   subirFotosCampana,
@@ -12,6 +13,7 @@ import { ErrorApiAdmin } from '@/services/admin/cliente-admin';
 import type { CampanaConTotales } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
 import { CampoTexto } from '@/components/admin/ui/CampoTexto';
+import { ConfirmarEliminarModal } from '@/components/admin/ui/ConfirmarEliminarModal';
 import { Interruptor } from '@/components/admin/ui/Interruptor';
 import { ModalAdmin } from '@/components/admin/ui/ModalAdmin';
 import { ZonaFotos, type FotoExistente } from '@/components/admin/ui/ZonaFotos';
@@ -25,6 +27,7 @@ type CampanaFormModalProps = {
   campana: CampanaConTotales | null;
   onCerrar: () => void;
   onGuardada: (id: string, fotosFallidas: File[] | null) => void;
+  onEliminada: () => void;
 };
 
 const VACIO: CampanaFormulario = {
@@ -83,7 +86,12 @@ function sumaContadores(valores: string[]): number {
   }, 0);
 }
 
-export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormModalProps) {
+export function CampanaFormModal({
+  campana,
+  onCerrar,
+  onGuardada,
+  onEliminada,
+}: CampanaFormModalProps) {
   const textos = textosAdmin.nuevaCampana;
   const formId = useId();
   const [formulario, setFormulario] = useState<CampanaFormulario>(() => formularioDe(campana));
@@ -91,6 +99,9 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
   const [errores, setErrores] = useState<ErroresCampana>({});
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [confirmar, setConfirmar] = useState(false);
+  const [borrando, setBorrando] = useState(false);
+  const [errorBorrado, setErrorBorrado] = useState<string | null>(null);
   const edicion = campana !== null;
   const total = sumaContadores([
     formulario.perrosMachos,
@@ -104,8 +115,25 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
   }
 
   function cerrar() {
-    if (guardando) return;
+    if (guardando || borrando) return;
     onCerrar();
+  }
+
+  async function eliminar() {
+    if (!campana || borrando) return;
+    setBorrando(true);
+    setErrorBorrado(null);
+    try {
+      await deleteCampana(campana.id);
+      onEliminada();
+    } catch (causa) {
+      setErrorBorrado(
+        causa instanceof ErrorApiAdmin && causa.status === 409
+          ? textosAdmin.campanas.eliminar.noPermitida
+          : textosAdmin.supuestos.error,
+      );
+      setBorrando(false);
+    }
   }
 
   /** Quita del servidor las fotos que el usuario retiró. Una que ya no existe cuenta como quitada. */
@@ -169,6 +197,7 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
   }));
 
   return (
+    <>
     <ModalAdmin
       abierto
       titulo={edicion ? textos.editarTitulo : textos.titulo}
@@ -176,6 +205,17 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
       onCerrar={cerrar}
       pie={
         <>
+          {edicion ? (
+            <BotonPildora
+              variante="ghost"
+              className="mr-auto gap-2"
+              disabled={guardando}
+              onClick={() => setConfirmar(true)}
+            >
+              <Trash2 className="size-4" aria-hidden="true" />
+              {textosAdmin.campanas.eliminar.boton}
+            </BotonPildora>
+          ) : null}
           <BotonPildora variante="ghost" disabled={guardando} onClick={cerrar}>
             {textos.cancelar}
           </BotonPildora>
@@ -346,5 +386,17 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
         </div>
       </form>
     </ModalAdmin>
+    {confirmar && campana ? (
+      <ConfirmarEliminarModal
+        titulo={textosAdmin.campanas.eliminar.titulo}
+        detalle={textosAdmin.campanas.eliminar.cuerpo(campana.titulo)}
+        accion={textosAdmin.campanas.eliminar.accion}
+        borrando={borrando}
+        error={errorBorrado}
+        onCancelar={() => setConfirmar(false)}
+        onConfirmar={() => void eliminar()}
+      />
+    ) : null}
+    </>
   );
 }

@@ -100,6 +100,7 @@ export class ImpactoPublicoService {
            join public.v_campanas_resumen resumen on resumen.id = campana.id
           where campana.estado in (${ESTADOS_PUBLICOS_SQL})
             and campana.fecha is not null
+            and campana.eliminado_en is null
             ${filtroAdicional}
           order by campana.fecha desc, campana.id`,
         parametros,
