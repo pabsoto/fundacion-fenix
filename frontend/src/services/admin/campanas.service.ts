@@ -6,6 +6,13 @@ import { totalesDe, type Campana, type CampanaConTotales, type CampanaEntrada } 
 
 const campanas: Campana[] = structuredClone(CAMPANAS_EJEMPLO);
 
+function porFechaDesc(a: Campana, b: Campana): number {
+  if (a.fecha === b.fecha) return 0;
+  if (!a.fecha) return 1;
+  if (!b.fecha) return -1;
+  return b.fecha.localeCompare(a.fecha);
+}
+
 function presentar(campana: Campana): CampanaConTotales {
   return {
     ...structuredClone(campana),
@@ -18,9 +25,7 @@ function presentar(campana: Campana): CampanaConTotales {
 // TODO(backend): GET /api/admin/campanas
 export async function listCampanas(): Promise<CampanaConTotales[]> {
   await esperarMock();
-  return [...campanas]
-    .sort((a, b) => b.fecha.localeCompare(a.fecha))
-    .map(presentar);
+  return [...campanas].sort(porFechaDesc).map(presentar);
 }
 
 // TODO(backend): GET /api/admin/campanas/:id

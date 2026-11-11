@@ -1,6 +1,9 @@
 // SAMPLE DATA
 import type { Campaign } from '@/types';
 
+const FOTO_HORIZONTAL = '/demo/foto-horizontal.png';
+const FOTO_VERTICAL = '/demo/foto-vertical.png';
+
 export const campaignsMock: Campaign[] = [
   {
     id: 'villa-adela-2025',
@@ -8,6 +11,7 @@ export const campaignsMock: Campaign[] = [
     city: 'El Alto',
     year: 2025,
     months: [3],
+    fecha: '2025-03-01',
     total: 64,
     dogs: 40,
     cats: 24,
@@ -21,12 +25,13 @@ export const campaignsMock: Campaign[] = [
     city: 'La Paz',
     year: 2025,
     months: [1],
+    fecha: '2025-01-01',
     total: 72,
     dogs: 45,
     cats: 27,
     males: 34,
     females: 38,
-    photos: [],
+    photos: [FOTO_HORIZONTAL],
   },
   {
     id: 'distrito-4-2024',
@@ -34,12 +39,13 @@ export const campaignsMock: Campaign[] = [
     city: 'El Alto',
     year: 2024,
     months: [11, 12],
+    fecha: '2024-12-01',
     total: 85,
     dogs: 52,
     cats: 33,
     males: 38,
     females: 47,
-    photos: [],
+    photos: [FOTO_HORIZONTAL, FOTO_VERTICAL, FOTO_HORIZONTAL],
   },
   {
     id: 'obrajes-2024',
@@ -47,12 +53,13 @@ export const campaignsMock: Campaign[] = [
     city: 'La Paz',
     year: 2024,
     months: [9],
+    fecha: '2024-09-01',
     total: 91,
     dogs: 55,
     cats: 36,
     males: 42,
     females: 49,
-    photos: [],
+    photos: [FOTO_HORIZONTAL, FOTO_VERTICAL, FOTO_HORIZONTAL, FOTO_VERTICAL, FOTO_HORIZONTAL],
   },
   {
     id: 'ciudad-satelite-2024',
@@ -60,6 +67,7 @@ export const campaignsMock: Campaign[] = [
     city: 'El Alto',
     year: 2024,
     months: [6],
+    fecha: '2024-06-01',
     total: 58,
     dogs: 35,
     cats: 23,

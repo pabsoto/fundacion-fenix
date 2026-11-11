@@ -134,6 +134,12 @@
     ,"loading": "Loading recorded campaigns…",
     "error": "Campaigns could not be loaded right now."
   },
+  "gallery": {
+    "prev": "Previous photo",
+    "next": "Next photo",
+    "close": "Close",
+    "counter": "{{n}} of {{total}}"
+  },
   "results": {
     "title": "Results",
     "subtitle": "Every sterilization means a life with less suffering and a future with more hope.",

@@ -37,11 +37,23 @@ export function useCarousel(options?: EmblaOptions) {
     () => false
   );
 
+  const selectedIndex = useSyncExternalStore(
+    subscribe,
+    () => emblaApi?.selectedScrollSnap() ?? 0,
+    () => 0
+  );
+
+  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+  const scrollTo = useCallback((indice: number) => emblaApi?.scrollTo(indice), [emblaApi]);
+
   return {
     emblaRef,
-    scrollPrev: () => emblaApi?.scrollPrev(),
-    scrollNext: () => emblaApi?.scrollNext(),
+    scrollPrev,
+    scrollNext,
+    scrollTo,
     canPrev,
     canNext,
+    selectedIndex,
   };
 }

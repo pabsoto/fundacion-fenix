@@ -38,7 +38,7 @@ function formularioDe(campana: CampanaConTotales | null): CampanaFormulario {
   return {
     titulo: campana.titulo,
     lugar: campana.lugar ?? '',
-    fecha: campana.fecha,
+    fecha: campana.fecha ?? '',
     descripcion: campana.descripcion ?? '',
     perrosMachos: String(campana.perrosMachos),
     perrosHembras: String(campana.perrosHembras),

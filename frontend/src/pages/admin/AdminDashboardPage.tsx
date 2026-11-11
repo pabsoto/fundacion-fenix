@@ -95,8 +95,8 @@ export function AdminDashboardPage() {
   }
 
   return (
-    <div className="bg-crema text-negro flex min-h-dvh flex-col overflow-x-clip">
-      <header className="border-linea border-b">
+    <div className="bg-crema text-negro flex min-h-dvh flex-col">
+      <header className="border-linea sticky top-0 z-40 border-b bg-crema">
         <div className="escritorio:grid-cols-[1fr_auto_1fr] escritorio:px-(--spacing-pagina-admin) grid grid-cols-[auto_minmax(0,1fr)_auto] items-center px-(--spacing-pagina-admin-compacto) py-(--spacing-nav-admin)">
           <Link
             to="/admin"
@@ -183,7 +183,7 @@ export function AdminDashboardPage() {
         </p>
       )}
 
-      <main className="escritorio:px-(--spacing-pagina-admin) flex min-h-0 flex-1 flex-col px-(--spacing-pagina-admin-compacto) py-(--spacing-bloque-admin)">
+      <main className="escritorio:px-(--spacing-pagina-admin) flex min-h-0 flex-1 flex-col overflow-x-clip px-(--spacing-pagina-admin-compacto) py-(--spacing-bloque-admin)">
         <Outlet />
       </main>
     </div>

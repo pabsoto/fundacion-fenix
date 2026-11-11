@@ -2,6 +2,7 @@ import { cn } from '@/lib/cn';
 
 interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
 export function IconButton({ children, className, ...props }: IconButtonProps) {
