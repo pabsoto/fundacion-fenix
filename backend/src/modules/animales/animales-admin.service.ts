@@ -195,10 +195,12 @@ export class AnimalesAdminService {
   }
 
   /**
-   * Borrado lógico: el animal deja de aparecer y de contar, pero el registro y
-   * sus fotos se conservan para poder recuperarlos o auditarlos.
+   * Borrado lógico: el animal deja de aparecer y de contar y el registro se
+   * conserva para auditarlo, pero sus fotos se borran de Storage porque son
+   * datos privados (adopciones).
    */
   async eliminar(id: string, administradorId: string): Promise<void> {
+    const rutas: string[] = [];
     try {
       await this.dataSource.transaction('READ COMMITTED', async (manager) => {
         const animales = manager.getRepository(Animal);
@@ -209,8 +211,17 @@ export class AnimalesAdminService {
         if (!existente) throw new NotFoundException('El animal no existe');
 
         const datosAntes = this.datosAuditables(existente);
+        for (const ruta of [existente.fotoAnimalRuta, existente.fotoEntregaRuta]) {
+          if (ruta) rutas.push(ruta);
+        }
         const ahora = new Date();
         Object.assign(existente, {
+          fotoAnimalRuta: null,
+          fotoAnimalContentType: null,
+          fotoAnimalTamano: null,
+          fotoEntregaRuta: null,
+          fotoEntregaContentType: null,
+          fotoEntregaTamano: null,
           eliminadoEn: ahora,
           eliminadoPorId: administradorId,
           actualizadoPorId: administradorId,
@@ -235,6 +246,9 @@ export class AnimalesAdminService {
         'No fue posible eliminar el animal',
       );
     }
+
+    // Después de confirmar el borrado: si Storage falla, queda registrado.
+    for (const ruta of rutas) await this.limpiar(ruta);
   }
 
   private async auditar(

@@ -95,10 +95,7 @@ export class FotosCampanaService {
     const tipo = this.validar(archivo);
     const { buffer, size } = archivo!;
 
-    const campana = await this.campanas.findOne({ where: { id: campanaId } });
-    if (!campana) {
-      throw new NotFoundException('La campaña no existe');
-    }
+    await this.exigirCampanaEditable(campanaId);
 
     const ruta = `campanas/${campanaId}/${randomUUID()}.${FORMATOS[tipo]}`;
 

@@ -89,8 +89,9 @@ existe, `503` si no se puede guardar.
 ## `deleteAnimal(id)`
 
 `DELETE /api/admin/animales/{id}`. Responde `204` sin cuerpo. Es un borrado
-lógico: el animal deja de aparecer en la lista y en el resumen, pero el registro
-y sus fotos se conservan. Se audita. Errores: `400` si `id` no es UUID, `401`,
+lógico: el animal deja de aparecer en la lista y en el resumen y el registro se
+conserva para auditarlo, pero sus fotos se borran de Storage y se limpian sus
+columnas. Se audita. Errores: `400` si `id` no es UUID, `401`,
 `403`, `404` si no existe o ya estaba eliminado, `503`.
 
 ## `subirFotoAnimal(id, tipo, archivo)`

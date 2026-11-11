@@ -122,7 +122,7 @@ algún parámetro no es válido.
 
 `GET` de campañas devuelve `fotos: [{ id, url, orden }]`. `PUT .../orden` exige
 exactamente las fotos de la campaña, sin repetir ni agregar otras (`400`). En una
-campaña `cerrada`, quitar y reordenar responden `409`. El panel solo usa el
+campaña `cerrada`, subir, quitar y reordenar responden `409`. El panel solo usa el
 borrado; el reordenamiento aún no tiene pantalla.
 
 ## Cierre
