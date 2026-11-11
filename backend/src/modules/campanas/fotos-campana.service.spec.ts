@@ -79,6 +79,16 @@ describe('FotosCampanaService', () => {
     );
   });
 
+  it('no sube fotos a una campaña cerrada (409) ni toca Storage', async () => {
+    campanas.findOne.mockResolvedValue({ id: CAMPANA_ID, estado: 'cerrada' });
+
+    await expect(
+      servicio.subir(CAMPANA_ID, archivo(JPG, 'image/jpeg'), ADMIN_ID),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(storage.subir).not.toHaveBeenCalled();
+    expect(fotos.save).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['image/jpeg', JPG, 'jpg'],
     ['image/png', PNG, 'png'],

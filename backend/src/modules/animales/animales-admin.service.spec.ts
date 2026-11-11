@@ -263,14 +263,53 @@ describe('AnimalesAdminService', () => {
       );
     });
 
-    it('conserva las fotos en Storage', async () => {
+    it('borra las fotos de Storage y limpia sus columnas', async () => {
       findOneTransaccion.mockResolvedValue(
-        crearAnimal({ fotoAnimalRuta: 'animales/a.jpg' }),
+        crearAnimal({
+          fotoAnimalRuta: 'animales/a.jpg',
+          fotoAnimalContentType: 'image/jpeg',
+          fotoAnimalTamano: 10,
+          fotoEntregaRuta: 'entregas/e.jpg',
+          fotoEntregaContentType: 'image/jpeg',
+          fotoEntregaTamano: 20,
+        }),
       );
 
       await servicio.eliminar(ANIMAL_ID, ADMIN_ID);
 
+      expect(guardar.mock.calls[0][0]).toMatchObject({
+        fotoAnimalRuta: null,
+        fotoAnimalContentType: null,
+        fotoAnimalTamano: null,
+        fotoEntregaRuta: null,
+        fotoEntregaContentType: null,
+        fotoEntregaTamano: null,
+      });
+      expect(eliminarArchivo).toHaveBeenCalledWith('animales/a.jpg', true);
+      expect(eliminarArchivo).toHaveBeenCalledWith('entregas/e.jpg', true);
+    });
+
+    it('no toca Storage si el borrado falla', async () => {
+      findOneTransaccion.mockResolvedValue(
+        crearAnimal({ fotoAnimalRuta: 'animales/a.jpg' }),
+      );
+      guardarAuditoria.mockRejectedValueOnce(new Error('auditoría caída'));
+
+      await expect(servicio.eliminar(ANIMAL_ID, ADMIN_ID)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
       expect(eliminarArchivo).not.toHaveBeenCalled();
+    });
+
+    it('el animal queda eliminado aunque Storage falle al limpiar', async () => {
+      findOneTransaccion.mockResolvedValue(
+        crearAnimal({ fotoAnimalRuta: 'animales/a.jpg' }),
+      );
+      eliminarArchivo.mockRejectedValueOnce(new Error('storage'));
+
+      await expect(
+        servicio.eliminar(ANIMAL_ID, ADMIN_ID),
+      ).resolves.toBeUndefined();
     });
 
     it('responde 404 si no existe o ya está eliminado', async () => {
