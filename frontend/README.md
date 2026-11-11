@@ -14,16 +14,23 @@ Frontend de la web de la Fundación Fénix LPB, ONG de esterilización de perros
 ## Instalación
 
 ```bash
-npm install
+npm ci
 ```
 
 ## Variables de entorno
 
-Copia `.env.example` a `.env` y configura las variables necesarias:
+Copia `.env.example` a `.env` y configura las variables necesarias (en
+PowerShell usa `Copy-Item .env.example .env`):
 
 ```bash
 cp .env.example .env
 ```
+
+- `VITE_API_URL`: URL base del backend; por defecto es
+  `http://localhost:3000/api`.
+- `VITE_GOOGLE_CLIENT_ID`: ID del cliente OAuth de Google para habilitar el
+  proveedor en el frontend administrativo. Déjalo vacío si todavía no está
+  configurado.
 
 `VITE_DEMO_SHOWCASE=true` activa únicamente las campañas, estadísticas e
 historias de demostración guardadas en `src/data`. También permite visualizar

@@ -72,6 +72,14 @@ Formato común `{ statusCode, error, message, path, timestamp }`.
 | `404` | La campaña no existe o no es visible (solo detalle). |
 | `503` | PostgreSQL no está disponible. No se filtran detalles internos. |
 
+## Estadísticas públicas
+
+`GET /api/public/estadisticas` suma los contadores base únicamente de campañas
+con `estado = cerrada` y `es_historico = true`. El cierre administrativo marca
+la campaña como histórica; las correcciones posteriores reemplazan los
+contadores de esa misma campaña, por lo que los totales se recalculan sin
+duplicarla.
+
 ## Evidencia
 
 - `backend/src/modules/impacto-publico/impacto-publico.service.spec.ts`:

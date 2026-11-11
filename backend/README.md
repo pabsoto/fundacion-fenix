@@ -2,7 +2,7 @@
 
 API NestJS del sitio público y del panel administrativo de Fundación FÉNIX LPB.
 
-El backend incluye la estructura modular, configuración de entorno, CORS con orígenes explícitos, validación global, manejo uniforme de errores, conexión a PostgreSQL mediante TypeORM, la autenticación administrativa mediante Google OAuth 2.0 / OpenID Connect y **sesiones administrativas persistentes en servidor** con cookies seguras, cierre de sesión y guards de protección. El CRUD de administradores y el resto de controladores funcionales todavía no están implementados.
+El backend implementa APIs públicas y administrativas para campañas, contenido institucional, canales de contacto y donaciones; incluye auditoría, validación y manejo uniforme de errores. La autenticación administrativa usa Google OAuth 2.0 / OpenID Connect y **sesiones persistentes en servidor** con cookies seguras y guards de protección. Las cuentas administrativas se aprovisionan previamente; no existe registro público ni CRUD de administradores.
 
 ## Requisitos
 
@@ -14,7 +14,7 @@ El backend incluye la estructura modular, configuración de entorno, CORS con or
 Desde `backend/`:
 
 ```bash
-npm install
+npm ci
 cp .env.example .env
 npm run start:dev
 ```
@@ -48,7 +48,7 @@ No uses `rejectUnauthorized: false` ni un modo SSL que omita la verificación. L
 
 No agregues `ssl`, `sslmode`, `sslrootcert`, `sslcert` ni `sslkey` a `DATABASE_URL`. El driver `pg` da prioridad a esos parámetros y puede reemplazar el objeto TLS proporcionado por la aplicación. El backend los rechaza y carga exclusivamente la CA indicada por `DATABASE_CA_CERT_PATH`, manteniendo `rejectUnauthorized: true` y la verificación del hostname.
 
-TypeORM está configurado con `synchronize: false`, `dropSchema: false`, `migrationsRun: false` e `installExtensions: false`. El archivo `src/database/typeorm.datasource.ts` queda preparado como DataSource para migraciones futuras, pero esta etapa no crea ni ejecuta migraciones.
+TypeORM está configurado con `synchronize: false`, `dropSchema: false`, `migrationsRun: false` e `installExtensions: false`. Las migraciones versionadas están en `src/database/migrations/` y se aplican explícitamente con `npm run build` seguido de `npm run db:migrate`; no se ejecutan automáticamente al iniciar el servicio. Revisa las secciones de sesiones y fotos de campaña para conocer las migraciones pendientes de autorización o aplicación.
 
 ## Swagger / OpenAPI
 

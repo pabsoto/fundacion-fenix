@@ -120,6 +120,8 @@ describe('application bootstrap (e2e)', () => {
         '/api/admin/campanas',
         '/api/admin/campanas/cifras',
         '/api/admin/campanas/{id}',
+        '/api/admin/campanas/{id}/cerrar',
+        '/api/admin/campanas/{id}/cifras',
         '/api/admin/campanas/{id}/fotos',
         '/api/admin/donaciones',
         '/api/admin/donaciones/qr',

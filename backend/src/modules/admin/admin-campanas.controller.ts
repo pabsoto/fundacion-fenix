@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   Header,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -38,6 +40,7 @@ import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
 import { CampanasAdminService } from '../campanas/campanas-admin.service.js';
 import { CampanaAdminDto } from '../campanas/dto/campana-admin.dto.js';
+import { CorregirCifrasCampanaDto } from '../campanas/dto/corregir-cifras-campana.dto.js';
 import {
   CifrasPeriodoDto,
   ConsultaCifrasDto,
@@ -132,6 +135,58 @@ export class AdminCampanasController {
   })
   obtener(@Param('id', ParseUUIDPipe) id: string): Promise<CampanaAdminDto> {
     return this.campanas.obtener(id);
+  }
+
+  @Post(':id/cerrar')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Cerrar una campaña publicada e incluirla en el histórico',
+  })
+  @ApiOkResponse({ type: CampanaAdminDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiConflictResponse({
+    description: 'La campaña ya está cerrada o no está publicada.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
+  cerrar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: PeticionConSesion,
+  ): Promise<CampanaAdminDto> {
+    return this.campanas.cerrar(id, this.administradorId(request));
+  }
+
+  @Post(':id/cifras')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Corregir las cifras de una campaña cerrada',
+    description:
+      'Reemplaza los cuatro contadores base y registra los cambios en auditoría.',
+  })
+  @ApiBody({ type: CorregirCifrasCampanaDto })
+  @ApiOkResponse({ type: CampanaAdminDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiConflictResponse({
+    description: 'Solo se pueden corregir cifras de campañas cerradas.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
+  corregirCifras(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() entrada: CorregirCifrasCampanaDto,
+    @Req() request: PeticionConSesion,
+  ): Promise<CampanaAdminDto> {
+    return this.campanas.corregirCifras(
+      id,
+      entrada,
+      this.administradorId(request),
+    );
   }
 
   @Post()

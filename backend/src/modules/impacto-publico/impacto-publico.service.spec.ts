@@ -146,6 +146,33 @@ describe('ImpactoPublicoService', () => {
     });
   });
 
+  it('calcula el histórico solo con campañas cerradas marcadas como históricas', async () => {
+    const query = vi.fn().mockResolvedValue([
+      {
+        perros_machos: '5',
+        perros_hembras: '3',
+        gatos_machos: '2',
+        gatos_hembras: '4',
+        total_perros: '8',
+        total_gatos: '6',
+      },
+    ]);
+    const service = new ImpactoPublicoService({
+      query,
+    } as unknown as DataSource);
+
+    await expect(service.obtenerEstadisticas()).resolves.toEqual({
+      caninos: { total: 8, machos: 5, hembras: 3 },
+      felinos: { total: 6, machos: 2, hembras: 4 },
+    });
+    expect(String(query.mock.calls[0][0])).toContain(
+      "where campana.estado = 'cerrada'",
+    );
+    expect(String(query.mock.calls[0][0])).toContain(
+      'and campana.es_historico = true',
+    );
+  });
+
   it('no filtra detalles de errores de PostgreSQL', async () => {
     const service = new ImpactoPublicoService({
       query: vi.fn().mockRejectedValue(new Error('host secreto')),
