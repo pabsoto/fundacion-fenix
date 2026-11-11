@@ -53,7 +53,8 @@ export type Campana = {
   id: string;
   titulo: string;
   lugar: string | null;
-  fecha: string;
+  /** Null cuando la jornada aún no tiene fecha. El filtro solo la muestra en «Todos». */
+  fecha: string | null;
   descripcion: string | null;
   fotos: string[];
 } & ContadoresCampana;

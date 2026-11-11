@@ -56,6 +56,28 @@ export const textosAdmin = {
     exportar: 'Exportar',
     nueva: '+ Nueva campaña',
     agregarFiltro: '+ Agregar filtro',
+    filtros: {
+      anio: 'Año',
+      mes: 'Mes',
+      /** Año sin acotar. No está en Figma: el marco solo dice «+ Agregar filtro». */
+      todos: 'Todos',
+      todosLosMeses: 'Todos los meses',
+      limpiar: 'Limpiar',
+      meses: [
+        'Enero',
+        'Febrero',
+        'Marzo',
+        'Abril',
+        'Mayo',
+        'Junio',
+        'Julio',
+        'Agosto',
+        'Septiembre',
+        'Octubre',
+        'Noviembre',
+        'Diciembre',
+      ],
+    },
     columnas: {
       campana: 'Campaña',
       fecha: 'Fecha',

@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Cat, Hash, PawPrint } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import { listCampanas, subirFotosCampana } from '@/services/admin/campanas.service';
+import {
+  aniosDeCampanas,
+  cifrasDePeriodo,
+  type PeriodoCampanas,
+} from '@/services/admin/cifras-campanas';
 import type { CampanaConTotales, ContadoresCampana } from '@/types/admin';
 import { totalesDe } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
@@ -31,7 +36,8 @@ const MESES_CORTOS = [
   'dic',
 ] as const;
 
-function fechaCorta(iso: string): string {
+function fechaCorta(iso: string | null): string {
+  if (!iso) return '';
   const [anio, mes, dia] = iso.split('-').map(Number);
   const nombre = mes ? MESES_CORTOS[mes - 1] : undefined;
   if (!anio || !dia || !nombre) return iso;
@@ -65,15 +71,12 @@ function celdaNumero(valor: number) {
   return <span className="t-fila block text-right text-negro">{formatNumber(valor, 'es')}</span>;
 }
 
-function acumuladoDe(lista: CampanaConTotales[]): ContadoresCampana {
-  return lista.reduce(
-    (total, campana) => ({
-      perrosMachos: total.perrosMachos + campana.perrosMachos,
-      perrosHembras: total.perrosHembras + campana.perrosHembras,
-      gatosMachos: total.gatosMachos + campana.gatosMachos,
-      gatosHembras: total.gatosHembras + campana.gatosHembras,
-    }),
-    { perrosMachos: 0, perrosHembras: 0, gatosMachos: 0, gatosHembras: 0 },
+const PERIODO_TODOS: PeriodoCampanas = { anio: null, mes: null };
+
+function textoMostrando(visibles: number, total: number) {
+  return textosAdmin.campanas.mostrando.replace(
+    '4 de 4',
+    `${formatNumber(visibles, 'es')} de ${formatNumber(total, 'es')}`,
   );
 }
 
@@ -239,6 +242,8 @@ export function AdminCampanasPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [fotoPendiente, setFotoPendiente] = useState<FotoPendiente | null>(null);
   const [reintentandoFoto, setReintentandoFoto] = useState(false);
+  const [periodo, setPeriodo] = useState<PeriodoCampanas>(PERIODO_TODOS);
+  const periodoRef = useRef(periodo);
 
   useEffect(() => {
     let vivo = true;
@@ -246,7 +251,9 @@ export function AdminCampanasPage() {
       .then((lista) => {
         if (!vivo) return;
         setCampanas(lista);
-        setSeleccionId((actual) => elegirId(lista, actual));
+        setSeleccionId((actual) =>
+          elegirId(cifrasDePeriodo(lista, periodoRef.current).campanas, actual),
+        );
         setFotoActiva(0);
         setCarga('listo');
       })
@@ -270,18 +277,30 @@ export function AdminCampanasPage() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const seleccionada = campanas.find((campana) => campana.id === seleccionId) ?? null;
-  const totales = acumuladoDe(campanas);
+  const cifras = cifrasDePeriodo(campanas, periodo);
+  const visibles = cifras.campanas;
+  const anios = aniosDeCampanas(campanas);
+  const seleccionada = visibles.find((campana) => campana.id === seleccionId) ?? null;
+  const hayFiltro = periodo.anio !== null || periodo.mes !== null;
 
   function abrirEdicion() {
     if (!seleccionada?.editable) return;
     setModal(seleccionada);
   }
 
+  function fijarPeriodo(siguiente: PeriodoCampanas) {
+    periodoRef.current = siguiente;
+    setPeriodo(siguiente);
+    setSeleccionId((actual) => elegirId(cifrasDePeriodo(campanas, siguiente).campanas, actual));
+    setFotoActiva(0);
+  }
+
   async function recargar(preferido?: string) {
     const lista = await listCampanas();
     setCampanas(lista);
-    setSeleccionId((actual) => elegirId(lista, actual, preferido));
+    setSeleccionId((actual) =>
+      elegirId(cifrasDePeriodo(lista, periodoRef.current).campanas, actual, preferido),
+    );
     setFotoActiva(0);
     setCarga('listo');
   }
@@ -361,28 +380,75 @@ export function AdminCampanasPage() {
               <div className="flex min-w-0 items-center gap-2.5">
                 <h2 className="t-barra text-negro">{textos.todas}</h2>
                 <p className="t-small text-negro">
-                  {formatNumber(campanas.length, 'es')} {textos.jornadas}
+                  {formatNumber(visibles.length, 'es')} {textos.jornadas}
                 </p>
               </div>
               <BotonPildora onClick={() => setModal('crear')}>{textos.nueva}</BotonPildora>
             </div>
-            {campanas.length === 0 ? (
-              <p className="px-3 py-4 t-small text-negro">{textosAdmin.supuestos.vacio}</p>
-            ) : (
-              <TablaSeleccion
-                etiqueta={textos.todas}
-                columnas={COLUMNAS}
-                filas={campanas}
-                seleccionId={seleccionId}
-                onSeleccionar={seleccionar}
-                pie={<FilaAcumulada contadores={totales} />}
-              />
-            )}
+            <div className="flex h-(--size-control-admin) items-center gap-2 rounded-btn bg-crema-tono px-4">
+              <label htmlFor="filtro-anio-campanas" className="t-chip shrink-0 text-negro">
+                {textos.filtros.anio}
+              </label>
+              <select
+                id="filtro-anio-campanas"
+                value={periodo.anio === null ? '' : String(periodo.anio)}
+                onChange={(event) => {
+                  const valor = event.target.value;
+                  fijarPeriodo({
+                    ...periodo,
+                    anio: valor === '' ? null : Number(valor),
+                  });
+                }}
+                className="h-(--size-boton-admin) min-w-(--spacing-col-fecha-admin) cursor-pointer rounded-admin-control border border-linea bg-blanco px-3 t-control text-negro"
+              >
+                <option value="">{textos.filtros.todos}</option>
+                {anios.map((anio) => (
+                  <option key={anio} value={String(anio)}>
+                    {anio}
+                  </option>
+                ))}
+              </select>
+              <label htmlFor="filtro-mes-campanas" className="t-chip shrink-0 text-negro">
+                {textos.filtros.mes}
+              </label>
+              <select
+                id="filtro-mes-campanas"
+                value={periodo.mes === null ? '' : String(periodo.mes)}
+                onChange={(event) => {
+                  const valor = event.target.value;
+                  fijarPeriodo({
+                    ...periodo,
+                    mes: valor === '' ? null : Number(valor),
+                  });
+                }}
+                className="h-(--size-boton-admin) min-w-(--spacing-col-estado) cursor-pointer rounded-admin-control border border-linea bg-blanco px-3 t-control text-negro"
+              >
+                <option value="">{textos.filtros.todosLosMeses}</option>
+                {textos.filtros.meses.map((nombre, indice) => (
+                  <option key={nombre} value={String(indice + 1)}>
+                    {nombre}
+                  </option>
+                ))}
+              </select>
+              <BotonPildora
+                variante="ghost"
+                className="ml-auto"
+                disabled={!hayFiltro}
+                onClick={() => fijarPeriodo(PERIODO_TODOS)}
+              >
+                {textos.filtros.limpiar}
+              </BotonPildora>
+            </div>
+            <TablaSeleccion
+              etiqueta={textos.todas}
+              columnas={COLUMNAS}
+              filas={visibles}
+              seleccionId={seleccionId}
+              onSeleccionar={seleccionar}
+              pie={<FilaAcumulada contadores={cifras.contadores} />}
+            />
             <p className="t-small mt-auto px-3 text-negro">
-              {textos.mostrando.replace(
-                '4 de 4',
-                `${formatNumber(campanas.length, 'es')} de ${formatNumber(campanas.length, 'es')}`,
-              )}
+              {textoMostrando(visibles.length, campanas.length)}
             </p>
           </div>
           {seleccionada ? (
