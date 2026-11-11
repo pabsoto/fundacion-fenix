@@ -377,16 +377,16 @@ describe('CampanasAdminService', () => {
       crearCampana({ id: otraId, tituloEs: 'Sin fotos' }),
     ]);
     findFotos.mockResolvedValue([
-      { campanaId: CAMPANA_ID, ruta: 'c/1.webp', orden: 1 },
-      { campanaId: CAMPANA_ID, ruta: 'c/2.webp', orden: 2 },
+      { id: 'f1', campanaId: CAMPANA_ID, ruta: 'c/1.webp', orden: 1 },
+      { id: 'f2', campanaId: CAMPANA_ID, ruta: 'c/2.webp', orden: 2 },
     ]);
 
     const lista = await servicio.listar();
 
     expect(findFotos).toHaveBeenCalledTimes(1);
     expect(lista[0].fotos).toEqual([
-      'https://fotos/c/1.webp',
-      'https://fotos/c/2.webp',
+      { id: 'f1', url: 'https://fotos/c/1.webp', orden: 1 },
+      { id: 'f2', url: 'https://fotos/c/2.webp', orden: 2 },
     ]);
     expect(lista[1].fotos).toEqual([]);
   });
@@ -394,12 +394,14 @@ describe('CampanasAdminService', () => {
   it('devuelve las fotos de una campaña al obtenerla', async () => {
     findOne.mockResolvedValue(crearCampana());
     findFotos.mockResolvedValue([
-      { campanaId: CAMPANA_ID, ruta: 'c/1.webp', orden: 1 },
+      { id: 'f1', campanaId: CAMPANA_ID, ruta: 'c/1.webp', orden: 1 },
     ]);
 
     const campana = await servicio.obtener(CAMPANA_ID);
 
-    expect(campana.fotos).toEqual(['https://fotos/c/1.webp']);
+    expect(campana.fotos).toEqual([
+      { id: 'f1', url: 'https://fotos/c/1.webp', orden: 1 },
+    ]);
   });
 
   it('responde la campaña actualizada aunque falle la consulta de fotos', async () => {

@@ -2,6 +2,7 @@ import { DEMO_SHOWCASE } from '@/lib/demo';
 import { validarImagenes } from '@/schemas/imagen';
 import { validarCampana, type CampanaFormulario } from '@/schemas/campana';
 import {
+  borrar,
   enviarArchivo,
   enviarJson,
   pedirJson,
@@ -12,6 +13,7 @@ import {
   createCampanaDemo,
   getCampanaDemo,
   listCampanasDemo,
+  quitarFotoCampanaDemo,
   reabrirCampanaDemo,
   subirFotosCampanaDemo,
   updateCampanaDemo,
@@ -30,10 +32,12 @@ type ApiCampanaAdmin = {
   gatosMachos: number;
   gatosHembras: number;
   totales: CampanaConTotales['totales'];
-  fotos: string[];
+  fotos: ApiFotoAdmin[];
 };
 
 type ApiFotoCampana = { id: string; url: string };
+
+type ApiFotoAdmin = { id: string; url: string; orden: number };
 
 function desdeApi(campana: ApiCampanaAdmin): CampanaConTotales {
   return {
@@ -42,7 +46,8 @@ function desdeApi(campana: ApiCampanaAdmin): CampanaConTotales {
     lugar: campana.lugar,
     fecha: soloFecha(campana.fecha),
     descripcion: campana.descripcionEs,
-    fotos: campana.fotos,
+    fotos: campana.fotos.map((foto) => foto.url),
+    fotoIds: campana.fotos.map((foto) => foto.id),
     estado: campana.estado as EstadoCampana,
     perrosMachos: campana.perrosMachos,
     perrosHembras: campana.perrosHembras,
@@ -112,6 +117,15 @@ export async function cerrarCampana(id: string): Promise<CampanaConTotales> {
 export async function reabrirCampana(id: string): Promise<CampanaConTotales> {
   if (DEMO_SHOWCASE) return reabrirCampanaDemo(id);
   return desdeApi(await enviarJson<ApiCampanaAdmin>('POST', `/admin/campanas/${id}/reabrir`, {}));
+}
+
+/** Quita una foto de la campaña. Con la API real `fotoId` es el id de la foto, no su URL. */
+export async function quitarFotoCampana(
+  id: string,
+  fotoId: string,
+): Promise<CampanaConTotales | void> {
+  if (DEMO_SHOWCASE) return quitarFotoCampanaDemo(id, fotoId);
+  await borrar(`/admin/campanas/${id}/fotos/${fotoId}`);
 }
 
 /** Sube las fotos una por una (JPG, PNG o WebP, 5 MB) después de guardar la campaña. */

@@ -2,9 +2,9 @@ import { DEMO_SHOWCASE } from '@/lib/demo';
 import { validarImagen } from '@/schemas/imagen';
 import { validarAnimal, type AnimalFormulario } from '@/schemas/animal';
 import {
+  borrar,
   enviarArchivo,
   enviarJson,
-  NoDisponibleEnBackendError,
   pedirJson,
   soloFecha,
 } from '@/services/admin/cliente-admin';
@@ -138,16 +138,17 @@ export async function createAnimal(entrada: AnimalEntrada): Promise<Animal> {
   return desdeApi(creado, false);
 }
 
-/** Falta PUT /admin/animales/:id. Ver `capacidadesAdmin.editarAnimal`. */
+/** Reemplaza los datos del animal. Conserva sus fotos. */
 export async function updateAnimal(id: string, entrada: AnimalEntrada): Promise<Animal> {
   if (DEMO_SHOWCASE) return updateAnimalDemo(id, entrada);
-  throw new NoDisponibleEnBackendError('editar un animal');
+  const actualizado = await enviarJson<ApiAnimal>('PUT', `/admin/animales/${id}`, cuerpoApi(entrada));
+  return desdeApi(actualizado, true);
 }
 
-/** Falta DELETE /admin/animales/:id. Ver `capacidadesAdmin.eliminarAnimal`. */
+/** Borrado lógico: el animal deja de aparecer, pero el registro se conserva. */
 export async function deleteAnimal(id: string): Promise<void> {
   if (DEMO_SHOWCASE) return deleteAnimalDemo(id);
-  throw new NoDisponibleEnBackendError('eliminar un animal');
+  await borrar(`/admin/animales/${id}`);
 }
 
 /** JPG, PNG o WebP, 5 MB. La de tipo `entrega` exige un animal adoptado. */
@@ -163,10 +164,11 @@ export async function subirFotoAnimal(
   return getAnimal(id);
 }
 
-/** Falta DELETE /admin/animales/:id/fotos/:tipo. Ver `capacidadesAdmin.quitarFotoAnimal`. */
+/** Quita la foto del animal (`animal`) o la de su adopción (`entrega`). */
 export async function quitarFotoAnimal(id: string, tipo: TipoFotoAnimal): Promise<Animal> {
   if (DEMO_SHOWCASE) return quitarFotoAnimalDemo(id, tipo);
-  throw new NoDisponibleEnBackendError('quitar la foto de un animal');
+  await borrar(`/admin/animales/${id}/fotos/${tipo}`);
+  return getAnimal(id);
 }
 
 export async function guardarAnimal(

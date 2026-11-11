@@ -21,14 +21,6 @@ export class ErrorApiAdmin extends Error {
   }
 }
 
-/** Lo que el backend todavía no ofrece. La interfaz lo oculta con `capacidadesAdmin`. */
-export class NoDisponibleEnBackendError extends Error {
-  constructor(accion: string) {
-    super(`El backend aún no ofrece: ${accion}`);
-    this.name = 'NoDisponibleEnBackendError';
-  }
-}
-
 type CuerpoError = { message?: string | string[] } | null;
 
 async function solicitar<T>(endpoint: string, init: RequestInit = {}): Promise<T> {
@@ -78,4 +70,9 @@ export function enviarArchivo<T>(endpoint: string, archivo: File): Promise<T> {
 /** Quita la hora de una fecha ISO. El panel trabaja con AAAA-MM-DD. */
 export function soloFecha(valor: string | null | undefined): string | null {
   return valor ? valor.slice(0, 10) : null;
+}
+
+/** DELETE sin cuerpo. El API responde 204. */
+export function borrar(endpoint: string): Promise<void> {
+  return solicitar<void>(endpoint, { method: 'DELETE' });
 }

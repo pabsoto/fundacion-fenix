@@ -69,6 +69,8 @@ export type CampanaEntrada = Omit<Campana, 'id' | 'estado'> & {
 };
 
 export type CampanaConTotales = Campana & {
+  /** Identificador de cada foto, en el mismo orden que `fotos`. Sirve para quitarlas. */
+  fotoIds: string[];
   totales: TotalesCampana;
   /** False cuando el backend marca la campaña como cerrada. */
   editable: boolean;

@@ -213,4 +213,93 @@ describe('FotosAnimalService', () => {
       ServiceUnavailableException,
     );
   });
+
+  describe('quitar', () => {
+    it('quita la foto del animal: limpia las tres columnas y borra del bucket privado', async () => {
+      animales.findOne.mockResolvedValue({
+        id: ANIMAL_ID,
+        adoptado: false,
+        fotoAnimalRuta: 'animales/a.jpg',
+        fotoEntregaRuta: null,
+      });
+
+      await servicio.quitar('animal', ANIMAL_ID, ADMIN_ID);
+
+      expect(animales.update).toHaveBeenCalledWith(
+        ANIMAL_ID,
+        expect.objectContaining({
+          fotoAnimalRuta: null,
+          fotoAnimalContentType: null,
+          fotoAnimalTamano: null,
+          actualizadoPorId: ADMIN_ID,
+        }),
+      );
+      expect(storage.eliminar).toHaveBeenCalledWith('animales/a.jpg', true);
+    });
+
+    it('quita la foto de la entrega', async () => {
+      animales.findOne.mockResolvedValue({
+        id: ANIMAL_ID,
+        adoptado: true,
+        fotoEntregaRuta: 'entregas/e.jpg',
+      });
+
+      await servicio.quitar('entrega', ANIMAL_ID, ADMIN_ID);
+
+      expect(animales.update).toHaveBeenCalledWith(
+        ANIMAL_ID,
+        expect.objectContaining({ fotoEntregaRuta: null }),
+      );
+      expect(storage.eliminar).toHaveBeenCalledWith('entregas/e.jpg', true);
+    });
+
+    it('responde 404 si el animal no tiene esa foto', async () => {
+      animales.findOne.mockResolvedValue({
+        id: ANIMAL_ID,
+        adoptado: true,
+        fotoAnimalRuta: null,
+      });
+
+      await expect(
+        servicio.quitar('animal', ANIMAL_ID, ADMIN_ID),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(storage.eliminar).not.toHaveBeenCalled();
+    });
+
+    it('responde 404 si el animal no existe', async () => {
+      animales.findOne.mockResolvedValue(null);
+
+      await expect(
+        servicio.quitar('animal', ANIMAL_ID, ADMIN_ID),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('si Storage falla al limpiar, la foto igual queda quitada', async () => {
+      animales.findOne.mockResolvedValue({
+        id: ANIMAL_ID,
+        adoptado: false,
+        fotoAnimalRuta: 'animales/a.jpg',
+      });
+      storage.eliminar.mockRejectedValue(new Error('storage'));
+
+      await expect(
+        servicio.quitar('animal', ANIMAL_ID, ADMIN_ID),
+      ).resolves.toBeUndefined();
+      expect(animales.update).toHaveBeenCalled();
+    });
+
+    it('responde 503 si no puede actualizar la base y no toca Storage', async () => {
+      animales.findOne.mockResolvedValue({
+        id: ANIMAL_ID,
+        adoptado: false,
+        fotoAnimalRuta: 'animales/a.jpg',
+      });
+      animales.update.mockRejectedValue(new Error('db'));
+
+      await expect(
+        servicio.quitar('animal', ANIMAL_ID, ADMIN_ID),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      expect(storage.eliminar).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -267,6 +267,7 @@ export const textosAdmin = {
     lugarLargo: 'El lugar admite hasta 200 caracteres.',
     descripcionLarga: 'La descripción admite hasta 5000 caracteres.',
     fotoNoSubio: 'Se guardó, pero la foto no se pudo subir.',
+    fotoNoQuito: 'Se guardaron los cambios, pero una foto no se pudo quitar. Inténtalo de nuevo.',
     campanaCerrada: 'Esta jornada está cerrada y no se puede editar.',
     fecha: 'La fecha debe tener el formato AAAA-MM-DD.',
     edad: 'La edad admite un entero de 0 a 40.',

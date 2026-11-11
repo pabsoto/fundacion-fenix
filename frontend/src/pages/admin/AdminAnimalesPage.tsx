@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Calendar, Cat, Heart, MapPin, Mars, PawPrint, User, Venus } from 'lucide-react';
-import { capacidadesAdmin } from '@/services/admin/capacidades';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import {
@@ -452,11 +451,9 @@ export function AdminAnimalesPage() {
                   : []),
               ]}
               accion={
-                capacidadesAdmin.editarAnimal ? (
-                  <BotonPildora variante="ghost" onClick={() => setModal(seleccionado)}>
-                    {textos.editarRegistro}
-                  </BotonPildora>
-                ) : undefined
+                <BotonPildora variante="ghost" onClick={() => setModal(seleccionado)}>
+                  {textos.editarRegistro}
+                </BotonPildora>
               }
               filas={filasDetalle(seleccionado)}
             />

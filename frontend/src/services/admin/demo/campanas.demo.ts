@@ -17,6 +17,8 @@ function porFechaDesc(a: Campana, b: Campana): number {
 function presentar(campana: Campana): CampanaConTotales {
   return {
     ...structuredClone(campana),
+    // En la demo la propia URL hace de identificador.
+    fotoIds: [...campana.fotos],
     totales: totalesDe(campana),
     editable: campana.estado !== 'cerrada',
   };
@@ -92,5 +94,20 @@ export async function reabrirCampanaDemo(id: string): Promise<CampanaConTotales>
   if (!actual) throw new NoEncontradoError();
   if (actual.estado !== 'cerrada') throw new Error('La campaña no está cerrada');
   campanas[indice] = { ...actual, estado: 'publicada' };
+  return presentar(campanas[indice]);
+}
+
+export async function quitarFotoCampanaDemo(
+  id: string,
+  fotoId: string,
+): Promise<CampanaConTotales> {
+  await esperarMock();
+  const indice = campanas.findIndex((item) => item.id === id);
+  const actual = indice < 0 ? undefined : campanas[indice];
+  if (!actual) throw new NoEncontradoError();
+  if (actual.estado === 'cerrada') {
+    throw new Error('Las fotografías de una campaña cerrada no se modifican');
+  }
+  campanas[indice] = { ...actual, fotos: actual.fotos.filter((foto) => foto !== fotoId) };
   return presentar(campanas[indice]);
 }

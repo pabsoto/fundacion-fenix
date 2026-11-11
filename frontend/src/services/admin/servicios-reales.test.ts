@@ -1,13 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createAnimal, listAnimales } from '@/services/admin/animales.service';
+import {
+  createAnimal,
+  deleteAnimal,
+  listAnimales,
+  quitarFotoAnimal,
+  updateAnimal,
+} from '@/services/admin/animales.service';
 import {
   cerrarCampana,
   createCampana,
   listCampanas,
+  quitarFotoCampana,
   reabrirCampana,
   subirFotosCampana,
 } from '@/services/admin/campanas.service';
 import { fijarCsrfAdmin } from '@/services/admin/cliente-admin';
+import { getResumen } from '@/services/admin/resumen.service';
 import type { AnimalEntrada, CampanaEntrada } from '@/types/admin';
 
 vi.mock('@/lib/demo', () => ({ DEMO_SHOWCASE: false }));
@@ -43,7 +51,7 @@ const apiCampana = {
   gatosMachos: 3,
   gatosHembras: 4,
   totales: { perros: 3, gatos: 7, machos: 4, hembras: 6, total: 10 },
-  fotos: ['https://fotos/1.webp'],
+  fotos: [{ id: 'f1', url: 'https://fotos/1.webp', orden: 1 }],
 };
 
 describe('campanas con la API real', () => {
@@ -58,6 +66,7 @@ describe('campanas con la API real', () => {
       estado: 'cerrada',
       editable: false,
       fotos: ['https://fotos/1.webp'],
+      fotoIds: ['f1'],
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
@@ -245,5 +254,117 @@ describe('cierre de campañas con la API real', () => {
     );
 
     await expect(cerrarCampana('c1')).rejects.toThrow(/al menos una esterilización/);
+  });
+});
+
+describe('quitar fotos de campaña con la API real', () => {
+  it('borra por id con DELETE y el token CSRF', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+
+    await quitarFotoCampana('c1', 'f1');
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/\/admin\/campanas\/c1\/fotos\/f1$/);
+    expect(init.method).toBe('DELETE');
+    expect(new Headers(init.headers).get('X-CSRF-Token')).toBe('token-csrf');
+  });
+
+  it('propaga el error cuando la campaña está cerrada', async () => {
+    fetchMock.mockResolvedValue(
+      respuesta({ message: 'Las fotografías de una campaña cerrada no se modifican' }, 409),
+    );
+
+    await expect(quitarFotoCampana('c1', 'f1')).rejects.toThrow(/campaña cerrada/);
+  });
+});
+
+describe('editar, eliminar y quitar fotos de animales con la API real', () => {
+  const apiAnimal = {
+    id: 'a1',
+    nombre: 'Max',
+    especie: 'perro',
+    sexo: 'macho',
+    edad: 3,
+    edadUnidad: 'anios',
+    fechaIngreso: '2026-01-05',
+    adoptado: false,
+    nombreAdoptante: null,
+    direccionAdoptante: null,
+    fechaAdopcion: null,
+    tieneFotoAnimal: false,
+    tieneFotoEntrega: false,
+  };
+
+  const entrada: AnimalEntrada = {
+    nombre: 'Max el grande',
+    especie: 'perro',
+    sexo: 'macho',
+    edad: { valor: 4, unidad: 'meses' },
+    fechaIngreso: '2026-01-05',
+    fotoIngreso: null,
+    adoptadoPor: null,
+    direccionAdoptante: null,
+    fotoAdopcion: null,
+    fechaAdopcion: null,
+  };
+
+  it('actualiza con PUT, CSRF y edadUnidad "meses"', async () => {
+    fetchMock.mockResolvedValue(respuesta({ ...apiAnimal, nombre: 'Max el grande' }));
+
+    const animal = await updateAnimal('a1', entrada);
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/\/admin\/animales\/a1$/);
+    expect(init.method).toBe('PUT');
+    expect(new Headers(init.headers).get('X-CSRF-Token')).toBe('token-csrf');
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      nombre: 'Max el grande',
+      edad: 4,
+      edadUnidad: 'meses',
+      adoptado: false,
+    });
+    expect(animal.nombre).toBe('Max el grande');
+  });
+
+  it('elimina con DELETE', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+
+    await deleteAnimal('a1');
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/\/admin\/animales\/a1$/);
+    expect(init.method).toBe('DELETE');
+  });
+
+  it('quita la foto y vuelve a leer el animal', async () => {
+    fetchMock.mockImplementation(async (_url: string, init?: RequestInit) =>
+      init?.method === 'DELETE' ? new Response(null, { status: 204 }) : respuesta(apiAnimal),
+    );
+
+    const animal = await quitarFotoAnimal('a1', 'entrega');
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/\/admin\/animales\/a1\/fotos\/entrega$/);
+    expect(init.method).toBe('DELETE');
+    expect(animal.fotoAdopcion).toBeNull();
+  });
+});
+
+describe('resumen con la API real', () => {
+  it('lo pide al servidor en vez de calcularlo en el navegador', async () => {
+    const resumen = {
+      esterilizaciones: { total: 310, jornadas: 4 },
+      enLaFundacion: { cantidad: 4, registrados: 8 },
+      adopcionesDelAnio: { cantidad: 4, anio: 2026 },
+      diasHastaAdoptar: 196,
+      serie: [],
+      espera: [],
+    };
+    fetchMock.mockResolvedValue(respuesta(resumen));
+
+    await expect(getResumen()).resolves.toEqual(resumen);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toMatch(/\/admin\/resumen$/);
   });
 });

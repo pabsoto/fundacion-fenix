@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Header,
   HttpCode,
@@ -25,6 +26,7 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -48,6 +50,7 @@ import {
   FotoCampanaDto,
 } from '../campanas/dto/foto-campana.dto.js';
 import { GuardarCampanaDto } from '../campanas/dto/guardar-campana.dto.js';
+import { ReordenarFotosDto } from '../campanas/dto/reordenar-fotos.dto.js';
 import {
   FotosCampanaService,
   TAMANO_MAXIMO_FOTO,
@@ -306,6 +309,75 @@ export class AdminCampanasController {
     @Req() request: PeticionConSesion,
   ): Promise<FotoCampanaDto> {
     return this.fotos.subir(id, archivo, this.administradorId(request));
+  }
+
+  @Put(':id/fotos/orden')
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Reordenar las fotografías de una campaña',
+    description:
+      'Recibe los identificadores de todas las fotos en el orden deseado. La primera es la principal. No se permite en campañas cerradas.',
+  })
+  @ApiBody({ type: ReordenarFotosDto })
+  @ApiOkResponse({ type: FotoCampanaDto, isArray: true })
+  @ApiBadRequestResponse({
+    description:
+      'La lista no incluye exactamente las fotos de la campaña o el identificador no es válido.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta está desactivada o el token CSRF es inválido.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'La campaña no existe.',
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'La campaña está cerrada.',
+    type: ErrorResponseDto,
+  })
+  reordenarFotos(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() entrada: ReordenarFotosDto,
+  ): Promise<FotoCampanaDto[]> {
+    return this.fotos.reordenar(id, entrada.ids);
+  }
+
+  @Delete(':id/fotos/:fotoId')
+  @HttpCode(204)
+  @UseGuards(CsrfGuard)
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiOperation({
+    summary: 'Quitar una fotografía de una campaña',
+    description:
+      'Elimina la fotografía de la galería y de Storage. No se permite en campañas cerradas.',
+  })
+  @ApiNoContentResponse({ description: 'La fotografía se quitó.' })
+  @ApiBadRequestResponse({
+    description: 'Algún identificador no es un UUID.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta está desactivada o el token CSRF es inválido.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'La campaña o la fotografía no existen.',
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'La campaña está cerrada.',
+    type: ErrorResponseDto,
+  })
+  quitarFoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('fotoId', ParseUUIDPipe) fotoId: string,
+  ): Promise<void> {
+    return this.fotos.quitar(id, fotoId);
   }
 
   private administradorId(request: PeticionConSesion): string {

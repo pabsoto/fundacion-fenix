@@ -1,15 +1,13 @@
 # Contrato del resumen del panel
 
-No hay endpoint. `getResumen()` arma la respuesta en el navegador con
-`listCampanas()` y `listAnimales()`.
-
-Si más adelante existe `GET /api/admin/resumen`, solo cambia el interior de
-`getResumen()`. La pantalla sigue leyendo este objeto. El código lo marca con
-`TODO(backend)`.
+`GET /api/admin/resumen`. El servidor calcula las cifras en PostgreSQL. Solo en
+modo demo (`VITE_DEMO_SHOWCASE=true`) `getResumen()` las arma en el navegador con
+las listas de ejemplo.
 
 ## Petición
 
-Sin cuerpo. La sesión es la misma cookie que usan las dos listas.
+Sin cuerpo. La sesión es la cookie httpOnly. No lleva `X-CSRF-Token` porque solo
+lee.
 
 ## Respuesta
 
@@ -35,8 +33,11 @@ Sin cuerpo. La sesión es la misma cookie que usan las dos listas.
 | `serie` | Doce meses, el último es el mes actual. Ingresos y adopciones de ese mes. Quien no tiene `fechaIngreso` no entra. |
 | `espera` | Hasta 4 animales sin adoptar y con `fechaIngreso`, del ingreso más antiguo. `dias` es hoy menos esa fecha. |
 
+«Hoy» y «este mes» se miden en la zona horaria `America/La_Paz`. Los animales
+eliminados no cuentan. En la base el contador de animales usa `adoptado`; el
+front lo deduce de `adoptadoPor`.
+
 ## Errores
 
-Los mismos que fallen `listCampanas()` o `listAnimales()` (incluida la
-simulación de error del mock). La pantalla muestra el aviso y permite
-reintentar. No crea un error propio.
+`401` sin sesión, `403` cuenta desactivada y `503` si PostgreSQL no responde
+(sin detalles internos). La pantalla muestra el aviso y permite reintentar.

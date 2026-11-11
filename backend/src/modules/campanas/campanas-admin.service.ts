@@ -16,7 +16,11 @@ import {
   Repository,
 } from 'typeorm';
 import { Auditoria } from '../auditoria/entities/auditoria.entity.js';
-import { CampanaAdminDto, TotalesCampanaDto } from './dto/campana-admin.dto.js';
+import {
+  CampanaAdminDto,
+  FotoCampanaAdminDto,
+  TotalesCampanaDto,
+} from './dto/campana-admin.dto.js';
 import {
   CifrasPeriodoDto,
   ConsultaCifrasDto,
@@ -104,7 +108,7 @@ export class CampanasAdminService {
 
   async obtener(id: string): Promise<CampanaAdminDto> {
     let campana: Campana | null;
-    let fotos: string[] = [];
+    let fotos: FotoCampanaAdminDto[] = [];
     try {
       campana = await this.repositorio.findOne({ where: { id } });
       if (campana) fotos = (await this.urlsDeFotos([id])).get(id) ?? [];
@@ -298,7 +302,7 @@ export class CampanasAdminService {
   }
 
   /** La escritura ya se guardó: si las fotos fallan, se responde sin ellas. */
-  private async fotosSinFallar(id: string): Promise<string[]> {
+  private async fotosSinFallar(id: string): Promise<FotoCampanaAdminDto[]> {
     try {
       return (await this.urlsDeFotos([id])).get(id) ?? [];
     } catch {
@@ -307,8 +311,10 @@ export class CampanasAdminService {
   }
 
   /** Una sola consulta para todas las campañas, ordenadas como la galería. */
-  private async urlsDeFotos(ids: string[]): Promise<Map<string, string[]>> {
-    const urls = new Map<string, string[]>();
+  private async urlsDeFotos(
+    ids: string[],
+  ): Promise<Map<string, FotoCampanaAdminDto[]>> {
+    const urls = new Map<string, FotoCampanaAdminDto[]>();
     if (ids.length === 0) return urls;
     const fotos = await this.fotos.find({
       where: { campanaId: In(ids) },
@@ -316,7 +322,11 @@ export class CampanasAdminService {
     });
     for (const foto of fotos) {
       const lista = urls.get(foto.campanaId) ?? [];
-      lista.push(this.storage.obtenerUrlPublica(foto.ruta));
+      lista.push({
+        id: foto.id,
+        url: this.storage.obtenerUrlPublica(foto.ruta),
+        orden: foto.orden,
+      });
       urls.set(foto.campanaId, lista);
     }
     return urls;
@@ -386,7 +396,10 @@ export class CampanasAdminService {
     };
   }
 
-  private aDto(campana: Campana, fotos: string[] = []): CampanaAdminDto {
+  private aDto(
+    campana: Campana,
+    fotos: FotoCampanaAdminDto[] = [],
+  ): CampanaAdminDto {
     return {
       id: campana.id,
       tituloEs: campana.tituloEs,

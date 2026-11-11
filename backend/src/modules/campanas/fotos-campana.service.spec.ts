@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   NotFoundException,
   PayloadTooLargeException,
   ServiceUnavailableException,
@@ -38,6 +39,9 @@ describe('FotosCampanaService', () => {
     create: ReturnType<typeof vi.fn>;
     save: ReturnType<typeof vi.fn>;
     createQueryBuilder: ReturnType<typeof vi.fn>;
+    findOne: ReturnType<typeof vi.fn>;
+    find: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
   };
   let storage: {
     subir: ReturnType<typeof vi.fn>;
@@ -54,6 +58,9 @@ describe('FotosCampanaService', () => {
         id: 'foto-id',
         ...foto,
       })),
+      findOne: vi.fn(),
+      find: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
       createQueryBuilder: vi.fn(() => ({
         select: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
@@ -167,5 +174,118 @@ describe('FotosCampanaService', () => {
     expect(storage.eliminar).toHaveBeenCalledWith(
       storage.subir.mock.calls[0][0],
     );
+  });
+
+  describe('quitar y reordenar', () => {
+    const FOTO_A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const FOTO_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+    const FOTO_C = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    const galeria = () => [
+      { id: FOTO_A, campanaId: CAMPANA_ID, ruta: 'campanas/a.webp', orden: 1 },
+      { id: FOTO_B, campanaId: CAMPANA_ID, ruta: 'campanas/b.webp', orden: 2 },
+      { id: FOTO_C, campanaId: CAMPANA_ID, ruta: 'campanas/c.webp', orden: 3 },
+    ];
+
+    it('quita la foto de la base y de Storage', async () => {
+      fotos.findOne.mockResolvedValue(galeria()[1]);
+
+      await servicio.quitar(CAMPANA_ID, FOTO_B);
+
+      expect(fotos.findOne).toHaveBeenCalledWith({
+        where: { id: FOTO_B, campanaId: CAMPANA_ID },
+      });
+      expect(fotos.delete).toHaveBeenCalledWith({ id: FOTO_B });
+      expect(storage.eliminar).toHaveBeenCalledWith('campanas/b.webp');
+    });
+
+    it('responde 404 si la foto no es de esa campaña', async () => {
+      fotos.findOne.mockResolvedValue(null);
+
+      await expect(servicio.quitar(CAMPANA_ID, FOTO_B)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(fotos.delete).not.toHaveBeenCalled();
+      expect(storage.eliminar).not.toHaveBeenCalled();
+    });
+
+    it('responde 404 si la campaña no existe', async () => {
+      campanas.findOne.mockResolvedValue(null);
+
+      await expect(servicio.quitar(CAMPANA_ID, FOTO_B)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it('no modifica las fotos de una campaña cerrada (409)', async () => {
+      campanas.findOne.mockResolvedValue({ id: CAMPANA_ID, estado: 'cerrada' });
+
+      await expect(servicio.quitar(CAMPANA_ID, FOTO_B)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+      await expect(
+        servicio.reordenar(CAMPANA_ID, [FOTO_A, FOTO_B, FOTO_C]),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(fotos.delete).not.toHaveBeenCalled();
+      expect(fotos.save).not.toHaveBeenCalled();
+    });
+
+    it('si Storage falla al limpiar, la foto ya quedó quitada', async () => {
+      fotos.findOne.mockResolvedValue(galeria()[0]);
+      storage.eliminar.mockRejectedValue(new Error('storage'));
+
+      await expect(servicio.quitar(CAMPANA_ID, FOTO_A)).resolves.toBeUndefined();
+      expect(fotos.delete).toHaveBeenCalled();
+    });
+
+    it('responde 503 si no puede borrar de la base y no toca Storage', async () => {
+      fotos.findOne.mockResolvedValue(galeria()[0]);
+      fotos.delete.mockRejectedValue(new Error('db'));
+
+      await expect(servicio.quitar(CAMPANA_ID, FOTO_A)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      expect(storage.eliminar).not.toHaveBeenCalled();
+    });
+
+    it('reordena la galería y la primera pasa a ser la principal', async () => {
+      fotos.find.mockResolvedValue(galeria());
+      fotos.save.mockImplementation(async (lista: unknown) => lista);
+
+      const resultado = await servicio.reordenar(CAMPANA_ID, [
+        FOTO_C,
+        FOTO_A,
+        FOTO_B,
+      ]);
+
+      expect(resultado.map((foto) => [foto.id, foto.orden])).toEqual([
+        [FOTO_C, 1],
+        [FOTO_A, 2],
+        [FOTO_B, 3],
+      ]);
+      expect(resultado[0].url).toBe('https://cdn.test/campanas/c.webp');
+    });
+
+    it.each([
+      ['faltan fotos', [FOTO_A, FOTO_B]],
+      ['sobra una foto ajena', [FOTO_A, FOTO_B, FOTO_C, 'dddddddd-dddd-4ddd-8ddd-dddddddddddd']],
+      ['una foto no es de la campaña', [FOTO_A, FOTO_B, 'dddddddd-dddd-4ddd-8ddd-dddddddddddd']],
+      ['hay repetidas', [FOTO_A, FOTO_A, FOTO_B]],
+    ])('rechaza el orden si %s (400)', async (_caso, ids) => {
+      fotos.find.mockResolvedValue(galeria());
+
+      await expect(servicio.reordenar(CAMPANA_ID, ids)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(fotos.save).not.toHaveBeenCalled();
+    });
+
+    it('responde 503 si no puede guardar el nuevo orden', async () => {
+      fotos.find.mockResolvedValue(galeria());
+      fotos.save.mockRejectedValue(new Error('db'));
+
+      await expect(
+        servicio.reordenar(CAMPANA_ID, [FOTO_C, FOTO_B, FOTO_A]),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+    });
   });
 });

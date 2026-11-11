@@ -45,9 +45,11 @@ es UUID. `404` si no existe. `401`, `403` y `503` como en el listado.
 
 ## `guardarAnimal(formulario, id?)`
 
-Sin `id` crea (`POST /api/admin/animales`, `201`). Con `id` actualiza. El API
-aún no tiene actualización: `updateAnimal` es mock y queda marcado
-`TODO(backend)`.
+Sin `id` crea (`POST /api/admin/animales`, `201`). Con `id` actualiza
+(`PUT /api/admin/animales/{id}`, `200`) con el mismo cuerpo y las mismas reglas.
+El `PUT` conserva las fotos; si el animal deja de estar adoptado se borran los
+datos de adopción y la foto de la entrega. Responde `404` si el animal no existe
+o ya fue eliminado.
 
 Cuerpo que debe enviar el servicio, no el componente:
 
@@ -86,8 +88,10 @@ existe, `503` si no se puede guardar.
 
 ## `deleteAnimal(id)`
 
-El API aún no borra animales. El mock quita el registro. `TODO(backend)`.
-Errores previstos: `401`, `403`, `404`, `503`.
+`DELETE /api/admin/animales/{id}`. Responde `204` sin cuerpo. Es un borrado
+lógico: el animal deja de aparecer en la lista y en el resumen, pero el registro
+y sus fotos se conservan. Se audita. Errores: `400` si `id` no es UUID, `401`,
+`403`, `404` si no existe o ya estaba eliminado, `503`.
 
 ## `subirFotoAnimal(id, tipo, archivo)`
 
@@ -106,5 +110,6 @@ subida sin crear otro registro.
 
 ## `quitarFotoAnimal(id, tipo)`
 
-El API aún no quita fotos. El mock deja el campo en `null`. `TODO(backend)`.
-Errores previstos: `401`, `403`, `404`, `503`.
+`DELETE /api/admin/animales/{id}/fotos/{tipo}`, con `tipo` `animal` o `entrega`.
+Responde `204`. Borra la foto del bucket privado. Errores: `400`, `401`, `403`,
+`404` si el animal no existe o no tiene esa foto, `503`.

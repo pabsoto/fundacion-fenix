@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -142,6 +143,107 @@ export class FotosCampanaService {
       });
       throw new ServiceUnavailableException(
         'No fue posible guardar la fotografía',
+      );
+    }
+  }
+
+  /** Quita una fotografía de la campaña y la borra de Storage. */
+  async quitar(campanaId: string, fotoId: string): Promise<void> {
+    await this.exigirCampanaEditable(campanaId);
+
+    let foto: FotoCampana | null;
+    try {
+      foto = await this.fotos.findOne({ where: { id: fotoId, campanaId } });
+    } catch {
+      throw new ServiceUnavailableException(
+        'Las fotografías no están disponibles temporalmente',
+      );
+    }
+    if (!foto) throw new NotFoundException('La fotografía no existe');
+
+    try {
+      await this.fotos.delete({ id: foto.id });
+    } catch {
+      throw new ServiceUnavailableException(
+        'No fue posible quitar la fotografía',
+      );
+    }
+
+    await this.storage.eliminar(foto.ruta).catch((error: unknown) => {
+      this.logger.error(
+        `Limpieza pendiente de Supabase Storage para ${foto.ruta}`,
+        error instanceof Error ? error.message : 'Error de Storage',
+      );
+    });
+  }
+
+  /**
+   * Fija el orden de la galería. `ids` debe traer todas las fotos de la
+   * campaña, sin repetir ni agregar otras; la primera pasa a ser la principal.
+   */
+  async reordenar(
+    campanaId: string,
+    ids: string[],
+  ): Promise<FotoCampanaDto[]> {
+    await this.exigirCampanaEditable(campanaId);
+
+    let actuales: FotoCampana[];
+    try {
+      actuales = await this.fotos.find({
+        where: { campanaId },
+        order: { orden: 'ASC' },
+      });
+    } catch {
+      throw new ServiceUnavailableException(
+        'Las fotografías no están disponibles temporalmente',
+      );
+    }
+
+    const conocidas = new Set(actuales.map((foto) => foto.id));
+    const completo =
+      ids.length === actuales.length &&
+      new Set(ids).size === ids.length &&
+      ids.every((id) => conocidas.has(id));
+    if (!completo) {
+      throw new BadRequestException(
+        'La lista debe incluir exactamente las fotografías de la campaña, sin repetir',
+      );
+    }
+
+    const porId = new Map(actuales.map((foto) => [foto.id, foto]));
+    const reordenadas = ids.map((id, indice) =>
+      Object.assign(porId.get(id)!, { orden: indice + 1 }),
+    );
+
+    try {
+      await this.fotos.save(reordenadas);
+    } catch {
+      throw new ServiceUnavailableException(
+        'No fue posible reordenar las fotografías',
+      );
+    }
+
+    return reordenadas.map((foto) => ({
+      id: foto.id,
+      campanaId,
+      orden: foto.orden,
+      url: this.storage.obtenerUrlPublica(foto.ruta),
+    }));
+  }
+
+  private async exigirCampanaEditable(campanaId: string): Promise<void> {
+    let campana: Campana | null;
+    try {
+      campana = await this.campanas.findOne({ where: { id: campanaId } });
+    } catch {
+      throw new ServiceUnavailableException(
+        'Las campañas no están disponibles temporalmente',
+      );
+    }
+    if (!campana) throw new NotFoundException('La campaña no existe');
+    if (campana.estado === 'cerrada') {
+      throw new ConflictException(
+        'Las fotografías de una campaña cerrada no se modifican. Reábrela primero',
       );
     }
   }

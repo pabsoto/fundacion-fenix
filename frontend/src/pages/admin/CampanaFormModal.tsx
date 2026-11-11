@@ -1,10 +1,14 @@
 import { useId, useState } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
-import { capacidadesAdmin } from '@/services/admin/capacidades';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import { validarCampana, type CampanaFormulario, type ErroresCampana } from '@/schemas/campana';
-import { guardarCampana, subirFotosCampana } from '@/services/admin/campanas.service';
+import {
+  guardarCampana,
+  quitarFotoCampana,
+  subirFotosCampana,
+} from '@/services/admin/campanas.service';
+import { ErrorApiAdmin } from '@/services/admin/cliente-admin';
 import type { CampanaConTotales } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
 import { CampoTexto } from '@/components/admin/ui/CampoTexto';
@@ -104,6 +108,22 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
     onCerrar();
   }
 
+  /** Quita del servidor las fotos que el usuario retiró. Una que ya no existe cuenta como quitada. */
+  async function quitarFotosRetiradas(original: CampanaConTotales): Promise<boolean> {
+    const conservadas = new Set(guardadas.map((foto) => foto.valor));
+    let todoBien = true;
+    for (const [indice, url] of original.fotos.entries()) {
+      const fotoId = original.fotoIds[indice];
+      if (conservadas.has(url) || !fotoId) continue;
+      try {
+        await quitarFotoCampana(original.id, fotoId);
+      } catch (causa) {
+        if (!(causa instanceof ErrorApiAdmin && causa.status === 404)) todoBien = false;
+      }
+    }
+    return todoBien;
+  }
+
   async function guardar() {
     if (guardando) return;
     const resultado = validarCampana(formulario);
@@ -122,6 +142,11 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
         campana?.id,
         guardadas.map((foto) => foto.valor),
       );
+      if (campana && !(await quitarFotosRetiradas(campana))) {
+        setErrorGeneral(textosAdmin.supuestos.fotoNoQuito);
+        setGuardando(false);
+        return;
+      }
       let fotosFallidas: File[] | null = null;
       if (formulario.fotos.length > 0) {
         try {
@@ -308,11 +333,8 @@ export function CampanaFormModal({ campana, onCerrar, onGuardada }: CampanaFormM
             archivos={formulario.fotos}
             onArchivos={(fotos) => setFormulario((actual) => ({ ...actual, fotos }))}
             existentes={existentes}
-            onQuitarExistente={
-              capacidadesAdmin.quitarFotoCampana
-                ? (clave) =>
-                    setGuardadas((actuales) => actuales.filter((foto) => foto.clave !== clave))
-                : undefined
+            onQuitarExistente={(clave) =>
+              setGuardadas((actuales) => actuales.filter((foto) => foto.clave !== clave))
             }
             nota={textos.notaFotos}
           />
