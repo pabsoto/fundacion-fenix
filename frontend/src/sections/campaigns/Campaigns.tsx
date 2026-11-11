@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCampaigns } from '@/hooks/useCampaigns';
+import { ordenarCampanas } from '@/services/campaigns.service';
 import { CampaignList } from './CampaignList';
 import { CampaignDetail } from './CampaignDetail';
 import { useStats } from '@/hooks/useStats';
@@ -12,25 +13,31 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export function Campaigns() {
   const { t, i18n } = useTranslation();
-  const [year, setYear] = useState(CURRENT_YEAR);
+  const [year, setYear] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
-  const { data: allCampaigns = [], isPending, isError } = useCampaigns();
+  const { data: campaignsData = [], isPending, isError } = useCampaigns();
+  const allCampaigns = useMemo(() => ordenarCampanas(campaignsData), [campaignsData]);
+  const latest = allCampaigns.find((campaign) => campaign.fecha) ?? null;
   const years = useMemo(() => {
-    const officialYears = [...new Set(allCampaigns.map((campaign) => campaign.year))]
-      .sort((a, b) => b - a);
+    const officialYears = [
+      ...new Set(allCampaigns.filter((campaign) => campaign.year > 0).map((campaign) => campaign.year)),
+    ].sort((a, b) => b - a);
     return officialYears.length > 0
       ? officialYears
       : [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
   }, [allCampaigns]);
-  const effectiveYear = years.includes(year) ? year : years[0];
+  const effectiveYear =
+    year != null && years.includes(year) ? year : (latest?.year ?? years[0]);
   const campaigns = allCampaigns.filter((campaign) => campaign.year === effectiveYear);
   const { data: stats } = useStats();
   const accumulated = (stats?.caninos.total ?? 0) + (stats?.felinos.total ?? 0);
 
   const selected =
-    campaigns.find((c) => c.id === selectedId) ?? campaigns[0] ?? null;
+    campaigns.find((campaign) => campaign.id === selectedId) ??
+    campaigns.find((campaign) => campaign.fecha) ??
+    null;
 
   function handleYearChange(next: number) {
     setYear(next);
