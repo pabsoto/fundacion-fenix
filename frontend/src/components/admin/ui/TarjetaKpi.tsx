@@ -7,6 +7,8 @@ type TarjetaKpiProps = {
   nota: string;
   destacada?: boolean;
   separador?: boolean;
+  /** Tarjeta suelta del Resumen móvil (2×2), no la fila del escritorio. */
+  suelta?: boolean;
 };
 
 export function TarjetaKpi({
@@ -15,7 +17,24 @@ export function TarjetaKpi({
   nota,
   destacada = false,
   separador = false,
+  suelta = false,
 }: TarjetaKpiProps) {
+  if (suelta) {
+    return (
+      <Card
+        radius="admin"
+        className={cn(
+          'flex h-full min-w-0 flex-col gap-(--spacing-kpi-interno) p-(--spacing-kpi-movil)',
+          destacada ? 'border-0 bg-amarillo' : 'border-negro shadow-kpi-admin',
+        )}
+      >
+        <p className="t-chip text-negro">{etiqueta}</p>
+        <p className="t-kpi-movil text-negro">{valor}</p>
+        <p className="t-nota text-negro">{nota}</p>
+      </Card>
+    );
+  }
+
   const contenido = (
     <>
       <p className="t-nav text-negro">{etiqueta}</p>

@@ -9,6 +9,8 @@ type ConfirmarEliminarModalProps = {
   /** Segunda línea opcional, por ejemplo qué se está eliminando. */
   detalle?: string;
   accion: string;
+  /** Botón de confirmar en rojo, como al eliminar una campaña. */
+  peligro?: boolean;
   borrando: boolean;
   error: string | null;
   onCancelar: () => void;
@@ -24,6 +26,7 @@ export function ConfirmarEliminarModal({
   cuerpo = textosAdmin.supuestos.confirmarEliminar,
   detalle,
   accion,
+  peligro = false,
   borrando,
   error,
   onCancelar,
@@ -41,7 +44,12 @@ export function ConfirmarEliminarModal({
           <BotonPildora variante="ghost" disabled={borrando} onClick={onCancelar}>
             {textosAdmin.supuestos.cancelar}
           </BotonPildora>
-          <BotonPildora disabled={borrando} aria-busy={borrando} onClick={onConfirmar}>
+          <BotonPildora
+            variante={peligro ? 'peligroSolido' : 'naranja'}
+            disabled={borrando}
+            aria-busy={borrando}
+            onClick={onConfirmar}
+          >
             {borrando ? textosAdmin.supuestos.guardando : accion}
           </BotonPildora>
         </>

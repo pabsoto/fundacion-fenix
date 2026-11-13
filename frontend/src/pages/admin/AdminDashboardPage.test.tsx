@@ -144,4 +144,34 @@ describe('AdminDashboardPage', () => {
     );
     expect(await screen.findByText('Ruta de inicio de sesión')).toBeTruthy();
   });
+
+  it('en móvil abre la cuenta desde el avatar y cierra sesión', async () => {
+    const original = window.matchMedia;
+    window.matchMedia = (query: string) => ({
+      matches: query.includes('48rem'),
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    });
+
+    try {
+      renderDashboard();
+
+      expect(await screen.findByRole('link', { name: 'Donaciones' })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Salir' })).toBeNull();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Abrir menú de la cuenta' }));
+      expect(screen.getByText('Administración FÉNIX')).toBeTruthy();
+      expect(screen.getByText('Administrador del panel')).toBeTruthy();
+
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Salir' }));
+      await waitFor(() => expect(cerrarSesion).toHaveBeenCalledWith(sesion.csrfToken));
+    } finally {
+      window.matchMedia = original;
+    }
+  });
 });

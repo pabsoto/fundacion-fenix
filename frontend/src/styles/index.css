@@ -6,6 +6,8 @@
   --color-negro: #1c1c1c;
   --color-naranja: #ff5402;
   --color-naranja-hover: #ff9700;
+  --color-peligro: #dc2626;
+  --color-peligro-texto: #b91c1c;
   --color-amarillo: #ffc200;
   --color-blanco: #ffffff;
   --color-linea: rgb(28 28 28 / 0.15);
@@ -102,6 +104,51 @@
   --spacing-leyenda-admin: 18px;
   --radius-barra-admin: 7px;
   --radius-barra-cero: 2px;
+
+  /* Admin móvil (<768 px). Cabecera y barra: Campañas móvil. Contenido: Resumen móvil. */
+  --spacing-nav-movil-x: 16px;
+  --spacing-nav-movil-y: 8px;
+  --size-nav-movil: 56px;
+  --spacing-pagina-admin-movil: 16px;
+  --spacing-contenido-movil-y: 20px;
+  --spacing-bloque-movil: 20px;
+  --spacing-kpi-movil: 16px;
+  --spacing-kpi-gap-movil: 12px;
+  --spacing-kpi-interno: 6px;
+  --spacing-card-movil: 20px;
+  --spacing-card-gap-movil: 16px;
+  --spacing-cabecera-movil: 10px;
+  --spacing-grafica-movil: 176px;
+  --spacing-barra-movil: 16px;
+  --spacing-barra-max-movil: 64px;
+  --spacing-entre-barras-movil: 3px;
+  --spacing-mes-movil: 54px;
+  --spacing-mes-activo-x: 4px;
+  --spacing-mes-activo-y: 8px;
+  --radius-barra-movil: 6px;
+  --radius-mes-activo: 14px;
+  --shadow-kpi-admin: 0 2px 8px rgb(28 28 28 / 0.06);
+  --shadow-menu-admin: 0 8px 28px rgb(0 0 0 / 0.16);
+  --spacing-menu-avatar: 240px;
+  --spacing-menu-avatar-y: 8px;
+  --spacing-barra-inferior-x: 8px;
+  --spacing-barra-inferior-pt: 8px;
+  --spacing-barra-inferior-pb: 34px;
+  --spacing-tabs-movil: 8px;
+  --spacing-tab-gap: 4px;
+  --size-tab-indicador-x: 60px;
+  --size-tab-indicador-y: 32px;
+  --size-icono-tab: 22px;
+  --spacing-contenido-bajo-barra: 108px;
+  --spacing-pista: 6px;
+  --size-pista: 14px;
+  --shadow-tarjeta-movil: 0 3px 10px rgb(28 28 28 / 0.07);
+  --shadow-fab-admin: 0 8px 20px rgb(28 28 28 / 0.22);
+  --spacing-fab-sobre-barra: 92px;
+  --spacing-libre-fab: 88px;
+  --spacing-mini-movil: 72px;
+  --spacing-resumen-movil: 68px;
+  --radius-resumen-movil: 20px;
 }
 
 @utility t-hero {
@@ -312,6 +359,66 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.0625rem;
+  line-height: normal;
+}
+
+@utility t-pantalla-movil {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: normal;
+}
+
+@utility t-total-tarjeta {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2rem;
+  line-height: normal;
+  letter-spacing: -0.078em;
+}
+
+@utility t-pagina-movil {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2.25rem;
+  line-height: normal;
+  letter-spacing: -0.025em;
+}
+
+@utility t-kpi-movil {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2.5rem;
+  line-height: normal;
+  letter-spacing: -0.0625em;
+}
+
+@utility t-cifra-movil {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: normal;
+  letter-spacing: -0.083em;
+}
+
+@utility t-tab {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.75rem;
+  line-height: normal;
+}
+
+@utility t-tab-activa {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: normal;
+}
+
+@utility t-nota {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.8125rem;
   line-height: normal;
 }
 
