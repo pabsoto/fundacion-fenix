@@ -1,5 +1,6 @@
-import { useId, useState } from 'react';
-import { Calendar, Lock, MapPin, Trash2, User } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Calendar, Lock, MapPin, Trash2, User, X } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import {
   validarAnimal,
@@ -33,6 +34,8 @@ type AnimalFormModalProps = {
   onCerrar: () => void;
   onGuardado: (id: string, fotos: FotosPendientes | null) => void;
   onEliminado: () => void;
+  /** En móvil el formulario ocupa la pantalla, con la barra de acciones fija. */
+  pantallaCompleta?: boolean;
 };
 
 function fechaHoy(): string {
@@ -90,11 +93,163 @@ function hayFotos(fotos: FotosPendientes): boolean {
   return Boolean(fotos.ingreso || fotos.adopcion || fotos.quitarIngreso || fotos.quitarAdopcion);
 }
 
+function PantallaAnimal({
+  titulo,
+  subtitulo,
+  onCerrar,
+  pie,
+  children,
+}: {
+  titulo: string;
+  subtitulo?: string;
+  onCerrar: () => void;
+  pie?: React.ReactNode;
+  children: React.ReactNode;
+  abierto?: boolean;
+}) {
+  return createPortal(
+    <div className="bg-crema fixed inset-0 z-50 flex flex-col pt-[env(safe-area-inset-top,0px)]">
+      <header className="flex items-center gap-3 px-4 py-1.5">
+        <button
+          type="button"
+          className="border-linea flex size-11 items-center justify-center rounded-pill border"
+          aria-label={textosAdmin.registrarAnimal.cerrar}
+          onClick={onCerrar}
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+        <h1 className="t-pantalla-movil text-negro">{titulo}</h1>
+      </header>
+      <div className="bg-linea h-px" />
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-4">
+        {subtitulo ? <p className="t-control text-negro mb-5">{subtitulo}</p> : null}
+        {children}
+      </div>
+      <div className="border-linea bg-blanco flex items-center gap-3 border-t px-4 pt-3 pb-[max(2.125rem,env(safe-area-inset-bottom,0px))]">
+        {pie}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function ConfirmacionEliminarMovil({
+  titulo,
+  cuerpo,
+  accion,
+  cancelar,
+  borrando,
+  error,
+  onCancelar,
+  onConfirmar,
+}: {
+  titulo: string;
+  cuerpo: string;
+  accion: string;
+  cancelar: string;
+  borrando: boolean;
+  error: string | null;
+  onCancelar: () => void;
+  onConfirmar: () => void;
+}) {
+  const tituloId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const cancelarRef = useRef(onCancelar);
+
+  useEffect(() => {
+    cancelarRef.current = onCancelar;
+  }, [onCancelar]);
+
+  useEffect(() => {
+    const previo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialogRef.current?.focus();
+    function alTeclado(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !borrando) {
+        event.preventDefault();
+        cancelarRef.current();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const nodo = dialogRef.current;
+      if (!nodo) return;
+      const lista = [...nodo.querySelectorAll<HTMLElement>('button:not([disabled])')];
+      const primero = lista[0];
+      const ultimo = lista[lista.length - 1];
+      if (!primero || !ultimo) return;
+      if (event.shiftKey && document.activeElement === primero) {
+        event.preventDefault();
+        ultimo.focus();
+      } else if (!event.shiftKey && document.activeElement === ultimo) {
+        event.preventDefault();
+        primero.focus();
+      }
+    }
+    document.addEventListener('keydown', alTeclado);
+    return () => {
+      document.removeEventListener('keydown', alTeclado);
+      previo?.focus();
+    };
+  }, [borrando]);
+
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-6">
+      <button
+        type="button"
+        className="bg-velo absolute inset-0"
+        aria-label={cancelar}
+        disabled={borrando}
+        onClick={onCancelar}
+      />
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={tituloId}
+        tabIndex={-1}
+        className="border-linea bg-blanco relative flex w-full flex-col gap-5 rounded-admin border p-6 outline-none"
+      >
+        <div className="flex flex-col gap-2">
+          <h2 id={tituloId} className="t-total-detalle text-negro">
+            {titulo}
+          </h2>
+          <p className="t-control text-negro">{cuerpo}</p>
+        </div>
+        {error ? (
+          <p className="t-small text-naranja" role="alert">
+            {error}
+          </p>
+        ) : null}
+        <div className="flex flex-col gap-3">
+          <BotonPildora
+            variante="ghost"
+            className="h-(--size-control-admin) w-full"
+            disabled={borrando}
+            onClick={onCancelar}
+          >
+            {cancelar}
+          </BotonPildora>
+          <BotonPildora
+            variante="peligroSolido"
+            className="h-(--size-control-admin) w-full"
+            disabled={borrando}
+            aria-busy={borrando}
+            onClick={onConfirmar}
+          >
+            {borrando ? textosAdmin.supuestos.guardando : accion}
+          </BotonPildora>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export function AnimalFormModal({
   animal,
   onCerrar,
   onGuardado,
   onEliminado,
+  pantallaCompleta = false,
 }: AnimalFormModalProps) {
   const textos = textosAdmin.registrarAnimal;
   const formId = useId();
@@ -113,16 +268,45 @@ export function AnimalFormModal({
   const [confirmar, setConfirmar] = useState(false);
   const [borrando, setBorrando] = useState(false);
   const [errorBorrado, setErrorBorrado] = useState<string | null>(null);
+  const [descartar, setDescartar] = useState(false);
   const edicion = animal !== null;
 
   function actualizar<K extends keyof AnimalFormulario>(campo: K, valor: AnimalFormulario[K]) {
     setFormulario((actual) => ({ ...actual, [campo]: valor }));
   }
 
+  function hayCambios() {
+    const base = formularioDe(animal);
+    const campos = (Object.keys(base) as (keyof AnimalFormulario)[]).some((campo) => {
+      if (campo === 'fotoIngreso' || campo === 'fotoAdopcion') return false;
+      return formulario[campo] !== base[campo];
+    });
+    return (
+      campos ||
+      Boolean(formulario.fotoIngreso) ||
+      Boolean(formulario.fotoAdopcion) ||
+      quitarIngreso ||
+      quitarAdopcion
+    );
+  }
+
   function cerrar() {
     if (guardando || borrando) return;
+    if (pantallaCompleta && hayCambios()) {
+      setDescartar(true);
+      return;
+    }
     onCerrar();
   }
+
+  useEffect(() => {
+    if (!pantallaCompleta) return;
+    function alTeclado(event: KeyboardEvent) {
+      if (event.key === 'Escape') cerrar();
+    }
+    document.addEventListener('keydown', alTeclado);
+    return () => document.removeEventListener('keydown', alTeclado);
+  });
 
   function elegirEspecie(especie: Especie) {
     if (guardando) return;
@@ -250,16 +434,18 @@ export function AnimalFormModal({
         ]
       : [];
 
+  const Marco = pantallaCompleta ? PantallaAnimal : ModalAdmin;
+
   return (
     <>
-      <ModalAdmin
+      <Marco
         abierto
         titulo={edicion ? textos.editarTitulo : textos.titulo}
         subtitulo={textos.subtitulo}
         onCerrar={cerrar}
         pie={
           <>
-            {edicion ? (
+            {edicion && !pantallaCompleta ? (
               <BotonPildora
                 variante="ghost"
                 className="mr-auto gap-2"
@@ -273,7 +459,13 @@ export function AnimalFormModal({
             <BotonPildora variante="ghost" disabled={guardando} onClick={cerrar}>
               {textos.cancelar}
             </BotonPildora>
-            <BotonPildora type="submit" form={formId} disabled={guardando} aria-busy={guardando}>
+            <BotonPildora
+              type="submit"
+              form={formId}
+              disabled={guardando}
+              aria-busy={guardando}
+              className={pantallaCompleta ? 'min-w-0 flex-1' : undefined}
+            >
               {guardando
                 ? textosAdmin.supuestos.guardando
                 : edicion
@@ -296,7 +488,7 @@ export function AnimalFormModal({
               {errorGeneral}
             </p>
           ) : null}
-          <div className="flex items-start gap-4">
+          <div className={pantallaCompleta ? 'flex flex-col gap-5' : 'flex items-start gap-4'}>
             <div className="min-w-0 flex-1">
               <CampoTexto
                 id={`${formId}-nombre`}
@@ -333,7 +525,7 @@ export function AnimalFormModal({
               </div>
             </div>
           </div>
-          <div className="flex items-start gap-4">
+          <div className={pantallaCompleta ? 'flex flex-col gap-5' : 'flex items-start gap-4'}>
             <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-2">
                 <span id={sexoId} className="t-chip text-negro">
@@ -379,7 +571,7 @@ export function AnimalFormModal({
               />
             </div>
           </div>
-          <div className="w-campo-corto max-w-full">
+          <div className={pantallaCompleta ? 'min-w-0' : 'w-campo-corto max-w-full'}>
             <CampoTexto
               id={`${formId}-fecha`}
               etiqueta={textos.fechaIngreso}
@@ -427,7 +619,7 @@ export function AnimalFormModal({
                   {textos.notaPrivada}
                 </p>
               </div>
-              <div className="flex items-start gap-4">
+              <div className={pantallaCompleta ? 'flex flex-col gap-5' : 'flex items-start gap-4'}>
                 <div className="min-w-0 flex-1">
                   <CampoTexto
                     id={`${formId}-adoptante`}
@@ -474,9 +666,64 @@ export function AnimalFormModal({
               </div>
             </div>
           ) : null}
+          {pantallaCompleta && edicion && animal ? (
+            <div className="border-linea flex flex-col gap-3 border-t pt-5">
+              <p className="t-chip text-negro">{textos.zonaPeligro}</p>
+              <p className="t-small text-negro">{textos.zonaPeligroNota}</p>
+              <BotonPildora
+                variante="peligro"
+                className="h-(--size-control-admin) w-full gap-2"
+                disabled={guardando}
+                onClick={() => setConfirmar(true)}
+              >
+                <Trash2 className="size-5" aria-hidden="true" />
+                {textos.eliminar}
+              </BotonPildora>
+            </div>
+          ) : null}
         </form>
-      </ModalAdmin>
-      {confirmar ? (
+      </Marco>
+      {descartar ? (
+        createPortal(
+          <div className="fixed inset-0 z-[60] flex items-center justify-center px-6">
+            <button
+              type="button"
+              className="bg-velo absolute inset-0"
+              aria-label={textos.seguirEditando}
+              onClick={() => setDescartar(false)}
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`${formId}-descartar`}
+              className="border-negro bg-blanco relative flex w-full max-w-sm flex-col gap-4 rounded-admin border p-6"
+            >
+              <h2 id={`${formId}-descartar`} className="t-pantalla-movil text-negro">
+                {textos.descartarTitulo}
+              </h2>
+              <p className="t-control text-negro">{textos.descartarCuerpo}</p>
+              <BotonPildora onClick={() => setDescartar(false)}>{textos.seguirEditando}</BotonPildora>
+              <BotonPildora variante="ghost" onClick={onCerrar}>
+                {textos.descartar}
+              </BotonPildora>
+            </div>
+          </div>,
+          document.body,
+        )
+      ) : null}
+      {confirmar && animal && pantallaCompleta ? (
+        <ConfirmacionEliminarMovil
+          titulo={textosAdmin.supuestos.confirmarEliminarTitulo}
+          cuerpo={textosAdmin.supuestos.confirmarEliminar}
+          accion={textosAdmin.supuestos.confirmarEliminarAccion}
+          cancelar={textos.cancelar}
+          borrando={borrando}
+          error={errorBorrado}
+          onCancelar={() => setConfirmar(false)}
+          onConfirmar={() => void eliminar()}
+        />
+      ) : null}
+      {confirmar && !pantallaCompleta ? (
         <ConfirmarEliminarModal
           titulo={textosAdmin.supuestos.confirmarEliminarTitulo}
           accion={textosAdmin.supuestos.confirmarEliminarAccion}

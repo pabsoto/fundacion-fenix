@@ -62,4 +62,45 @@ describe('AdminAnimalesPage', () => {
     expect(screen.getByText('Esta acción no se puede deshacer.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Exportar/ })).toBeNull();
   });
+
+  it('en móvil lista tarjetas, filtra, abre el detalle y el registro', async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: true,
+      media: query,
+      onchange: null,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+    })) as typeof window.matchMedia;
+
+    try {
+      render(<AdminAnimalesPage />);
+
+      expect(await screen.findByPlaceholderText('Buscar por nombre', {}, { timeout: 2000 })).toBeTruthy();
+      expect(screen.getByText('Mostrando 8 de 8 animales')).toBeTruthy();
+      expect(screen.getByText('animales · 4 adoptados')).toBeTruthy();
+      expect(screen.queryByRole('row')).toBeNull();
+
+      fireEvent.click(screen.getByRole('button', { name: 'En la fundación' }));
+      expect(await screen.findByText('Mostrando 4 de 4 animales')).toBeTruthy();
+      expect(screen.getByText('animales · 0 adoptados')).toBeTruthy();
+
+      fireEvent.click(screen.getByRole('button', { name: /Apolo/ }));
+      expect(screen.getByText('Al ingresar')).toBeTruthy();
+      expect(screen.queryByText('En su adopción')).toBeNull();
+      expect(screen.queryByText('Adoptado por')).toBeNull();
+      expect(screen.queryByText('Dirección')).toBeNull();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }));
+      expect(screen.getByRole('heading', { name: 'Registrar animal' })).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
+      expect(screen.queryByRole('heading', { name: 'Registrar animal' })).toBeNull();
+    } finally {
+      window.matchMedia = original;
+      cleanup();
+    }
+  });
 });
