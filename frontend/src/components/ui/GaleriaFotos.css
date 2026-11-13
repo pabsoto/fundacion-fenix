@@ -1,0 +1,316 @@
+/* Velo del visor. Único color nuevo: se ajusta aquí. */
+.galeria-visor {
+  --galeria-velo: rgba(0, 0, 0, 0.55);
+  position: fixed;
+  inset: 0;
+  /* Por encima del botón flotante de WhatsApp (z-index: 1000). */
+  z-index: 1100;
+}
+
+.galeria-visor__velo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--galeria-velo);
+  animation: galeria-velo-in 180ms ease-out backwards;
+}
+
+.galeria-visor--salida .galeria-visor__velo {
+  animation: galeria-velo-out 180ms ease-in forwards;
+}
+
+.galeria-visor__contador {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 2;
+  margin: 0;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-negro) 72%, transparent);
+  color: var(--color-crema);
+}
+
+.galeria-visor__control {
+  z-index: 2;
+  box-shadow: var(--shadow-soft);
+}
+
+.galeria-visor__escena {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 4.5rem 1rem;
+  pointer-events: none;
+}
+
+.galeria-visor__foto {
+  width: min(90vw, calc(100vw - 7rem));
+  pointer-events: auto;
+  transform-origin: center;
+  animation: galeria-foto-in 180ms ease-out backwards;
+}
+
+.galeria-visor--salida .galeria-visor__foto {
+  animation: galeria-foto-out 180ms ease-in forwards;
+}
+
+.galeria-miniatura {
+  cursor: zoom-in;
+}
+
+.galeria-miniatura__marco {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+}
+
+.galeria-miniatura__escala {
+  display: block;
+  width: 100%;
+  transform: scale(1);
+  transform-origin: center;
+}
+
+.galeria-miniatura__escala--pista {
+  animation-name: galeria-pulso;
+  animation-duration: 5.6s;
+  animation-timing-function: linear;
+  animation-iteration-count: 5;
+  animation-fill-mode: backwards;
+}
+
+.galeria-puntero,
+.galeria-onda {
+  position: absolute;
+  pointer-events: none;
+  animation-duration: 5.6s;
+  animation-timing-function: linear;
+  animation-iteration-count: 5;
+  animation-fill-mode: backwards;
+}
+
+.galeria-puntero {
+  top: 50%;
+  left: 50%;
+  width: 52px;
+  height: 52px;
+  /* La punta del cursor queda en el centro de la miniatura. */
+  margin-top: -7px;
+  margin-left: -11px;
+  opacity: 0;
+  transform-origin: 22% 16%;
+  animation-name: galeria-puntero;
+}
+
+.galeria-onda {
+  top: 50%;
+  left: 50%;
+  width: 52px;
+  height: 52px;
+  margin-top: -26px;
+  margin-left: -26px;
+  border: 2px solid var(--color-blanco);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-negro) 55%, transparent);
+  opacity: 0;
+  animation-name: galeria-onda;
+}
+
+.galeria-miniatura__lupa {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  z-index: 1;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-negro);
+  color: var(--color-blanco);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .galeria-miniatura:hover .galeria-miniatura__escala:not(.galeria-miniatura__escala--pista),
+  .galeria-miniatura:focus-visible .galeria-miniatura__escala:not(.galeria-miniatura__escala--pista) {
+    transform: scale(1.03);
+    transition: transform 200ms ease-out;
+  }
+
+  .galeria-miniatura:hover .galeria-miniatura__lupa,
+  .galeria-miniatura:focus-visible .galeria-miniatura__lupa {
+    opacity: 1;
+  }
+}
+
+@media (hover: none) {
+  .galeria-miniatura__lupa {
+    opacity: 1;
+  }
+}
+
+@keyframes galeria-puntero {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+    animation-timing-function: ease-out;
+  }
+
+  7% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  12.5% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  15% {
+    opacity: 1;
+    transform: scale(0.72);
+  }
+
+  20% {
+    opacity: 1;
+    transform: scale(0.72);
+  }
+
+  23% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  28.6% {
+    opacity: 0;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes galeria-pulso {
+  0%,
+  12.5% {
+    transform: scale(1);
+    animation-timing-function: ease-in;
+  }
+
+  15% {
+    transform: scale(0.86);
+    animation-timing-function: linear;
+  }
+
+  20% {
+    transform: scale(0.86);
+    animation-timing-function: cubic-bezier(0.16, 1.4, 0.3, 1);
+  }
+
+  23.5% {
+    transform: scale(1.04);
+    animation-timing-function: ease-out;
+  }
+
+  26% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes galeria-onda {
+  0%,
+  12.5% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+
+  13.2% {
+    opacity: 0.7;
+    transform: scale(0.35);
+  }
+
+  28.6% {
+    opacity: 0;
+    transform: scale(1.85);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.85);
+  }
+}
+
+@keyframes galeria-velo-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes galeria-velo-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes galeria-foto-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes galeria-foto-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .galeria-puntero,
+  .galeria-onda,
+  .galeria-miniatura__escala--pista,
+  .galeria-visor__velo,
+  .galeria-visor__foto,
+  .galeria-visor--salida .galeria-visor__velo,
+  .galeria-visor--salida .galeria-visor__foto {
+    animation: none;
+  }
+
+  .galeria-visor__foto {
+    opacity: 1;
+    transform: none;
+  }
+}

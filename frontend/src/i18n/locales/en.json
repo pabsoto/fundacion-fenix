@@ -138,7 +138,8 @@
     "prev": "Previous photo",
     "next": "Next photo",
     "close": "Close",
-    "counter": "{{n}} of {{total}}"
+    "counter": "{{n}} of {{total}}",
+    "zoom": "Enlarge photo {{n}} of {{total}}"
   },
   "results": {
     "title": "Results",
