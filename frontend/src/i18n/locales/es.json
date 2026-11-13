@@ -138,7 +138,8 @@
     "prev": "Foto anterior",
     "next": "Foto siguiente",
     "close": "Cerrar",
-    "counter": "{{n}} de {{total}}"
+    "counter": "{{n}} de {{total}}",
+    "zoom": "Ampliar foto {{n}} de {{total}}"
   },
   "results": {
     "title": "Resultados",

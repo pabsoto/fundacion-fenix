@@ -1,14 +1,19 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, ArrowRight, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, X, ZoomIn } from 'lucide-react'
 import { useCarousel } from '@/hooks/useCarousel'
 import { cn } from '@/lib/cn'
 import { Carousel } from './Carousel'
 import { IconButton } from './IconButton'
 import { Photo } from './Photo'
+import './GaleriaFotos.css'
 
 const HUECOS = 3
+const PISTA_CLAVE = 'fenix-galeria-pista-vista'
+const PISTA_RETRASO_MS = 1000
+const PISTA_UMBRAL = 0.6
+const CIERRE_MS = 180
 
 interface GaleriaFotosProps {
   fotos: readonly string[]
@@ -18,9 +23,69 @@ interface GaleriaFotosProps {
 
 export function GaleriaFotos({ fotos, textoAlt, textoPendiente }: GaleriaFotosProps) {
   const { t } = useTranslation()
+  const raizRef = useRef<HTMLDivElement>(null)
+  const timerPistaRef = useRef(0)
+  const pistaDescartadaRef = useRef(false)
   const [abierta, setAbierta] = useState<number | null>(null)
+  const [pista, setPista] = useState(false)
   const { emblaRef, scrollPrev, scrollNext, canPrev, canNext } = useCarousel()
   const conCarrusel = fotos.length > HUECOS
+
+  const descartarPista = () => {
+    if (pistaDescartadaRef.current) return
+    pistaDescartadaRef.current = true
+    window.clearTimeout(timerPistaRef.current)
+    setPista(false)
+    try {
+      sessionStorage.setItem(PISTA_CLAVE, '1')
+    } catch {
+      /* sesión no disponible */
+    }
+  }
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(PISTA_CLAVE) === '1') {
+        pistaDescartadaRef.current = true
+        return
+      }
+    } catch {
+      pistaDescartadaRef.current = true
+      return
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const nodo = raizRef.current
+    if (!nodo) return
+
+    const observer = new IntersectionObserver(
+      (entradas) => {
+        const visible = entradas.some(
+          (entrada) => entrada.isIntersecting && entrada.intersectionRatio >= PISTA_UMBRAL
+        )
+        if (!visible || pistaDescartadaRef.current) return
+        observer.disconnect()
+        timerPistaRef.current = window.setTimeout(() => {
+          if (pistaDescartadaRef.current) return
+          if (nodo.matches(':hover') || nodo.matches(':focus-within')) {
+            pistaDescartadaRef.current = true
+            try {
+              sessionStorage.setItem(PISTA_CLAVE, '1')
+            } catch {
+              /* sesión no disponible */
+            }
+            return
+          }
+          setPista(true)
+        }, PISTA_RETRASO_MS)
+      },
+      { threshold: PISTA_UMBRAL }
+    )
+    observer.observe(nodo)
+    return () => {
+      observer.disconnect()
+      window.clearTimeout(timerPistaRef.current)
+    }
+  }, [])
 
   const alTeclado = (evento: React.KeyboardEvent) => {
     if (!conCarrusel || abierta !== null) return
@@ -34,7 +99,7 @@ export function GaleriaFotos({ fotos, textoAlt, textoPendiente }: GaleriaFotosPr
   }
 
   return (
-    <div className="min-w-0 flex-1" onKeyDown={alTeclado}>
+    <div ref={raizRef} className="min-w-0 flex-1" onKeyDown={alTeclado}>
       {conCarrusel && (
         <div className="mb-3 flex justify-end gap-3">
           <IconButton
@@ -65,7 +130,14 @@ export function GaleriaFotos({ fotos, textoAlt, textoPendiente }: GaleriaFotosPr
               key={`${src}-${indice}`}
               className="min-w-0 flex-[0_0_100%] sm:flex-[0_0_calc(50%-6px)] lg:flex-[0_0_calc(33.333%-8px)]"
             >
-              <BotonFoto src={src} alt={textoAlt(indice + 1)} onAbrir={() => setAbierta(indice)} />
+              <BotonFoto
+                src={src}
+                alt={textoAlt(indice + 1)}
+                etiqueta={t('gallery.zoom', { n: indice + 1, total: fotos.length })}
+                pista={pista && indice === 0}
+                onInteraccion={descartarPista}
+                onAbrir={() => setAbierta(indice)}
+              />
             </div>
           ))}
         </Carousel>
@@ -81,6 +153,9 @@ export function GaleriaFotos({ fotos, textoAlt, textoPendiente }: GaleriaFotosPr
                 key={`${src}-${indice}`}
                 src={src}
                 alt={textoAlt(indice + 1)}
+                etiqueta={t('gallery.zoom', { n: indice + 1, total: fotos.length })}
+                pista={pista && indice === 0}
+                onInteraccion={descartarPista}
                 onAbrir={() => setAbierta(indice)}
               />
             )
@@ -108,15 +183,63 @@ function HuecoPendiente({ texto }: { texto: string }) {
   )
 }
 
-function BotonFoto({ src, alt, onAbrir }: { src: string; alt: string; onAbrir: () => void }) {
+function BotonFoto({
+  src,
+  alt,
+  etiqueta,
+  pista,
+  onInteraccion,
+  onAbrir,
+}: {
+  src: string
+  alt: string
+  etiqueta: string
+  pista: boolean
+  onInteraccion: () => void
+  onAbrir: () => void
+}) {
   return (
     <button
       type="button"
-      className="flex w-full min-w-0 flex-1 border-0 bg-transparent p-0"
-      onClick={onAbrir}
+      className="galeria-miniatura flex w-full min-w-0 flex-1 border-0 bg-transparent p-0"
+      aria-label={etiqueta}
+      onMouseEnter={onInteraccion}
+      onFocus={onInteraccion}
+      onClick={() => {
+        onInteraccion()
+        onAbrir()
+      }}
     >
-      <Photo src={src} alt={alt} radius="card" className="h-24 w-full" />
+      <span className="galeria-miniatura__marco">
+        <span className={cn('galeria-miniatura__escala', pista && 'galeria-miniatura__escala--pista')}>
+          <Photo src={src} alt={alt} radius="card" className="h-24 w-full" />
+        </span>
+        {pista && (
+          <>
+            <span className="galeria-onda" aria-hidden="true" />
+            <PunteroClick />
+          </>
+        )}
+        <span className="galeria-miniatura__lupa" aria-hidden="true">
+          <ZoomIn className="h-3.5 w-3.5" />
+        </span>
+      </span>
     </button>
+  )
+}
+
+function PunteroClick() {
+  return (
+    <svg className="galeria-puntero" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M5.2 3.2v12.4l3.2-3 2.3 5.2 2.2-.9-2.3-5.1h4.4L5.2 3.2z"
+        fill="var(--color-blanco)"
+        stroke="var(--color-negro)"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
   )
 }
 
@@ -136,8 +259,10 @@ function VisorFotos({
   const dialogRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const onCloseRef = useRef(onClose)
+  const cerrandoRef = useRef(false)
   const sincronizado = useRef(false)
   const [indice, setIndice] = useState(indiceInicial)
+  const [cerrando, setCerrando] = useState(false)
   const { emblaRef, scrollTo, selectedIndex } = useCarousel({
     align: 'start',
     containScroll: false,
@@ -162,12 +287,33 @@ function VisorFotos({
   }, [indice, scrollTo])
 
   useEffect(() => {
-    const anterior = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const cuerpo = document.body
+    const overflowPrevio = cuerpo.style.overflow
+    const paddingPrevio = cuerpo.style.paddingRight
+    const compensacion = window.innerWidth - document.documentElement.clientWidth
+    cuerpo.style.overflow = 'hidden'
+    if (compensacion > 0) {
+      const base = Number.parseFloat(paddingPrevio) || 0
+      cuerpo.style.paddingRight = `${base + compensacion}px`
+    }
     return () => {
-      document.body.style.overflow = anterior
+      cuerpo.style.overflow = overflowPrevio
+      cuerpo.style.paddingRight = paddingPrevio
     }
   }, [])
+
+  useEffect(() => {
+    if (!cerrando) return
+    const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const id = window.setTimeout(() => onCloseRef.current(), reducido ? 0 : CIERRE_MS)
+    return () => window.clearTimeout(id)
+  }, [cerrando])
+
+  const cerrar = () => {
+    if (cerrandoRef.current) return
+    cerrandoRef.current = true
+    setCerrando(true)
+  }
 
   useEffect(() => {
     const previo = document.activeElement as HTMLElement | null
@@ -175,7 +321,8 @@ function VisorFotos({
 
     const onKeyDown = (evento: KeyboardEvent) => {
       if (evento.key === 'Escape') {
-        onCloseRef.current()
+        evento.preventDefault()
+        cerrar()
         return
       }
       if (evento.key === 'ArrowLeft') {
@@ -221,20 +368,21 @@ function VisorFotos({
       role="dialog"
       aria-modal="true"
       aria-labelledby={tituloId}
-      className="fixed inset-0 z-50 bg-negro"
-      onClick={onClose}
+      className={cn('galeria-visor', cerrando && 'galeria-visor--salida')}
+      onClick={cerrar}
     >
-      <p id={tituloId} className="t-body absolute top-6 left-6 text-crema" aria-live="polite">
+      <div className="galeria-visor__velo" />
+      <p id={tituloId} className="galeria-visor__contador t-body" aria-live="polite">
         {t('gallery.counter', { n: indice + 1, total: fotos.length })}
       </p>
       <IconButton
         type="button"
         ref={closeRef}
         aria-label={t('gallery.close')}
-        className="absolute top-6 right-6"
+        className="galeria-visor__control absolute top-6 right-6"
         onClick={(evento) => {
           evento.stopPropagation()
-          onClose()
+          cerrar()
         }}
       >
         <X className="h-5 w-5 text-negro" aria-hidden />
@@ -246,7 +394,7 @@ function VisorFotos({
           aria-label={t('gallery.prev')}
           disabled={indice === 0}
           className={cn(
-            'absolute top-1/2 left-6 -translate-y-1/2',
+            'galeria-visor__control absolute top-1/2 left-3 -translate-y-1/2 sm:left-6',
             indice === 0 && 'cursor-not-allowed opacity-40'
           )}
           onClick={(evento) => {
@@ -258,19 +406,19 @@ function VisorFotos({
         </IconButton>
       )}
 
-      <div className="flex h-full items-center justify-center px-20">
-        <div className="w-full" onClick={(evento) => evento.stopPropagation()}>
+      <div className="galeria-visor__escena">
+        <div className="galeria-visor__foto" onClick={(evento) => evento.stopPropagation()}>
           <Carousel emblaRef={emblaRef} className="w-full" gapClassName="gap-0">
             {fotos.map((src, posicion) => (
               <div
                 key={`${src}-${posicion}`}
-                className="flex min-w-0 flex-[0_0_100%] justify-center"
+                className="flex min-w-0 flex-[0_0_100%] justify-center px-3 py-4"
               >
                 <Photo
                   src={src}
                   alt={textoAlt(posicion + 1)}
                   radius="card"
-                  className="h-auto max-h-[70vh] w-auto max-w-full object-contain"
+                  className="h-auto max-h-[80vh] w-auto max-w-full object-contain shadow-soft"
                 />
               </div>
             ))}
@@ -284,7 +432,7 @@ function VisorFotos({
           aria-label={t('gallery.next')}
           disabled={indice === fotos.length - 1}
           className={cn(
-            'absolute top-1/2 right-6 -translate-y-1/2',
+            'galeria-visor__control absolute top-1/2 right-3 -translate-y-1/2 sm:right-6',
             indice === fotos.length - 1 && 'cursor-not-allowed opacity-40'
           )}
           onClick={(evento) => {
