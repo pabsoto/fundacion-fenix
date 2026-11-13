@@ -12,6 +12,9 @@ const buttonVariants = cva(
         dark: 'bg-negro text-crema',
         naranja: 'bg-naranja text-blanco hover:bg-naranja-hover hover:text-blanco disabled:text-blanco',
         ghost: 'border border-negro bg-transparent text-negro hover:bg-crema-tono',
+        peligro:
+          'border border-peligro bg-blanco text-peligro-texto hover:bg-crema-tono',
+        peligroSolido: 'bg-peligro text-blanco hover:bg-peligro disabled:text-blanco',
       },
       size: {
         md: 'rounded-btn t-button px-6 py-3',

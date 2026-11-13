@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/Button';
 
 type BotonPildoraProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variante?: 'naranja' | 'ghost';
+  variante?: 'naranja' | 'ghost' | 'peligro' | 'peligroSolido';
   children: React.ReactNode;
 };
 

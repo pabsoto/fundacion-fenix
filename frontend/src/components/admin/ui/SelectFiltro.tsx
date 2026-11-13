@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -24,6 +25,8 @@ type SelectFiltroProps = {
   opciones: OpcionFiltro[];
   disposicion: 'lista' | 'cuadricula';
   onCambio: (valor: string | null) => void;
+  /** Chip más alto de Campañas móvil. El menú es el mismo del escritorio. */
+  movil?: boolean;
 };
 
 function mover(indice: number, tecla: string, total: number, columnas: number | null): number {
@@ -58,10 +61,13 @@ export function SelectFiltro({
   opciones,
   disposicion,
   onCambio,
+  movil = false,
 }: SelectFiltroProps) {
   const reactId = useId();
   const raiz = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [abierto, setAbierto] = useState(false);
+  const [ancla, setAncla] = useState<{ top: number; left: number; width: number } | null>(null);
   const [activo, setActivo] = useState(0);
   const [cierre, setCierre] = useState<'foco' | 'silencio' | null>(null);
   const listaId = `${id}-lista`;
@@ -106,7 +112,8 @@ export function SelectFiltro({
   useEffect(() => {
     if (!abierto) return;
     function cerrarSiAfuera(event: MouseEvent) {
-      if (raiz.current?.contains(event.target as Node)) return;
+      const nodo = event.target as Node;
+      if (raiz.current?.contains(nodo) || menuRef.current?.contains(nodo)) return;
       const control =
         event.target instanceof HTMLElement &&
         event.target.closest('button, a, input, select, textarea');
@@ -116,6 +123,54 @@ export function SelectFiltro({
     document.addEventListener('mousedown', cerrarSiAfuera);
     return () => document.removeEventListener('mousedown', cerrarSiAfuera);
   }, [abierto]);
+
+  useLayoutEffect(() => {
+    if (!abierto || !movil) {
+      setAncla((actual) => (actual === null ? actual : null));
+      return;
+    }
+    function colocar() {
+      const menu = menuRef.current;
+      const boton = document.getElementById(id);
+      if (!menu || !boton) return;
+
+      function medida(variable: string, respaldo: number): number {
+        const valor = Number.parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue(variable),
+        );
+        return Number.isFinite(valor) ? valor : respaldo;
+      }
+
+      const margen = medida('--spacing-pagina-admin-movil', 16);
+      const anchoNatural = medida(
+        disposicion === 'cuadricula' ? '--size-menu-mes' : '--size-menu-anio',
+        disposicion === 'cuadricula' ? 288 : 176,
+      );
+      const ancho = Math.min(anchoNatural, window.innerWidth - margen * 2);
+      const rect = boton.getBoundingClientRect();
+      let left = rect.left;
+      if (left + ancho > window.innerWidth - margen) left = window.innerWidth - margen - ancho;
+      if (left < margen) left = margen;
+      const alto = menu.offsetHeight;
+      let top = rect.bottom + 8;
+      if (top + alto > window.innerHeight - margen && rect.top - alto - 8 >= margen) {
+        top = rect.top - alto - 8;
+      }
+      setAncla((actual) =>
+        actual && actual.top === top && actual.left === left && actual.width === ancho
+          ? actual
+          : { top, left, width: ancho },
+      );
+    }
+
+    colocar();
+    window.addEventListener('resize', colocar);
+    window.addEventListener('scroll', colocar, true);
+    return () => {
+      window.removeEventListener('resize', colocar);
+      window.removeEventListener('scroll', colocar, true);
+    };
+  }, [abierto, movil, disposicion, id, ancla?.width]);
 
   function alTeclado(event: React.KeyboardEvent<HTMLButtonElement>) {
     if (!abierto) {
@@ -182,6 +237,44 @@ export function SelectFiltro({
 
   const resto = items.slice(1);
 
+  const menu = abierto ? (
+    <div
+      ref={menuRef}
+      id={listaId}
+      role="listbox"
+      aria-label={etiqueta}
+      style={
+        movil
+          ? {
+              position: 'fixed',
+              top: ancla?.top ?? 0,
+              left: ancla?.left ?? 0,
+              width: ancla?.width,
+              visibility: ancla ? 'visible' : 'hidden',
+              zIndex: 50,
+            }
+          : undefined
+      }
+      className={cn(
+        'flex flex-col rounded-card border border-linea bg-blanco p-2 shadow-desplegable-admin',
+        movil ? 'max-w-[calc(100vw-2*var(--spacing-pagina-admin-movil))]' : 'absolute top-full left-0 z-20 mt-2',
+        disposicion === 'cuadricula' ? 'w-(--size-menu-mes) gap-1' : 'w-(--size-menu-anio) gap-0.5',
+        movil && ancla && 'w-auto',
+      )}
+    >
+      {disposicion === 'lista'
+        ? items.map((item, indice) => opcion(item, indice))
+        : (
+          <>
+            {items[0] ? opcion(items[0], 0) : null}
+            <div className="grid grid-cols-3 gap-1">
+              {resto.map((item, indice) => opcion(item, indice + 1))}
+            </div>
+          </>
+        )}
+    </div>
+  ) : null;
+
   return (
     <div ref={raiz} className="relative">
       <button
@@ -194,35 +287,15 @@ export function SelectFiltro({
         onClick={() => (abierto ? cerrar(false) : abrir())}
         onKeyDown={alTeclado}
         className={cn(
-          'inline-flex cursor-pointer items-center gap-1.5 rounded-pill px-chip-admin py-chip-admin-y t-chip',
+          'inline-flex cursor-pointer items-center gap-1.5 rounded-pill t-chip',
+          movil ? 'min-h-11 px-4 py-3' : 'px-chip-admin py-chip-admin-y',
           conValor ? 'bg-negro text-crema' : 'border border-linea bg-transparent text-negro',
         )}
       >
         {textoChip}
         <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
       </button>
-      {abierto ? (
-        <div
-          id={listaId}
-          role="listbox"
-          aria-label={etiqueta}
-          className={cn(
-            'absolute top-full left-0 z-20 mt-2 flex flex-col rounded-card border border-linea bg-blanco p-2 shadow-desplegable-admin',
-            disposicion === 'cuadricula' ? 'w-(--size-menu-mes) gap-1' : 'w-(--size-menu-anio) gap-0.5',
-          )}
-        >
-          {disposicion === 'lista'
-            ? items.map((item, indice) => opcion(item, indice))
-            : (
-              <>
-                {items[0] ? opcion(items[0], 0) : null}
-                <div className="grid grid-cols-3 gap-1">
-                  {resto.map((item, indice) => opcion(item, indice + 1))}
-                </div>
-              </>
-            )}
-        </div>
-      ) : null}
+      {movil && menu ? createPortal(menu, document.body) : menu}
     </div>
   );
 }

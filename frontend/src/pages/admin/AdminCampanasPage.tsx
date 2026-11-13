@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useVistaMovil } from '@/hooks/useVistaMovil';
+import { AdminCampanasMovil } from '@/pages/admin/AdminCampanasMovil';
 import { Cat, Eye, Hash, PawPrint, X } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
@@ -13,6 +15,7 @@ import { SelectFiltro } from '@/components/admin/ui/SelectFiltro';
 import { PanelDetalle } from '@/components/admin/ui/PanelDetalle';
 import { TablaSeleccion, type ColumnaTabla } from '@/components/admin/ui/TablaSeleccion';
 import { Card } from '@/components/ui/Card';
+import { cn } from '@/lib/cn';
 import { CampanaFormModal } from '@/pages/admin/CampanaFormModal';
 import { CierreCampanaModal, type AccionCierre } from '@/pages/admin/CierreCampanaModal';
 
@@ -255,6 +258,7 @@ function elegirId(lista: CampanaConTotales[], actual: string | null, preferido?:
 
 export function AdminCampanasPage() {
   const textos = textosAdmin.campanas;
+  const movil = useVistaMovil();
   const [carga, setCarga] = useState<Carga>('cargando');
   const [intento, setIntento] = useState(0);
   const [datos, setDatos] = useState<PaginaCampanas | null>(null);
@@ -283,11 +287,18 @@ export function AdminCampanasPage() {
       .then((respuesta) => {
         if (!vivo) return;
         // Tras eliminar la última campaña de una página, se retrocede a una que exista.
-        if (respuesta.items.length === 0 && pagina > 1) {
+        if (respuesta.items.length === 0 && pagina > 1 && !movil) {
           setPagina(Math.max(1, respuesta.totalPaginas));
           return;
         }
-        setDatos(respuesta);
+        setDatos((actual) => {
+          if (!movil || pagina === 1 || !actual) return respuesta;
+          const ids = new Set(actual.items.map((campana) => campana.id));
+          return {
+            ...respuesta,
+            items: [...actual.items, ...respuesta.items.filter((campana) => !ids.has(campana.id))],
+          };
+        });
         setSeleccionId((actual) => elegirId(respuesta.items, actual, preferidoRef.current));
         preferidoRef.current = undefined;
         setFotoActiva(0);
@@ -302,7 +313,7 @@ export function AdminCampanasPage() {
     return () => {
       vivo = false;
     };
-  }, [intento, pagina, periodo.anio, periodo.mes]);
+  }, [intento, pagina, periodo.anio, periodo.mes, movil]);
 
   function seleccionar(id: string) {
     setSeleccionId(id);
@@ -359,10 +370,15 @@ export function AdminCampanasPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-(--spacing-bloque-gap-admin)">
+    <div
+      className={cn(
+        'flex min-h-0 flex-1 flex-col',
+        movil ? 'gap-(--spacing-bloque-movil)' : 'gap-(--spacing-bloque-gap-admin)',
+      )}
+    >
       <header className="flex flex-col gap-(--spacing-titulo-pagina-admin)">
-        <h1 className="t-pagina text-negro">{textos.titulo}</h1>
-        <p className="t-subtitulo text-negro">{textos.subtitulo}</p>
+        <h1 className={cn(movil ? 't-pagina-movil' : 't-pagina', 'text-negro')}>{textos.titulo}</h1>
+        <p className={cn(movil ? 't-control' : 't-subtitulo', 'text-negro')}>{textos.subtitulo}</p>
       </header>
 
       {fotoPendiente ? (
@@ -379,7 +395,16 @@ export function AdminCampanasPage() {
         </div>
       ) : null}
 
-      {carga === 'cargando' ? (
+      {carga === 'cargando' && movil ? (
+        <div className="flex flex-col gap-3" aria-busy="true">
+          <p className="sr-only">{textosAdmin.supuestos.cargando}</p>
+          <div className="h-(--size-control-admin) animate-pulse rounded-card bg-crema-tono" />
+          <div className="h-24 animate-pulse rounded-admin bg-crema-tono" />
+          <div className="h-24 animate-pulse rounded-admin bg-crema-tono" />
+        </div>
+      ) : null}
+
+      {carga === 'cargando' && !movil ? (
         <Card radius="admin" elevated="panel" className="flex min-h-(--size-panel-vacio-admin)" aria-busy="true">
           <p className="sr-only">{textosAdmin.supuestos.cargando}</p>
           <div className="flex flex-1 flex-col gap-3 px-3 py-4">
@@ -410,7 +435,22 @@ export function AdminCampanasPage() {
         </Card>
       ) : null}
 
-      {carga === 'listo' && datos ? (
+      {carga === 'listo' && datos && movil ? (
+        <AdminCampanasMovil
+          datos={datos}
+          periodo={periodo}
+          onPeriodo={fijarPeriodo}
+          onCrear={() => setModal('crear')}
+          onEditar={(campana) => {
+            if (!campana.editable) return;
+            setModal(campana);
+          }}
+          onCargarMas={() => irAPagina(pagina + 1)}
+          cargandoMas={cambiando}
+        />
+      ) : null}
+
+      {carga === 'listo' && datos && !movil ? (
         <Card radius="admin" elevated="panel" className="flex items-stretch">
           <div className="flex min-w-0 flex-1 flex-col gap-3 px-3 py-4">
             <div className="flex h-(--size-control-admin) items-center justify-between gap-4 px-3">
@@ -621,6 +661,7 @@ export function AdminCampanasPage() {
       {modal ? (
         <CampanaFormModal
           key={modal === 'crear' ? 'crear' : modal.id}
+          pantallaCompleta={movil}
           campana={modal === 'crear' ? null : modal}
           onCerrar={() => setModal(null)}
           onGuardada={(id, fotosFallidas) => {

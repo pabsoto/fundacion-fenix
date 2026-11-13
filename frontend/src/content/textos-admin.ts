@@ -20,8 +20,11 @@ export const textosAdmin = {
     animales: 'Animales',
     donaciones: 'Donaciones',
     salir: 'Salir',
-    /** No está en Figma: nombre accesible del nav. */
+    /** Menú del avatar (Campañas móvil, nodo 464:537). El nombre sale de la sesión. */
+    rol: 'Administrador del panel',
+    
     etiqueta: 'Secciones del panel',
+    cuenta: 'Abrir menú de la cuenta',
   },
   resumen: {
     titulo: 'Resumen',
@@ -40,6 +43,9 @@ export const textosAdmin = {
     promedio: 'promedio desde que ingresan',
     grafica: 'Ingresos vs. adopciones por mes',
     graficaNota: 'Últimos 12 meses · animales que entran y animales que se adoptan',
+    /** Resumen móvil: el periodo va solo, debajo del título. */
+    graficaPeriodo: 'Últimos 12 meses',
+    desliza: 'Desliza para ver los meses anteriores',
     ingresos: 'Ingresos',
     adopcionesLeyenda: 'Adopciones',
     espera: 'Los que más llevan esperando',
@@ -55,6 +61,29 @@ export const textosAdmin = {
     jornadas: 'jornadas',
     exportar: 'Exportar',
     nueva: '+ Nueva campaña',
+    nuevaCorta: 'Nueva campaña',
+    buscar: 'Buscar por nombre o lugar',
+    borrarBusqueda: 'Borrar búsqueda',
+    cargarMas: 'Cargar más',
+    totalEtiqueta: 'TOTAL',
+    resumenLinea: (jornadas: number) =>
+      jornadas === 1
+        ? 'esterilizaciones · 1 jornada'
+        : `esterilizaciones · ${cifra(jornadas)} jornadas`,
+    mostrandoDe: (cantidad: number, total: number) =>
+      `Mostrando ${cifra(cantidad)} de ${cifra(total)} jornadas`,
+    vacioTitulo: 'Aún no hay campañas',
+    sinResultados: (consulta: string) => `Sin resultados para “${consulta}”`,
+    acciones: 'Más acciones',
+    importar: 'Importar',
+    proximamente: 'Próximamente',
+    zonaPeligro: 'Zona de peligro',
+    zonaPeligroNota: (total: string) =>
+      `Al eliminar la jornada se quitan sus ${total} esterilizaciones del total y se borran sus fotos.`,
+    descartarTitulo: '¿Descartar los cambios?',
+    descartarCuerpo: 'Si sales ahora, se perderán los datos que escribiste.',
+    seguirEditando: 'Seguir editando',
+    descartar: 'Descartar',
     agregarFiltro: '+ Agregar filtro',
     filtros: {
       filtrar: 'Filtrar',
@@ -63,6 +92,8 @@ export const textosAdmin = {
       todosLosAnios: 'Todos los años',
       todosLosMeses: 'Todos los meses',
       limpiar: 'Limpiar filtros',
+      /** Campañas móvil, chip con filtro: el texto es más corto que en escritorio. */
+      limpiarCorto: 'Limpiar',
       totalDe: (periodo: string) => `Total de ${periodo}`,
       /** El marco de filtrado no está en el archivo: el texto sale del pedido. */
       selecciona: 'Selecciona una campaña…',
@@ -113,6 +144,10 @@ export const textosAdmin = {
       titulo: 'Eliminar campaña',
       cuerpo: (titulo: string) => `Vas a eliminar «${titulo}». Sus fotos se borrarán.`,
       accion: 'Eliminar campaña',
+      tituloMovil: (titulo: string) => `¿Eliminar «${titulo}»?`,
+      cuerpoMovil: (total: string) =>
+        `Se quitarán sus ${total} esterilizaciones del total y se borrarán sus fotos. Esta acción no se puede deshacer.`,
+      accionMovil: 'Eliminar',
       eliminada: 'Campaña eliminada.',
       /** El API rechaza eliminar campañas cerradas o la histórica. */
       noPermitida: 'Esta campaña no se puede eliminar. Si está cerrada, reábrela primero.',
