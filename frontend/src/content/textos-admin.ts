@@ -205,6 +205,35 @@ export const textosAdmin = {
     registros: 'registros',
     exportar: 'Exportar',
     registrar: '+ Registrar animal',
+    /** Animales móvil (nodo 470:340): el más va en el ícono, no en el texto. */
+    registrarCorta: 'Registrar animal',
+    /** Animales móvil (nodo 470:197). */
+    buscar: 'Buscar por nombre',
+    borrarBusqueda: 'Borrar búsqueda',
+    cargarMas: 'Cargar más',
+    /** El menú del botón ⋯ no está dibujado: mismos textos que Campañas móvil. */
+    acciones: 'Más acciones',
+    importar: 'Importar',
+    proximamente: 'Próximamente',
+    /** El número grande va aparte. Figma escribe «animales · 4 adoptados». */
+    resumenLinea: (total: number, adoptados: number) => {
+      const animales = total === 1 ? 'animal' : 'animales';
+      const adopcion = adoptados === 1 ? '1 adoptado' : `${cifra(adoptados)} adoptados`;
+      return `${animales} · ${adopcion}`;
+    },
+    /** Desglose al abrir el resumen. Figma solo dibuja el resumen cerrado. */
+    resumenTarjetas: {
+      perros: 'Perros',
+      gatos: 'Gatos',
+      machos: 'Machos',
+      hembras: 'Hembras',
+    },
+    mostrandoDe: (cantidad: number, total: number) =>
+      `Mostrando ${cifra(cantidad)} de ${cifra(total)} animales`,
+    /** Estados no dibujados en el marco móvil. */
+    vacioTitulo: 'Aún no hay animales',
+    sinResultados: (consulta: string) => `Sin resultados para “${consulta}”`,
+    limpiar: 'Limpiar filtros',
     filtros: {
       todos: 'Todos',
       adoptados: 'Adoptados',
@@ -268,6 +297,13 @@ export const textosAdmin = {
     guardar: 'Guardar animal',
     guardarCambios: 'Guardar cambios',
     eliminar: 'Eliminar animal',
+    /** Misma confirmación que Campañas móvil. Figma no dibuja el formulario de animal en móvil. */
+    descartarTitulo: '¿Descartar los cambios?',
+    descartarCuerpo: 'Si sales ahora, se perderán los datos que escribiste.',
+    seguirEditando: 'Seguir editando',
+    descartar: 'Descartar',
+    zonaPeligro: 'Zona de peligro',
+    zonaPeligroNota: 'Al eliminar el animal se borra su registro y sus fotos.',
   },
   paginacion: {
     etiqueta: 'Paginación',

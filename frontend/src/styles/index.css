@@ -300,6 +300,31 @@
   line-height: normal;
 }
 
+/** Inicial del círculo en Animales móvil (nodo 470:226): Atkinson Medium 17 px. */
+@utility t-inicial-movil {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 1.0625rem;
+  line-height: normal;
+}
+
+/** Nombre de la tarjeta en Animales móvil (nodo 470:235): Atkinson Regular 17 px. */
+@utility t-nombre-movil {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 1.0625rem;
+  line-height: normal;
+}
+
+/** Cifra naranja del resumen de Animales móvil (nodo 470:218): 28 px, tracking −2.5 px. */
+@utility t-resumen-movil {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.75rem;
+  line-height: normal;
+  letter-spacing: -0.089em;
+}
+
 @utility t-foto {
   font-family: var(--font-body);
   font-weight: 400;

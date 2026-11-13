@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Calendar, Cat, Heart, MapPin, Mars, PawPrint, User, Venus } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
+import { useVistaMovil } from '@/hooks/useVistaMovil';
+import { cn } from '@/lib/cn';
 import { formatNumber } from '@/lib/format';
 import {
   listAnimales,
@@ -23,6 +25,7 @@ import { Paginacion } from '@/components/admin/ui/Paginacion';
 import { PanelDetalle, type FilaDetalle } from '@/components/admin/ui/PanelDetalle';
 import { TablaSeleccion, type ColumnaTabla } from '@/components/admin/ui/TablaSeleccion';
 import { Card } from '@/components/ui/Card';
+import { AdminAnimalesMovil } from '@/pages/admin/AdminAnimalesMovil';
 import { AnimalFormModal, type FotosPendientes } from '@/pages/admin/AnimalFormModal';
 
 type Carga = 'cargando' | 'listo' | 'error';
@@ -240,6 +243,7 @@ function subtituloDe(animal: Animal): string {
 
 export function AdminAnimalesPage() {
   const textos = textosAdmin.animales;
+  const movil = useVistaMovil();
   const [carga, setCarga] = useState<Carga>('cargando');
   const [intento, setIntento] = useState(0);
   const [datos, setDatos] = useState<Pagina<Animal> | null>(null);
@@ -263,11 +267,18 @@ export function AdminAnimalesPage() {
       .then((respuesta) => {
         if (!vivo) return;
         // Tras eliminar el último animal de una página, se retrocede a una que exista.
-        if (respuesta.items.length === 0 && pagina > 1) {
+        if (respuesta.items.length === 0 && pagina > 1 && !movil) {
           setPagina(Math.max(1, respuesta.totalPaginas));
           return;
         }
-        setDatos(respuesta);
+        setDatos((actual) => {
+          if (!movil || pagina === 1 || !actual) return respuesta;
+          const ids = new Set(actual.items.map((animal) => animal.id));
+          return {
+            ...respuesta,
+            items: [...actual.items, ...respuesta.items.filter((animal) => !ids.has(animal.id))],
+          };
+        });
         setSeleccionId((actual) => elegirId(respuesta.items, actual, preferidoRef.current));
         preferidoRef.current = undefined;
         setCarga('listo');
@@ -281,7 +292,7 @@ export function AdminAnimalesPage() {
     return () => {
       vivo = false;
     };
-  }, [intento, pagina, filtro]);
+  }, [intento, pagina, filtro, movil]);
 
   useEffect(() => {
     if (!toast) return;
@@ -365,10 +376,15 @@ export function AdminAnimalesPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-(--spacing-bloque-gap-admin)">
+    <div
+      className={cn(
+        'flex min-h-0 flex-1 flex-col',
+        movil ? 'gap-(--spacing-bloque-movil)' : 'gap-(--spacing-bloque-gap-admin)',
+      )}
+    >
       <header className="flex flex-col gap-(--spacing-titulo-pagina-admin)">
-        <h1 className="t-pagina text-negro">{textos.titulo}</h1>
-        <p className="t-subtitulo text-negro">{textos.subtitulo}</p>
+        <h1 className={cn(movil ? 't-pagina-movil' : 't-pagina', 'text-negro')}>{textos.titulo}</h1>
+        <p className={cn(movil ? 't-control' : 't-subtitulo', 'text-negro')}>{textos.subtitulo}</p>
       </header>
 
       {fotoPendiente ? (
@@ -385,7 +401,16 @@ export function AdminAnimalesPage() {
         </div>
       ) : null}
 
-      {carga === 'cargando' ? (
+      {carga === 'cargando' && movil ? (
+        <div className="flex flex-col gap-3" aria-busy="true">
+          <p className="sr-only">{textosAdmin.supuestos.cargando}</p>
+          <div className="h-(--size-control-admin) animate-pulse rounded-card bg-crema-tono" />
+          <div className="h-24 animate-pulse rounded-admin bg-crema-tono" />
+          <div className="h-24 animate-pulse rounded-admin bg-crema-tono" />
+        </div>
+      ) : null}
+
+      {carga === 'cargando' && !movil ? (
         <Card
           radius="admin"
           elevated="panel"
@@ -421,7 +446,19 @@ export function AdminAnimalesPage() {
         </Card>
       ) : null}
 
-      {carga === 'listo' && datos ? (
+      {carga === 'listo' && datos && movil ? (
+        <AdminAnimalesMovil
+          datos={datos}
+          filtro={filtro}
+          onFiltro={elegirFiltro}
+          onCrear={() => setModal('crear')}
+          onEditar={(animal) => setModal(animal)}
+          onCargarMas={() => irAPagina(pagina + 1)}
+          cargandoMas={cambiando}
+        />
+      ) : null}
+
+      {carga === 'listo' && datos && !movil ? (
         <Card radius="admin" elevated="panel" className="flex items-stretch">
           <div className="flex min-w-0 flex-1 flex-col gap-3 px-3 py-4">
             <div className="flex h-(--size-control-admin) items-center justify-between gap-4 px-3">
@@ -506,6 +543,7 @@ export function AdminAnimalesPage() {
         <AnimalFormModal
           key={modal === 'crear' ? 'crear' : modal.id}
           animal={modal === 'crear' ? null : modal}
+          pantallaCompleta={movil}
           onCerrar={() => setModal(null)}
           onGuardado={(id, fotos) => {
             setModal(null);
