@@ -8,9 +8,11 @@ import { useCarousel } from '@/hooks/useCarousel';
 import { useStories } from '@/hooks/useStories';
 import { DemoBadge } from '@/components/ui/DemoBadge';
 import { DEMO_SHOWCASE } from '@/lib/demo';
+import { formatStoryDate } from '@/lib/format';
 
 export function Stories() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang: 'es' | 'en' = i18n.language?.startsWith('en') ? 'en' : 'es';
   const { data: stories = [] } = useStories();
   const { emblaRef, scrollPrev, scrollNext, canPrev, canNext } = useCarousel();
 
@@ -46,13 +48,6 @@ export function Stories() {
 
       <Carousel emblaRef={emblaRef}>
         {stories.map((story) => {
-          const statusLabel =
-            story.status === 'adopted'
-              ? t('stories.status_adopted')
-              : t('stories.status_recovering');
-          const badgeClass =
-            story.status === 'adopted' ? 'bg-amarillo' : 'bg-naranja-hover';
-
           return (
             <article
               key={story.id}
@@ -61,7 +56,7 @@ export function Stories() {
               {story.photo ? (
                 <Photo
                   src={story.photo}
-                  alt={story.name}
+                  alt={story.animalName}
                   radius="card"
                   className="h-[260px] w-full rounded-none rounded-t-card"
                 />
@@ -74,18 +69,19 @@ export function Stories() {
               )}
 
               <div className="flex flex-col gap-3 p-6">
-                <div className="flex items-center justify-between gap-3">
-                  <h4 className="t-heading-card text-negro">{story.name}</h4>
-                  <span
-                    className={cn(
-                      'shrink-0 rounded-btn px-3 py-1 t-small text-negro',
-                      badgeClass
-                    )}
-                  >
-                    {statusLabel}
-                  </span>
-                </div>
-                <p className="t-body text-negro">{t(story.textKey)}</p>
+                <p className="t-small text-negro">
+                  {story.animalName} ·{' '}
+                  <time dateTime={story.date}>
+                    {formatStoryDate(story.date, lang)}
+                  </time>
+                </p>
+                <h4 className="t-heading-card text-negro">{story.title[lang]}</h4>
+                <p className="t-body text-negro">{story.text[lang]}</p>
+                {story.author && (
+                  <p className="t-small text-negro">
+                    {t('stories.by_author', { author: story.author })}
+                  </p>
+                )}
                 <a
                   href="#historias"
                   className="t-body-strong inline-flex items-center gap-2 text-negro underline underline-offset-2"

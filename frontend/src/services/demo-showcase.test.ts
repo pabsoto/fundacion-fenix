@@ -33,7 +33,7 @@ describe('VITE_DEMO_SHOWCASE', () => {
     expect(stats.felinos).toEqual({ total: 643, males: 312, females: 331 });
     expect(stats.caninos.total + stats.felinos.total).toBe(1368);
     expect(stories.map((story) => story.id)).toEqual(['apolo', 'luna', 'max']);
-    expect(stories.every((story) => story.textKey.startsWith('stories.demo_'))).toBe(true);
+    expect(stories.every((story) => story.text.es.startsWith('Historia ficticia de demostración:'))).toBe(true);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
