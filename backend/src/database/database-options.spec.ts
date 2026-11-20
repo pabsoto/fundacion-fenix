@@ -35,7 +35,7 @@ describe('database configuration', () => {
     ).toThrow('DATABASE_URL no debe contener parámetros SSL');
   });
 
-  it('builds metadata for the nine tables without connecting', async () => {
+  it('builds metadata for the ten tables without connecting', async () => {
     const dataSource = new DataSource(createDatabaseOptions(testEnvironment));
     const metadataBuilder = dataSource as DataSource & {
       buildMetadatas(): Promise<void>;
@@ -55,9 +55,10 @@ describe('database configuration', () => {
       'contenido_institucional',
       'datos_donacion',
       'fotos_campana',
+      'historias',
       'sesiones_admin',
     ]);
-    expect(DATABASE_ENTITIES).toHaveLength(9);
+    expect(DATABASE_ENTITIES).toHaveLength(10);
 
     const expectedColumns: Record<string, string[]> = {
       administradores: [
@@ -244,7 +245,7 @@ describe('database configuration', () => {
             clave.nombre !== 'fotos_campana_campana_id_fkey',
         )
         .map((clave) => clave.onDelete),
-    ).toEqual(Array(12).fill('RESTRICT'));
+    ).toEqual(Array(15).fill('RESTRICT'));
 
     expect(
       dataSource.entityMetadatas

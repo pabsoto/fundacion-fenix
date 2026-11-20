@@ -11,6 +11,7 @@ import { SesionAdmin } from '../modules/auth/entities/sesion-admin.entity.js';
 import { CanalContacto } from '../modules/canales-contacto/entities/canal-contacto.entity.js';
 import { ContenidoInstitucional } from '../modules/contenido-institucional/entities/contenido-institucional.entity.js';
 import { DatoDonacion } from '../modules/donaciones/entities/dato-donacion.entity.js';
+import { Historia } from '../modules/historias/entities/historia.entity.js';
 
 export const DATABASE_ENTITIES = [
   Administrador,
@@ -22,6 +23,7 @@ export const DATABASE_ENTITIES = [
   ContenidoInstitucional,
   CanalContacto,
   SesionAdmin,
+  Historia,
 ];
 
 function getRequiredDatabaseUrl(environment: NodeJS.ProcessEnv): string {
