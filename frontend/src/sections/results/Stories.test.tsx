@@ -23,14 +23,18 @@ vi.mock('@/lib/demo', () => ({ DEMO_SHOWCASE: true }));
 afterEach(cleanup);
 
 describe('Stories en modo demostración', () => {
-  it('muestra Apolo, Luna y Max como historias ficticias', async () => {
+  it('muestra título, fecha y autor de las historias ficticias', async () => {
     await i18n.changeLanguage('es');
     render(<Stories />);
 
     expect(screen.getByText('Datos de demostración')).toBeTruthy();
-    for (const name of ['Apolo', 'Luna', 'Max']) {
-      expect(screen.getByRole('heading', { name })).toBeTruthy();
+    for (const title of ['Apolo encontró un hogar', 'Luna sigue adelante', 'Max avanza cada día']) {
+      expect(screen.getByRole('heading', { name: title })).toBeTruthy();
     }
+    expect(screen.getByText('12 de septiembre de 2026')).toBeTruthy();
+    expect(screen.getByText('Por Equipo FÉNIX')).toBeTruthy();
+    expect(screen.queryByText('Adoptado')).toBeNull();
+    expect(screen.queryByText('En recuperación')).toBeNull();
     expect(screen.getAllByText(/Historia ficticia de demostración:/)).toHaveLength(3);
   });
 });

@@ -130,10 +130,7 @@ export class AnimalesAdminService {
     }
   }
 
-  /**
-   * Reemplaza los datos del animal. Conserva sus fotos, salvo la de la entrega
-   * cuando el animal deja de estar adoptado: la base no admite esa combinación.
-   */
+ 
   async actualizar(
     id: string,
     entrada: RegistrarAnimalDto,

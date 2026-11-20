@@ -5,6 +5,7 @@ import { CrearTablaSesionesAdmin1730000000000 } from '../src/database/migrations
 import { CrearTablaFotosCampana1731000000000 } from '../src/database/migrations/1731000000000-CrearTablaFotosCampana.js';
 import { CrearTablaAnimales1732000000000 } from '../src/database/migrations/1732000000000-CrearTablaAnimales.js';
 import { AgregarBorradoLogicoCampanas1733000000000 } from '../src/database/migrations/1733000000000-AgregarBorradoLogicoCampanas.js';
+import { CrearTablaHistorias1734000000000 } from '../src/database/migrations/1734000000000-CrearTablaHistorias.js';
 
 const URL_PRUEBAS = process.env.TEST_DATABASE_URL;
 const CA_PRUEBAS = process.env.TEST_DATABASE_CA_CERT_PATH;
@@ -15,6 +16,7 @@ const MIGRACIONES = [
   CrearTablaFotosCampana1731000000000,
   CrearTablaAnimales1732000000000,
   AgregarBorradoLogicoCampanas1733000000000,
+  CrearTablaHistorias1734000000000,
 ];
 
 const TABLAS = [
@@ -28,6 +30,7 @@ const TABLAS = [
   'sesiones_admin',
   'fotos_campana',
   'animales',
+  'historias',
 ];
 
 const VISTAS = [
@@ -61,7 +64,9 @@ describe.skipIf(!URL_PRUEBAS)(
     let base: DataSource;
 
     beforeAll(async () => {
-      administracion = conexion(new URL(URL_PRUEBAS as string).pathname.slice(1));
+      administracion = conexion(
+        new URL(URL_PRUEBAS as string).pathname.slice(1),
+      );
       await administracion.initialize();
       await administracion.query(`CREATE DATABASE ${nombreBase}`);
 

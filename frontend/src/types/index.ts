@@ -30,10 +30,18 @@ export type Stats = {
   felinos: SpeciesStats;
 };
 
+export type LocalizedText = { es: string; en: string };
+
 export type Story = {
   id: string;
-  name: string;
-  status: 'adopted' | 'recovering';
-  textKey: string;
+  animalName: string;
+  title: LocalizedText;
+  text: LocalizedText;
+  /** Firma pública opcional; si falta, la tarjeta no muestra autor. */
+  author?: string;
+  /** Fecha de la historia (YYYY-MM-DD) que se muestra al público. */
+  date: string;
   photo?: string;
+  photoWidth?: number;
+  photoHeight?: number;
 };

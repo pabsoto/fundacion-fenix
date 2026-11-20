@@ -164,15 +164,11 @@
   "stories": {
     "eyebrow": "Featured stories",
     "title": "Stories that transform lives",
-    "status_adopted": "Adopted",
-    "status_recovering": "Recovering",
     "read_more": "Read the full story →",
+    "by_author": "By {{author}}",
     "photo_placeholder": "Photo · Pet",
     "prev": "Previous stories",
     "next": "More stories",
-    "demo_apolo": "Fictional demo story: Apolo found a home and is now enjoying a new chapter.",
-    "demo_luna": "Fictional demo story: Luna continues recovering with care and patience.",
-    "demo_max": "Fictional demo story: Max is making progress while waiting for a home.",
     "empty": "No official stories have been published yet."
   },
   "collaborate": {

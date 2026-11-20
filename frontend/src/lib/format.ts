@@ -38,3 +38,13 @@ export function formatCampaignLabel(year: number, months: number[], lang?: strin
   if (names.length === 1) return `${names[0]} ${year}`;
   return `${names[0]} – ${names[names.length - 1]} ${year}`;
 }
+
+/** Fecha `YYYY-MM-DD` (sin hora) en formato largo; se fija UTC para no correr un día. */
+export function formatStoryDate(isoDate: string, lang?: string): string {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat(resolveLocale(lang), {
+    dateStyle: 'long',
+    timeZone: 'UTC',
+  }).format(date);
+}
