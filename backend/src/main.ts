@@ -1,20 +1,21 @@
-import { Logger } from '@nestjs/common';
+import { Logger as NestLogger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { Logger } from 'nestjs-pino';
 import { DataSource } from 'typeorm';
 import { AppModule } from './app.module.js';
 import { configureApplication } from './config/configure-application.js';
 import { configureSwagger } from './config/swagger.js';
 
-const logger = new Logger('Bootstrap');
+const logger = new NestLogger('Bootstrap');
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
   const config = app.get(ConfigService);
 
   configureApplication(app, config);
   configureSwagger(app, config);
-
 
   const dataSource = app.get(DataSource);
   if (!dataSource.isInitialized) {

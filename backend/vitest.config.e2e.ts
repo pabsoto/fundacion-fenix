@@ -4,6 +4,7 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {
     env: {
+      LOG_LEVEL: 'silent',
       CORS_ALLOWED_ORIGINS: 'http://localhost:5173',
       DATABASE_URL: 'postgresql://user:password@localhost:5432/postgres',
       AUTH_REDIRECT_URL: 'http://localhost:5173/admin',

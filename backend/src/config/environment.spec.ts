@@ -33,6 +33,21 @@ describe('environment configuration', () => {
     ).toMatchObject({ PORT: 3100 });
   });
 
+  it('defaults LOG_LEVEL to info and accepts a valid override', () => {
+    expect(validateEnvironment({ ...BASE })).toMatchObject({
+      LOG_LEVEL: 'info',
+    });
+    expect(validateEnvironment({ ...BASE, LOG_LEVEL: 'DEBUG' })).toMatchObject({
+      LOG_LEVEL: 'debug',
+    });
+  });
+
+  it('rejects an unknown LOG_LEVEL', () => {
+    expect(() =>
+      validateEnvironment({ ...BASE, LOG_LEVEL: 'verbose' }),
+    ).toThrow('LOG_LEVEL');
+  });
+
   it('requires a PostgreSQL database URL', () => {
     expect(() =>
       validateEnvironment({

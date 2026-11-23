@@ -49,6 +49,26 @@ describe('application bootstrap (e2e)', () => {
     );
   });
 
+  it('returns a generated x-request-id header', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/health')
+      .expect(200);
+
+    expect(response.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('echoes a valid incoming x-request-id and replaces an invalid one', async () => {
+    const valido = await request(app.getHttpServer())
+      .get('/api/health')
+      .set('x-request-id', 'trazado-123');
+    const invalido = await request(app.getHttpServer())
+      .get('/api/health')
+      .set('x-request-id', 'id con espacios');
+
+    expect(valido.headers['x-request-id']).toBe('trazado-123');
+    expect(invalido.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
   it('reports service unavailable without exposing database error details', async () => {
     databaseQuery.mockRejectedValueOnce(
       new Error('secret internal database connection detail'),
@@ -151,9 +171,15 @@ describe('application bootstrap (e2e)', () => {
     expect(document.paths['/api/admin/animales']).toHaveProperty('post');
     expect(document.paths['/api/admin/animales/{id}']).toHaveProperty('put');
     expect(document.paths['/api/admin/animales/{id}']).toHaveProperty('delete');
-    expect(document.paths['/api/admin/animales/{id}/fotos/{tipo}']).toHaveProperty('delete');
-    expect(document.paths['/api/admin/campanas/{id}/fotos/orden']).toHaveProperty('put');
-    expect(document.paths['/api/admin/campanas/{id}/fotos/{fotoId}']).toHaveProperty('delete');
+    expect(
+      document.paths['/api/admin/animales/{id}/fotos/{tipo}'],
+    ).toHaveProperty('delete');
+    expect(
+      document.paths['/api/admin/campanas/{id}/fotos/orden'],
+    ).toHaveProperty('put');
+    expect(
+      document.paths['/api/admin/campanas/{id}/fotos/{fotoId}'],
+    ).toHaveProperty('delete');
     expect(document.paths['/api/admin/resumen']).toHaveProperty('get');
     expect(document.paths['/api/admin/animales/{id}']).toHaveProperty('get');
     expect(
@@ -167,11 +193,17 @@ describe('application bootstrap (e2e)', () => {
     expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('get');
     expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('put');
     expect(document.paths['/api/admin/campanas/{id}']).toHaveProperty('delete');
-    expect(document.paths['/api/admin/campanas/{id}/cerrar']).toHaveProperty('post');
-    expect(document.paths['/api/admin/campanas/{id}/reabrir']).toHaveProperty('post');
+    expect(document.paths['/api/admin/campanas/{id}/cerrar']).toHaveProperty(
+      'post',
+    );
+    expect(document.paths['/api/admin/campanas/{id}/reabrir']).toHaveProperty(
+      'post',
+    );
     expect(document.paths['/api/public/campanas/{id}']).toHaveProperty('get');
     expect(document.paths['/api/admin/contenido']).toHaveProperty('get');
-    expect(document.paths['/api/admin/contenido/{clave}']).toHaveProperty('put');
+    expect(document.paths['/api/admin/contenido/{clave}']).toHaveProperty(
+      'put',
+    );
     expect(document.paths['/api/admin/canales']).toHaveProperty('get');
     expect(document.paths['/api/admin/canales/{tipo}']).toHaveProperty('put');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('get');
