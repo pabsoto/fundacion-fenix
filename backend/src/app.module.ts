@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { LoggerModule } from 'nestjs-pino';
 import { validateEnvironment } from './config/environment.js';
+import { crearParametrosLogger, validarNivelLog } from './config/logger.js';
 import { DatabaseModule } from './database/database.module.js';
 import { AdminModule } from './modules/admin/admin.module.js';
 import { AdministradoresModule } from './modules/administradores/administradores.module.js';
@@ -19,6 +21,14 @@ import { ImpactoPublicoModule } from './modules/impacto-publico/impacto-publico.
       cache: true,
       isGlobal: true,
       validate: validateEnvironment,
+    }),
+    LoggerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) =>
+        crearParametrosLogger(
+          validarNivelLog(config.get<string>('LOG_LEVEL')),
+          config.get<string>('NODE_ENV'),
+        ),
     }),
     DatabaseModule,
     HealthModule,

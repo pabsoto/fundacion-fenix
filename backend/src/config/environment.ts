@@ -7,6 +7,7 @@ import {
   ConfiguracionSesionInvalidaError,
   validarConfiguracionSesion,
 } from './sesion.js';
+import { validarNivelLog } from './logger.js';
 import { validateSupabaseStorageEnvironment } from './supabase-storage.js';
 
 const DEFAULT_PORT = 3000;
@@ -66,6 +67,7 @@ export function validateEnvironment(
   const googleOAuth = validateGoogleOAuthEnvironment(values);
   const sesion = validateSessionEnvironment(values, allowedOrigins);
   const storage = validateSupabaseStorageEnvironment(values);
+  const logLevel = validarNivelLog(values.LOG_LEVEL);
 
   return {
     ...values,
@@ -76,6 +78,7 @@ export function validateEnvironment(
     ...googleOAuth,
     ...sesion,
     ...storage,
+    LOG_LEVEL: logLevel,
   };
 }
 
