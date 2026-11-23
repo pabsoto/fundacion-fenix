@@ -5,8 +5,12 @@ import { AdministradoresModule } from '../administradores/administradores.module
 import { AuthModule } from '../auth/auth.module.js';
 import { AnimalesModule } from '../animales/animales.module.js';
 import { CampanasModule } from '../campanas/campanas.module.js';
+import { CanalesContactoModule } from '../canales-contacto/canales-contacto.module.js';
+import { ContenidoInstitucionalModule } from '../contenido-institucional/contenido-institucional.module.js';
 import { DonacionesModule } from '../donaciones/donaciones.module.js';
 import { AdminAnimalesController } from './admin-animales.controller.js';
+import { AdminCanalesController } from './admin-canales.controller.js';
+import { AdminContenidoController } from './admin-contenido.controller.js';
 import { AdminCampanasController } from './admin-campanas.controller.js';
 import { AdminResumenController } from './admin-resumen.controller.js';
 import { AdminController } from './admin.controller.js';
@@ -26,12 +30,16 @@ import { ResumenAdminService } from './resumen-admin.service.js';
     DonacionesModule,
     CampanasModule,
     AnimalesModule,
+    ContenidoInstitucionalModule,
+    CanalesContactoModule,
   ],
   controllers: [
     AdminController,
     AdminCampanasController,
     AdminAnimalesController,
     AdminResumenController,
+    AdminContenidoController,
+    AdminCanalesController,
   ],
   providers: [SesionAdminGuard, CsrfGuard, ResumenAdminService],
 })
