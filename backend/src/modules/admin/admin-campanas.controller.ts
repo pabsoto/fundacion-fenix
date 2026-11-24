@@ -12,6 +12,7 @@ import {
   Put,
   Query,
   Req,
+  StreamableFile,
   UnauthorizedException,
   UploadedFile,
   UseGuards,
@@ -37,13 +38,20 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../../common/dto/error-response.dto.js';
+import {
+  generarCsv,
+  nombreArchivoCsv,
+  TIPO_CONTENIDO_CSV,
+} from '../../common/utils/csv.js';
 import { CsrfGuard } from '../../common/guards/csrf.guard.js';
 import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
+import { COLUMNAS_CSV_CAMPANAS } from '../campanas/campanas-csv.js';
 import { CampanasAdminService } from '../campanas/campanas-admin.service.js';
 import { CampanaAdminDto } from '../campanas/dto/campana-admin.dto.js';
 import {
   ConsultaCampanasDto,
+  ConsultaExportarCampanasDto,
   PaginaCampanasDto,
 } from '../campanas/dto/consulta-campanas.dto.js';
 import { CorregirCifrasCampanaDto } from '../campanas/dto/corregir-cifras-campana.dto.js';
@@ -126,6 +134,40 @@ export class AdminCampanasController {
   })
   cifras(@Query() consulta: ConsultaCifrasDto): Promise<CifrasPeriodoDto> {
     return this.campanas.consultarCifras(consulta);
+  }
+
+  // Debe declararse antes de `:id`, o "exportar" se leería como un id.
+  @Get('exportar')
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity('cookieAuth')
+  @ApiOperation({
+    summary: 'Exportar campañas a CSV',
+    description:
+      'Descarga todas las campañas que cumplen los filtros `anio` y `mes` (no solo la página visible). UTF-8 con BOM, separador `;` y celdas que empiezan con `=`, `+`, `-` o `@` neutralizadas. El archivo se llama `campanas_AAAA-MM-DD.csv`.',
+  })
+  @ApiOkResponse({
+    description: 'Archivo CSV.',
+    content: { 'text/csv': { schema: { type: 'string' } } },
+  })
+  @ApiBadRequestResponse({
+    description: 'El formato, el año o el mes no son válidos.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'La cuenta administrativa está desactivada.',
+    type: ErrorResponseDto,
+  })
+  async exportar(
+    @Query() consulta: ConsultaExportarCampanasDto,
+  ): Promise<StreamableFile> {
+    const campanas = await this.campanas.listarParaExportar(consulta);
+    return new StreamableFile(
+      Buffer.from(generarCsv(COLUMNAS_CSV_CAMPANAS, campanas), 'utf8'),
+      {
+        type: TIPO_CONTENIDO_CSV,
+        disposition: `attachment; filename="${nombreArchivoCsv('campanas')}"`,
+      },
+    );
   }
 
   @Get(':id')
