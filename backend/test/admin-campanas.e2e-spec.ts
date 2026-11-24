@@ -91,6 +91,7 @@ describe('administración de campañas (e2e)', () => {
     ]) {
       qb[metodo] = vi.fn(() => qb);
     }
+    qb.getMany = vi.fn(async () => [...campanas]);
     qb.getManyAndCount = vi.fn(async () => [[...campanas], campanas.length]);
     qb.getRawOne = vi.fn(async () => ({}));
     qb.getRawMany = vi.fn(async () => []);

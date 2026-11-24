@@ -135,10 +135,12 @@ describe('application bootstrap (e2e)', () => {
     expect(Object.keys(document.paths).sort()).toEqual(
       [
         '/api/admin/animales',
+        '/api/admin/animales/exportar',
         '/api/admin/animales/{id}',
         '/api/admin/animales/{id}/fotos/{tipo}',
         '/api/admin/campanas',
         '/api/admin/campanas/cifras',
+        '/api/admin/campanas/exportar',
         '/api/admin/campanas/{id}',
         '/api/admin/campanas/{id}/cerrar',
         '/api/admin/campanas/{id}/cifras',

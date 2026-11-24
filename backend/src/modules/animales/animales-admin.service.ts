@@ -33,6 +33,28 @@ export class AnimalesAdminService {
     private readonly storage: StorageService,
   ) {}
 
+  /** Todos los animales del filtro, sin paginar y con el orden de la lista. */
+  async listarParaExportar(
+    consulta: ConsultaAnimalesDto = {},
+  ): Promise<AnimalDto[]> {
+    try {
+      const animales = await this.repositorio.find({
+        where: {
+          eliminadoEn: IsNull(),
+          ...(consulta.adoptado !== undefined && {
+            adoptado: consulta.adoptado,
+          }),
+        },
+        order: { creadoEn: 'DESC', id: 'ASC' },
+      });
+      return animales.map((animal) => this.aDto(animal));
+    } catch {
+      throw new ServiceUnavailableException(
+        'Los animales no están disponibles temporalmente',
+      );
+    }
+  }
+
   async listar(
     consulta: ConsultaAnimalesDto = {},
   ): Promise<PaginaAnimalesDto> {

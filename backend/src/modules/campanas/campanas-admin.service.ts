@@ -63,27 +63,48 @@ export class CampanasAdminService {
     private readonly storage: StorageService,
   ) {}
 
+  /** Campañas activas que cumplen los filtros de año y mes de la lista. */
+  private consultaFiltrada(consulta: ConsultaCampanasDto) {
+    const qb = this.repositorio
+      .createQueryBuilder('c')
+      .where('c.eliminadoEn IS NULL');
+    if (consulta.anio !== undefined) {
+      qb.andWhere('EXTRACT(YEAR FROM c.fecha) = :anio', {
+        anio: consulta.anio,
+      });
+    }
+    if (consulta.mes !== undefined) {
+      qb.andWhere('EXTRACT(MONTH FROM c.fecha) = :mes', {
+        mes: consulta.mes,
+      });
+    }
+    return qb;
+  }
+
+  /** Todas las campañas del filtro, sin paginar y con el orden de la lista. */
+  async listarParaExportar(
+    consulta: ConsultaCampanasDto = {},
+  ): Promise<CampanaAdminDto[]> {
+    try {
+      const campanas = await this.consultaFiltrada(consulta)
+        .orderBy('c.fecha', 'DESC', 'NULLS LAST')
+        .addOrderBy('c.creadoEn', 'DESC')
+        .addOrderBy('c.id', 'ASC')
+        .getMany();
+      return campanas.map((campana) => this.aDto(campana));
+    } catch {
+      throw new ServiceUnavailableException(
+        'Las campañas no están disponibles temporalmente',
+      );
+    }
+  }
+
   async listar(
     consulta: ConsultaCampanasDto = {},
   ): Promise<PaginaCampanasDto> {
     const { pagina, limite, desde } = resolverPagina(consulta);
     try {
-      const filtrada = () => {
-        const qb = this.repositorio
-          .createQueryBuilder('c')
-          .where('c.eliminadoEn IS NULL');
-        if (consulta.anio !== undefined) {
-          qb.andWhere('EXTRACT(YEAR FROM c.fecha) = :anio', {
-            anio: consulta.anio,
-          });
-        }
-        if (consulta.mes !== undefined) {
-          qb.andWhere('EXTRACT(MONTH FROM c.fecha) = :mes', {
-            mes: consulta.mes,
-          });
-        }
-        return qb;
-      };
+      const filtrada = () => this.consultaFiltrada(consulta);
 
       const [campanas, total] = await filtrada()
         .orderBy('c.fecha', 'DESC', 'NULLS LAST')

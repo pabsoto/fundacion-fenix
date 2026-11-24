@@ -5,6 +5,10 @@ import {
   ConsultaPaginaDto,
   DatosPaginaDto,
 } from '../../../common/dto/pagina.dto.js';
+import {
+  CampoFormatoExportacion,
+  type FormatoExportacion,
+} from '../../../common/dto/formato-exportacion.js';
 import { CampanaAdminDto, TotalesCampanaDto } from './campana-admin.dto.js';
 
 export class ConsultaCampanasDto extends ConsultaPaginaDto {
@@ -23,6 +27,12 @@ export class ConsultaCampanasDto extends ConsultaPaginaDto {
   @Min(1, { message: 'El mes debe ser un entero entre 1 y 12' })
   @Max(12, { message: 'El mes debe ser un entero entre 1 y 12' })
   mes?: number;
+}
+
+/** Filtros de la lista más el formato; `pagina` y `limite` se ignoran. */
+export class ConsultaExportarCampanasDto extends ConsultaCampanasDto {
+  @CampoFormatoExportacion()
+  formato: FormatoExportacion;
 }
 
 export class ContadoresCampanaDto {

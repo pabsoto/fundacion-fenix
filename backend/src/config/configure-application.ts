@@ -26,6 +26,7 @@ export function configureApplication(
   app.enableCors({
     allowedHeaders: ['Content-Type', 'Authorization', CABECERA_CSRF],
     credentials: true,
+    exposedHeaders: ['Content-Disposition'],
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     origin: allowedOrigins,
   });
