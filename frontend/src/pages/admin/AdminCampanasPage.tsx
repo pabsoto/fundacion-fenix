@@ -1,14 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
+import { esPeticionCancelada, useBusquedaAdmin } from '@/hooks/useBusquedaAdmin';
+import { useFiltrosEnUrl } from '@/hooks/useFiltrosEnUrl';
+import {
+  CLAVE_FILTROS_CAMPANAS,
+  escribirFiltrosCampanas,
+  leerFiltrosCampanas,
+} from '@/lib/filtros-url-admin';
 import { useVistaMovil } from '@/hooks/useVistaMovil';
 import { AdminCampanasMovil } from '@/pages/admin/AdminCampanasMovil';
-import { Cat, Eye, Hash, PawPrint, X } from 'lucide-react';
+import { ArrowDown, Cat, Eye, Hash, PawPrint, X } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
+import { PanelExportacion } from '@/components/admin/ui/PanelExportacion';
+import { nombreSugerido } from '@/lib/nombre-descarga';
 import { listCampanas, subirFotosCampana } from '@/services/admin/campanas.service';
+import { descargarCampanasCsv } from '@/services/admin/exportacion.service';
 import type { PeriodoCampanas } from '@/services/admin/cifras-campanas';
 import type { CampanaConTotales, ContadoresCampana, PaginaCampanas } from '@/types/admin';
 import { TAMANO_PAGINA_ADMIN, totalesDe } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
+import { SearchInput } from '@/components/admin/ui/SearchInput';
 import { MarcaEstado } from '@/components/admin/ui/MarcaEstado';
 import { Paginacion } from '@/components/admin/ui/Paginacion';
 import { SelectFiltro } from '@/components/admin/ui/SelectFiltro';
@@ -73,8 +84,6 @@ function encabezadoContador(texto: string) {
 function celdaNumero(valor: number) {
   return <span className="t-fila block text-right text-negro">{formatNumber(valor, 'es')}</span>;
 }
-
-const PERIODO_TODOS: PeriodoCampanas = { anio: null, mes: null };
 
 function textoMostrando(datos: PaginaCampanas) {
   const desde = (datos.pagina - 1) * datos.limite + 1;
@@ -259,10 +268,13 @@ function elegirId(lista: CampanaConTotales[], actual: string | null, preferido?:
 export function AdminCampanasPage() {
   const textos = textosAdmin.campanas;
   const movil = useVistaMovil();
+  const movilRef = useRef(movil);
+  useEffect(() => {
+    movilRef.current = movil;
+  }, [movil]);
   const [carga, setCarga] = useState<Carga>('cargando');
   const [intento, setIntento] = useState(0);
   const [datos, setDatos] = useState<PaginaCampanas | null>(null);
-  const [pagina, setPagina] = useState(1);
   const [cambiando, setCambiando] = useState(false);
   const [seleccionId, setSeleccionId] = useState<string | null>(null);
   const [fotoActiva, setFotoActiva] = useState(0);
@@ -271,28 +283,49 @@ export function AdminCampanasPage() {
   const [cierre, setCierre] = useState<{ campana: CampanaConTotales; accion: AccionCierre } | null>(null);
   const [fotoPendiente, setFotoPendiente] = useState<FotoPendiente | null>(null);
   const [reintentandoFoto, setReintentandoFoto] = useState(false);
-  const [periodo, setPeriodo] = useState<PeriodoCampanas>(PERIODO_TODOS);
+  const { filtros, aplicar } = useFiltrosEnUrl(
+    CLAVE_FILTROS_CAMPANAS,
+    leerFiltrosCampanas,
+    escribirFiltrosCampanas,
+  );
+  const periodo: PeriodoCampanas = { anio: filtros.anio, mes: filtros.mes };
+  const pagina = filtros.pagina;
+  const {
+    texto: busqueda,
+    setTexto: setBusqueda,
+    consulta,
+    limpiar: limpiarBusqueda,
+    adoptar: adoptarBusqueda,
+  } = useBusquedaAdmin(filtros.q, (q) => {
+    setCambiando(true);
+    aplicar({ ...filtros, q, pagina: 1 }, 'replace');
+  });
   /** Campaña que se debe seleccionar al terminar la próxima carga (la recién guardada). */
   const preferidoRef = useRef<string | undefined>(undefined);
 
-  // El backend filtra por periodo, pagina y suma las cifras del filtro completo.
+  // El backend filtra por periodo, búsqueda y página, y suma las cifras del filtro completo.
   useEffect(() => {
+    const controlador = new AbortController();
     let vivo = true;
-    listCampanas({
-      pagina,
-      limite: TAMANO_PAGINA_ADMIN,
-      anio: periodo.anio ?? undefined,
-      mes: periodo.mes ?? undefined,
-    })
+    listCampanas(
+      {
+        pagina,
+        limite: TAMANO_PAGINA_ADMIN,
+        anio: periodo.anio ?? undefined,
+        mes: periodo.mes ?? undefined,
+        q: consulta || undefined,
+      },
+      controlador.signal,
+    )
       .then((respuesta) => {
         if (!vivo) return;
         // Tras eliminar la última campaña de una página, se retrocede a una que exista.
-        if (respuesta.items.length === 0 && pagina > 1 && !movil) {
-          setPagina(Math.max(1, respuesta.totalPaginas));
+        if (pagina > Math.max(1, respuesta.totalPaginas)) {
+          aplicar({ anio: periodo.anio, mes: periodo.mes, q: consulta, pagina: 1 }, 'replace');
           return;
         }
         setDatos((actual) => {
-          if (!movil || pagina === 1 || !actual) return respuesta;
+          if (!movilRef.current || pagina === 1 || !actual) return respuesta;
           const ids = new Set(actual.items.map((campana) => campana.id));
           return {
             ...respuesta,
@@ -305,17 +338,18 @@ export function AdminCampanasPage() {
         setCarga('listo');
         setCambiando(false);
       })
-      .catch(() => {
-        if (!vivo) return;
+      .catch((error: unknown) => {
+        if (!vivo || esPeticionCancelada(error)) return;
         setCarga('error');
         setCambiando(false);
       });
     return () => {
       vivo = false;
+      controlador.abort();
     };
-  }, [intento, pagina, periodo.anio, periodo.mes, movil]);
+  }, [intento, pagina, periodo.anio, periodo.mes, consulta, aplicar]);
 
-  function seleccionar(id: string) {
+  function seleccionar(id: string | null) {
     setSeleccionId(id);
     setFotoActiva(0);
   }
@@ -336,15 +370,47 @@ export function AdminCampanasPage() {
     setModal(seleccionada);
   }
 
+  const [exportacionAbierta, setExportacionAbierta] = useState(false);
+  const [nombreExportacion, setNombreExportacion] = useState('');
+  const sinRegistros = !datos || datos.total === 0;
+  const sugeridoExportacion = nombreSugerido('campanas');
+
+  function alExportar() {
+    if (sinRegistros) return;
+    setNombreExportacion(sugeridoExportacion);
+    setExportacionAbierta(true);
+  }
+
+  function resumenExportacion(): string {
+    const partes: string[] = [];
+    if (periodo.anio !== null) partes.push(textosAdmin.exportar.anio(periodo.anio));
+    if (periodo.mes !== null) {
+      const mes = textos.filtros.meses[periodo.mes - 1]?.toLocaleLowerCase('es');
+      if (mes) partes.push(textosAdmin.exportar.mes(mes));
+    }
+    const texto = filtros.q;
+    if (texto) partes.push(textosAdmin.exportar.busqueda(texto));
+    if (partes.length === 0 || !datos) return textosAdmin.exportar.todasLasCampanas;
+    return textosAdmin.exportar.campanasConFiltros(datos.total, partes.join(' · '));
+  }
+
   function fijarPeriodo(siguiente: PeriodoCampanas) {
+    const mes = siguiente.anio === null ? null : siguiente.mes;
+    if (siguiente.anio === filtros.anio && mes === filtros.mes) return;
     setCambiando(true);
-    setPagina(1);
-    setPeriodo(siguiente);
+    aplicar({ ...filtros, anio: siguiente.anio, mes, pagina: 1 }, 'push');
   }
 
   function irAPagina(siguiente: number) {
+    if (siguiente === filtros.pagina) return;
     setCambiando(true);
-    setPagina(siguiente);
+    aplicar({ ...filtros, pagina: siguiente }, 'push');
+  }
+
+  function limpiarFiltros() {
+    setCambiando(true);
+    adoptarBusqueda('');
+    aplicar({ anio: null, mes: null, pagina: 1, q: '' }, 'push');
   }
 
   /** Vuelve a pedir la página actual. `preferido` queda seleccionada si sigue en ella. */
@@ -372,7 +438,7 @@ export function AdminCampanasPage() {
   return (
     <div
       className={cn(
-        'flex min-h-0 flex-1 flex-col',
+        'flex min-h-0 w-full min-w-0 flex-1 flex-col',
         movil ? 'gap-(--spacing-bloque-movil)' : 'gap-(--spacing-bloque-gap-admin)',
       )}
     >
@@ -405,18 +471,25 @@ export function AdminCampanasPage() {
       ) : null}
 
       {carga === 'cargando' && !movil ? (
-        <Card radius="admin" elevated="panel" className="flex min-h-(--size-panel-vacio-admin)" aria-busy="true">
-          <p className="sr-only">{textosAdmin.supuestos.cargando}</p>
-          <div className="flex flex-1 flex-col gap-3 px-3 py-4">
-            <div className="h-(--size-control-admin) animate-pulse rounded-btn bg-crema-tono" />
-            <div className="h-fila-admin animate-pulse rounded-btn bg-crema-tono" />
-            <div className="h-fila-admin animate-pulse rounded-btn bg-crema-tono" />
-            <div className="h-fila-admin animate-pulse rounded-btn bg-crema-tono" />
-          </div>
-          <div className="w-panel-detalle shrink-0 border-l border-linea p-7">
-            <div className="h-foto-campana animate-pulse rounded-btn bg-crema-tono" />
-          </div>
-        </Card>
+        <div className="@container/lienzo min-w-0">
+          <Card
+            radius="admin"
+            elevated="panel"
+            className="flex min-h-(--size-panel-vacio-admin) min-w-0 flex-col lienzo-fila:flex-row"
+            aria-busy="true"
+          >
+            <p className="sr-only">{textosAdmin.supuestos.cargando}</p>
+            <div className="flex min-w-0 flex-1 flex-col gap-3 px-3 py-4">
+              <div className="h-(--size-control-admin) animate-pulse rounded-btn bg-crema-tono" />
+              <div className="h-fila-admin animate-pulse rounded-btn bg-crema-tono" />
+              <div className="h-fila-admin animate-pulse rounded-btn bg-crema-tono" />
+              <div className="h-fila-admin animate-pulse rounded-btn bg-crema-tono" />
+            </div>
+            <div className="w-full shrink-0 border-t border-linea p-7 lienzo-fila:w-(--spacing-panel-detalle) lienzo-fila:border-t-0 lienzo-fila:border-l">
+              <div className="h-foto-campana animate-pulse rounded-btn bg-crema-tono" />
+            </div>
+          </Card>
+        </div>
       ) : null}
 
       {carga === 'error' ? (
@@ -447,20 +520,54 @@ export function AdminCampanasPage() {
           }}
           onCargarMas={() => irAPagina(pagina + 1)}
           cargandoMas={cambiando}
+          onExport={alExportar}
+          exportarDeshabilitado={sinRegistros}
+          tituloExportar={sinRegistros ? textosAdmin.exportar.sinRegistros : undefined}
+          busqueda={busqueda}
+          onBusqueda={setBusqueda}
+          consulta={consulta}
+          onLimpiarBusqueda={limpiarBusqueda}
+          onLimpiarFiltros={limpiarFiltros}
+          seleccionId={seleccionId}
+          onSeleccionar={seleccionar}
         />
       ) : null}
 
       {carga === 'listo' && datos && !movil ? (
-        <Card radius="admin" elevated="panel" className="flex items-stretch">
+        <div className="@container/lienzo min-w-0">
+        <Card radius="admin" elevated="panel" className="flex min-w-0 flex-col lienzo-fila:flex-row lienzo-fila:items-stretch">
           <div className="flex min-w-0 flex-1 flex-col gap-3 px-3 py-4">
-            <div className="flex h-(--size-control-admin) items-center justify-between gap-4 px-3">
-              <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex min-w-0 items-center gap-4 px-3">
+              <div className="flex flex-[0_0_auto] items-center gap-2.5 whitespace-nowrap">
                 <h2 className="t-barra text-negro">{textos.todas}</h2>
                 <p className="t-small text-negro">
                   {formatNumber(datos.total, 'es')} {textos.jornadas}
                 </p>
               </div>
-              <BotonPildora onClick={() => setModal('crear')}>{textos.nueva}</BotonPildora>
+              <SearchInput
+                className="h-(--size-toque-admin) min-w-0 flex-[1_1_auto]"
+                value={busqueda}
+                onChange={setBusqueda}
+                onClear={() => setBusqueda('')}
+                placeholder={textos.buscar}
+                ariaLabel={textos.buscar}
+              />
+              <button
+                type="button"
+                onClick={alExportar}
+                disabled={sinRegistros}
+                title={sinRegistros ? textosAdmin.exportar.sinRegistros : undefined}
+                className="t-nav inline-flex flex-[0_0_auto] items-center gap-1.5 whitespace-nowrap text-negro disabled:opacity-50"
+              >
+                <ArrowDown className="size-4" aria-hidden="true" />
+                {textos.exportar}
+              </button>
+              <BotonPildora
+                className="flex-[0_0_auto] whitespace-nowrap"
+                onClick={() => setModal('crear')}
+              >
+                {textos.nueva}
+              </BotonPildora>
             </div>
             <div className="flex h-(--size-control-admin) items-center justify-between gap-4 rounded-btn bg-crema-tono px-4">
               <div className="flex min-w-0 items-center gap-2.5">
@@ -499,7 +606,7 @@ export function AdminCampanasPage() {
               {hayFiltro ? (
                 <button
                   type="button"
-                  onClick={() => fijarPeriodo(PERIODO_TODOS)}
+                  onClick={limpiarFiltros}
                   className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 px-2 py-1.5 t-chip text-negro"
                 >
                   {textos.filtros.limpiar}
@@ -508,6 +615,14 @@ export function AdminCampanasPage() {
               ) : null}
             </div>
             {/* Las columnas tienen ancho fijo: si no caben, la tabla se desplaza sola y no invade el panel. */}
+            {consulta && datos.total === 0 ? (
+              <div className="flex flex-col items-start gap-4 px-3 py-4">
+                <p className="t-control text-negro">{textos.sinResultados(consulta)}</p>
+                <BotonPildora variante="ghost" onClick={limpiarBusqueda}>
+                  {textos.limpiarBusqueda}
+                </BotonPildora>
+              </div>
+            ) : (
             <div className="min-w-0 overflow-x-auto">
               <div className="min-w-max">
             <TablaSeleccion
@@ -529,6 +644,7 @@ export function AdminCampanasPage() {
             />
               </div>
             </div>
+            )}
             <div className="mt-auto flex flex-wrap items-center justify-between gap-3 px-3">
               <p className="t-small text-negro">
                 {hayFiltro
@@ -545,6 +661,7 @@ export function AdminCampanasPage() {
           </div>
           {seleccionada ? (
             <PanelDetalle
+              className="w-full border-t lienzo-fila:w-(--spacing-panel-detalle) lienzo-fila:border-l lienzo-fila:border-t-0"
               fotos={[]}
               antes={
                 <GaleriaCampana
@@ -629,11 +746,12 @@ export function AdminCampanasPage() {
               ]}
             />
           ) : (
-            <aside className="flex w-panel-detalle shrink-0 items-center justify-center border-l border-linea p-7">
+            <aside className="flex w-full shrink-0 items-center justify-center border-t border-linea p-7 lienzo-fila:w-(--spacing-panel-detalle) lienzo-fila:border-t-0 lienzo-fila:border-l">
               <p className="t-small text-center text-texto-secundario">{textos.filtros.selecciona}</p>
             </aside>
           )}
         </Card>
+        </div>
       ) : null}
 
       {toast ? (
@@ -670,7 +788,7 @@ export function AdminCampanasPage() {
             setFotoPendiente(fotosFallidas ? { id, archivos: fotosFallidas } : null);
             setToast(fotosFallidas ? null : textosAdmin.supuestos.guardado);
             // Una campaña nueva puede quedar en cualquier página: se vuelve a la primera.
-            if (eraNueva) setPagina(1);
+            if (eraNueva) aplicar({ ...filtros, pagina: 1 }, 'replace');
             recargar(id);
           }}
           onEliminada={() => {
@@ -682,6 +800,23 @@ export function AdminCampanasPage() {
           }}
         />
       ) : null}
+
+      <PanelExportacion
+        key={exportacionAbierta ? 'abierta' : 'cerrada'}
+        abierto={exportacionAbierta}
+        titulo={textosAdmin.exportar.campanas}
+        resumen={resumenExportacion()}
+        nombre={nombreExportacion}
+        onNombre={setNombreExportacion}
+        nombreSugerido={sugeridoExportacion}
+        onCerrar={() => setExportacionAbierta(false)}
+        onDescargarCsv={(nombreArchivo) =>
+          descargarCampanasCsv(
+            { anio: filtros.anio, mes: filtros.mes, q: filtros.q },
+            nombreArchivo,
+          )
+        }
+      />
     </div>
   );
 }

@@ -57,7 +57,12 @@ export function PanelDetalle({
   className,
 }: PanelDetalleProps) {
   return (
-    <aside className={cn('flex w-panel-detalle shrink-0 flex-col items-center gap-5 border-l border-linea p-7', className)}>
+    <aside
+      className={cn(
+        'flex shrink-0 flex-col items-center gap-5 border-linea p-7',
+        className ?? 'w-(--spacing-panel-detalle) border-l',
+      )}
+    >
       {antes}
       {fotos.length > 0 ? (
         <div className="flex w-full gap-2">

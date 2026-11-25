@@ -51,6 +51,7 @@ type ApiFotoAnimal = { url: string };
 type OpcionesLista = {
   /** El resumen no usa fotos: con `false` se evitan las consultas de fotos. */
   conFotos?: boolean;
+  signal?: AbortSignal;
 };
 
 function fechaHoy(): string {
@@ -122,14 +123,18 @@ function cuerpoApi(entrada: AnimalEntrada) {
  * las fotos solo se piden de los animales de la página.
  */
 export async function listAnimales(
-  { filtro = 'todos', pagina = 1, limite = TAMANO_PAGINA_ADMIN }: ConsultaAnimales = {},
-  { conFotos = true }: OpcionesLista = {},
+  { filtro = 'todos', pagina = 1, limite = TAMANO_PAGINA_ADMIN, q }: ConsultaAnimales = {},
+  { conFotos = true, signal }: OpcionesLista = {},
 ): Promise<Pagina<Animal>> {
-  if (DEMO_SHOWCASE) return listAnimalesDemo({ filtro, pagina, limite });
+  if (DEMO_SHOWCASE) return listAnimalesDemo({ filtro, pagina, limite, q });
   const parametros = new URLSearchParams({ pagina: String(pagina), limite: String(limite) });
   if (filtro === 'adoptados') parametros.set('adoptado', 'true');
   if (filtro === 'en-la-fundacion') parametros.set('adoptado', 'false');
-  const respuesta = await pedirJson<Pagina<ApiAnimal>>(`/admin/animales?${parametros.toString()}`);
+  if (q) parametros.set('q', q);
+  const respuesta = await pedirJson<Pagina<ApiAnimal>>(
+    `/admin/animales?${parametros.toString()}`,
+    signal,
+  );
   return {
     ...respuesta,
     items: await Promise.all(respuesta.items.map((animal) => desdeApi(animal, conFotos))),

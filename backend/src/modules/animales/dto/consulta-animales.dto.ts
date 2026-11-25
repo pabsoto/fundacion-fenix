@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 import {
   ConsultaPaginaDto,
   DatosPaginaDto,
@@ -21,6 +21,20 @@ export class ConsultaAnimalesDto extends ConsultaPaginaDto {
   })
   @IsBoolean()
   adoptado?: boolean;
+
+  @ApiPropertyOptional({
+    maxLength: 120,
+    description: 'Busca en el nombre. Varias palabras exigen todas.',
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value !== 'string') return value;
+    const limpio = value.trim().replace(/\s+/g, ' ');
+    return limpio === '' ? undefined : limpio;
+  })
+  @IsString()
+  @MaxLength(120)
+  q?: string;
 }
 
 /** Filtros de la lista más el formato; `pagina` y `limite` se ignoran. */

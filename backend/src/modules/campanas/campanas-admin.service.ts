@@ -27,6 +27,7 @@ import {
   CifrasPeriodoDto,
   ConsultaCifrasDto,
 } from './dto/consulta-cifras.dto.js';
+import { aplicarBusqueda, expresionBusqueda } from '../../common/busqueda-texto.js';
 import {
   datosDePagina,
   resolverPagina,
@@ -78,6 +79,11 @@ export class CampanasAdminService {
         mes: consulta.mes,
       });
     }
+    aplicarBusqueda(
+      qb,
+      expresionBusqueda(`coalesce(c.tituloEs, '') || ' ' || coalesce(c.lugar, '')`),
+      consulta.q,
+    );
     return qb;
   }
 

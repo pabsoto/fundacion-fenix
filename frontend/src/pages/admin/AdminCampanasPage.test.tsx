@@ -1,17 +1,27 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { AdminCampanasPage } from '@/pages/admin/AdminCampanasPage';
 
 // DEMO: estas pruebas usan los datos simulados del panel.
 vi.mock('@/lib/demo', () => ({ DEMO_SHOWCASE: true }));
 
+function renderPagina() {
+  return render(
+    <MemoryRouter initialEntries={['/admin/campanas']}>
+      <AdminCampanasPage />
+    </MemoryRouter>,
+  );
+}
+
 afterEach(() => {
   cleanup();
+  sessionStorage.clear();
 });
 
 describe('AdminCampanasPage', () => {
   it('filtra por año y mes, deja en gris un mes vacío y limpia', async () => {
-    render(<AdminCampanasPage />);
+    renderPagina();
 
     expect(await screen.findByText('Mostrando 1–4 de 4 jornadas', {}, { timeout: 2000 })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Limpiar filtros' })).toBeNull();
@@ -46,8 +56,33 @@ describe('AdminCampanasPage', () => {
     expect(screen.queryByRole('button', { name: 'Limpiar filtros' })).toBeNull();
   });
 
+  it('busca sin tildes, combina con el año y limpia búsqueda y filtros', async () => {
+    renderPagina();
+    await screen.findByText('Mostrando 1–4 de 4 jornadas', {}, { timeout: 2000 });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Año' }));
+    fireEvent.click(screen.getByRole('option', { name: '2024' }));
+    expect(await screen.findByText('Mostrando 1–3 de 3 jornadas · 2024')).toBeTruthy();
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar por nombre o lugar' }), {
+      target: { value: 'satelite' },
+    });
+    expect(await screen.findByText('Mostrando 1–1 de 1 jornadas · 2024', {}, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getAllByText('Jornada Ciudad Satélite').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Jornada Distrito 4')).toBeNull();
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar por nombre o lugar' }), {
+      target: { value: 'zzzz' },
+    });
+    expect(await screen.findByText('Sin resultados para «zzzz»', {}, { timeout: 3000 })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+    expect(await screen.findByText('Mostrando 1–4 de 4 jornadas', {}, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getByRole('searchbox', { name: 'Buscar por nombre o lugar' })).toHaveProperty('value', '');
+  });
+
   it('cierra una campaña publicada con confirmación y permite reabrirla', async () => {
-    render(<AdminCampanasPage />);
+    renderPagina();
     await screen.findByText('Mostrando 1–4 de 4 jornadas', {}, { timeout: 2000 });
 
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar campaña' }));
@@ -73,7 +108,7 @@ describe('AdminCampanasPage', () => {
   });
 
   it('elimina una campaña solo después de confirmar en un modal', async () => {
-    render(<AdminCampanasPage />);
+    renderPagina();
     await screen.findByText('Mostrando 1–4 de 4 jornadas', {}, { timeout: 2000 });
 
     fireEvent.click(screen.getByRole('button', { name: 'Editar jornada' }));

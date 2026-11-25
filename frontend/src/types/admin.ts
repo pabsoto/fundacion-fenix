@@ -104,12 +104,16 @@ export type ConsultaCampanas = {
   limite?: number;
   anio?: number;
   mes?: number;
+  /** Texto del buscador. El backend lo aplica junto con año y mes. */
+  q?: string;
 };
 
 export type ConsultaAnimales = {
   filtro?: FiltroAnimales;
   pagina?: number;
   limite?: number;
+  /** Texto del buscador. El backend lo aplica junto con el filtro de adopción. */
+  q?: string;
 };
 
 export type PuntoMensual = {

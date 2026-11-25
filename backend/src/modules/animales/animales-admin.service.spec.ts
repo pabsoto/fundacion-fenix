@@ -330,4 +330,37 @@ describe('AnimalesAdminService', () => {
       );
     });
   });
+
+  describe('listar', () => {
+    it('busca en el nombre sin tildes y conserva el filtro de adopción', async () => {
+      const andWhere = vi.fn().mockReturnThis();
+      const qb = {
+        where: vi.fn().mockReturnThis(),
+        andWhere,
+        orderBy: vi.fn().mockReturnThis(),
+        addOrderBy: vi.fn().mockReturnThis(),
+        offset: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        getManyAndCount: vi.fn(async () => [[crearAnimal({ nombre: 'Satélite' })], 1]),
+      };
+      const repo = {
+        createQueryBuilder: vi.fn(() => qb),
+        findAndCount: vi.fn(),
+      } as unknown as Repository<Animal>;
+      const local = new AnimalesAdminService(
+        repo,
+        {} as unknown as DataSource,
+        { eliminar: vi.fn() } as unknown as StorageService,
+      );
+
+      const pagina = await local.listar({ q: 'satelite', adoptado: false });
+
+      expect(repo.findAndCount).not.toHaveBeenCalled();
+      expect(andWhere).toHaveBeenCalledWith('a.adoptado = :adoptado', { adoptado: false });
+      expect(andWhere).toHaveBeenCalledWith(expect.stringContaining('a.nombre'), {
+        q0: 'satelite',
+      });
+      expect(pagina).toMatchObject({ total: 1, items: [{ nombre: 'Satélite' }] });
+    });
+  });
 });
