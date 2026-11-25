@@ -73,10 +73,8 @@ export const textosAdmin = {
     mostrandoDe: (cantidad: number, total: number) =>
       `Mostrando ${cifra(cantidad)} de ${cifra(total)} jornadas`,
     vacioTitulo: 'Aún no hay campañas',
-    sinResultados: (consulta: string) => `Sin resultados para “${consulta}”`,
-    acciones: 'Más acciones',
-    importar: 'Importar',
-    proximamente: 'Próximamente',
+    sinResultados: (consulta: string) => `Sin resultados para «${consulta}»`,
+    limpiarBusqueda: 'Limpiar búsqueda',
     zonaPeligro: 'Zona de peligro',
     zonaPeligroNota: (total: string) =>
       `Al eliminar la jornada se quitan sus ${total} esterilizaciones del total y se borran sus fotos.`,
@@ -211,10 +209,6 @@ export const textosAdmin = {
     buscar: 'Buscar por nombre',
     borrarBusqueda: 'Borrar búsqueda',
     cargarMas: 'Cargar más',
-    /** El menú del botón ⋯ no está dibujado: mismos textos que Campañas móvil. */
-    acciones: 'Más acciones',
-    importar: 'Importar',
-    proximamente: 'Próximamente',
     /** El número grande va aparte. Figma escribe «animales · 4 adoptados». */
     resumenLinea: (total: number, adoptados: number) => {
       const animales = total === 1 ? 'animal' : 'animales';
@@ -232,7 +226,8 @@ export const textosAdmin = {
       `Mostrando ${cifra(cantidad)} de ${cifra(total)} animales`,
     /** Estados no dibujados en el marco móvil. */
     vacioTitulo: 'Aún no hay animales',
-    sinResultados: (consulta: string) => `Sin resultados para “${consulta}”`,
+    sinResultados: (consulta: string) => `Sin resultados para «${consulta}»`,
+    limpiarBusqueda: 'Limpiar búsqueda',
     limpiar: 'Limpiar filtros',
     filtros: {
       todos: 'Todos',
@@ -334,6 +329,32 @@ export const textosAdmin = {
     guardado: 'Datos de donación guardados.',
     qrSubido: 'QR subido correctamente.',
     qrRetirado: 'QR retirado correctamente.',
+  },
+  /**
+   * Panel de exportación. No está dibujado en Figma: modal en escritorio y hoja inferior en móvil.
+   */
+  exportar: {
+    campanas: 'Exportar campañas',
+    animales: 'Exportar animales',
+    cerrar: 'Cerrar',
+    guardarComo: 'Guardar como',
+    ayudaNombre: 'Se agregará .csv o .pdf automáticamente.',
+    pdf: 'PDF',
+    csv: 'CSV (Excel)',
+    proximamente: 'Próximamente',
+    generando: 'Generando…',
+    sinRegistros: 'No hay registros para exportar',
+    error: 'No se pudo generar el archivo.',
+    todasLasCampanas: 'Todas las campañas (sin filtros)',
+    todosLosAnimales: 'Todos los animales (sin filtros)',
+    campanasConFiltros: (total: number, detalle: string) =>
+      `${cifra(total)} ${total === 1 ? 'campaña' : 'campañas'} · ${detalle}`,
+    animalesConFiltros: (total: number, detalle: string) =>
+      `${cifra(total)} ${total === 1 ? 'animal' : 'animales'} · ${detalle}`,
+    anio: (anio: number) => `Año: ${anio}`,
+    mes: (mes: string) => `Mes: ${mes}`,
+    busqueda: (texto: string) => `Búsqueda: «${texto}»`,
+    estado: (estado: string) => `Estado: ${estado}`,
   },
   /**
    * No están dibujados en Figma. Sirven para carga, vacío, error y confirmaciones.

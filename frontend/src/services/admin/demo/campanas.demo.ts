@@ -3,6 +3,7 @@
 import { validarImagenes } from '@/schemas/imagen';
 import { CAMPANAS_EJEMPLO } from '@/services/admin/demo/datos-ejemplo';
 import { esperarMock, NoEncontradoError } from '@/services/admin/demo/latencia';
+import { coincideBusqueda } from '@/lib/busqueda';
 import { aniosDeCampanas, cifrasDePeriodo, mesesDeCampanas } from '@/services/admin/cifras-campanas';
 import {
   TAMANO_PAGINA_ADMIN,
@@ -38,7 +39,11 @@ export async function listCampanasDemo(consulta: ConsultaCampanas = {}): Promise
   await esperarMock();
   const ordenadas = [...campanas].sort(porFechaDesc);
   const periodo = { anio: consulta.anio ?? null, mes: consulta.mes ?? null };
-  const filtro = cifrasDePeriodo(ordenadas, periodo);
+  const porFecha = cifrasDePeriodo(ordenadas, periodo);
+  const buscadas = porFecha.campanas.filter((campana) =>
+    coincideBusqueda(`${campana.titulo} ${campana.lugar ?? ''}`, consulta.q),
+  );
+  const filtro = cifrasDePeriodo(buscadas, { anio: null, mes: null });
   const pagina = consulta.pagina ?? 1;
   const limite = consulta.limite ?? TAMANO_PAGINA_ADMIN;
   const desde = (pagina - 1) * limite;

@@ -88,7 +88,10 @@ function cuerpoApi(entrada: CampanaEntrada) {
  * Una página de campañas. El backend filtra por año y mes, pagina y suma las
  * cifras de todo el filtro (`contadores`, `totales`).
  */
-export async function listCampanas(consulta: ConsultaCampanas = {}): Promise<PaginaCampanas> {
+export async function listCampanas(
+  consulta: ConsultaCampanas = {},
+  signal?: AbortSignal,
+): Promise<PaginaCampanas> {
   if (DEMO_SHOWCASE) return listCampanasDemo(consulta);
   const parametros = new URLSearchParams({
     pagina: String(consulta.pagina ?? 1),
@@ -96,7 +99,11 @@ export async function listCampanas(consulta: ConsultaCampanas = {}): Promise<Pag
   });
   if (consulta.anio !== undefined) parametros.set('anio', String(consulta.anio));
   if (consulta.mes !== undefined) parametros.set('mes', String(consulta.mes));
-  const pagina = await pedirJson<ApiPaginaCampanas>(`/admin/campanas?${parametros.toString()}`);
+  if (consulta.q) parametros.set('q', consulta.q);
+  const pagina = await pedirJson<ApiPaginaCampanas>(
+    `/admin/campanas?${parametros.toString()}`,
+    signal,
+  );
   return { ...pagina, items: pagina.items.map(desdeApi) };
 }
 

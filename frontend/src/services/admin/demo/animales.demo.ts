@@ -1,5 +1,6 @@
 // DEMO: implementación simulada de animales. Se usa solo con VITE_DEMO_SHOWCASE=true.
 // Para quitar la simulación, borrar la carpeta `services/admin/demo/`.
+import { coincideBusqueda } from '@/lib/busqueda';
 import { validarImagen } from '@/schemas/imagen';
 import { ANIMALES_EJEMPLO } from '@/services/admin/demo/datos-ejemplo';
 import { esperarMock, NoEncontradoError } from '@/services/admin/demo/latencia';
@@ -27,11 +28,11 @@ function exigir(id: string): { indice: number; animal: Animal } {
   return { indice, animal };
 }
 
-function filtrados({ filtro = 'todos' }: ConsultaAnimales): Animal[] {
+function filtrados({ filtro = 'todos', q }: ConsultaAnimales): Animal[] {
   return animales.filter((animal) => {
-    if (filtro === 'adoptados') return estaAdoptado(animal);
-    if (filtro === 'en-la-fundacion') return !estaAdoptado(animal);
-    return true;
+    if (filtro === 'adoptados' && !estaAdoptado(animal)) return false;
+    if (filtro === 'en-la-fundacion' && estaAdoptado(animal)) return false;
+    return coincideBusqueda(animal.nombre, q);
   });
 }
 

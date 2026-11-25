@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Calendar, Cat, Heart, MapPin, Mars, PawPrint, User, Venus } from 'lucide-react';
+import { esPeticionCancelada, useBusquedaAdmin } from '@/hooks/useBusquedaAdmin';
+import { useFiltrosEnUrl } from '@/hooks/useFiltrosEnUrl';
+import {
+  CLAVE_FILTROS_ANIMALES,
+  escribirFiltrosAnimales,
+  leerFiltrosAnimales,
+} from '@/lib/filtros-url-admin';
+import { ArrowDown, Calendar, Cat, Heart, MapPin, Mars, PawPrint, User, Venus } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { useVistaMovil } from '@/hooks/useVistaMovil';
 import { cn } from '@/lib/cn';
@@ -19,6 +26,10 @@ import {
   type Sexo,
 } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
+import { PanelExportacion } from '@/components/admin/ui/PanelExportacion';
+import { nombreSugerido } from '@/lib/nombre-descarga';
+import { descargarAnimalesCsv } from '@/services/admin/exportacion.service';
+import { SearchInput } from '@/components/admin/ui/SearchInput';
 import { ChipFiltro } from '@/components/admin/ui/ChipFiltro';
 import { MarcaEstado } from '@/components/admin/ui/MarcaEstado';
 import { Paginacion } from '@/components/admin/ui/Paginacion';
@@ -119,6 +130,7 @@ const COLUMNAS: ColumnaTabla<Animal>[] = [
   {
     id: 'nombre',
     encabezado: textosAdmin.animales.columnas.nombre,
+    crece: true,
     className: 'w-col-nombre',
     celda: (animal) => <CeldaNombre nombre={animal.nombre} />,
   },
@@ -131,19 +143,19 @@ const COLUMNAS: ColumnaTabla<Animal>[] = [
   {
     id: 'sexo',
     encabezado: textosAdmin.animales.columnas.sexo,
-    className: 'w-col-corta',
-    celda: (animal) => <span className="t-fila text-negro">{textoSexo(animal.sexo)}</span>,
+    className: 'w-col-corta tabla-corta:hidden',
+    celda: (animal) => <span className="t-fila whitespace-nowrap text-negro">{textoSexo(animal.sexo)}</span>,
   },
   {
     id: 'edad',
     encabezado: textosAdmin.animales.columnas.edad,
-    className: 'w-col-corta',
-    celda: (animal) => <span className="t-fila text-negro">{textoEdad(animal.edad)}</span>,
+    className: 'w-col-corta tabla-corta:hidden',
+    celda: (animal) => <span className="t-fila whitespace-nowrap text-negro">{textoEdad(animal.edad)}</span>,
   },
   {
     id: 'estado',
     encabezado: textosAdmin.animales.columnas.estado,
-    className: 'w-col-estado',
+    className: 'w-col-estado whitespace-nowrap',
     celda: (animal) => (
       <MarcaEstado activo={estaAdoptado(animal)}>
         {estaAdoptado(animal) ? textosAdmin.estado.adoptado : textosAdmin.estado.enLaFundacion}
@@ -153,7 +165,7 @@ const COLUMNAS: ColumnaTabla<Animal>[] = [
   {
     id: 'adoptado',
     encabezado: textosAdmin.animales.columnas.adoptadoPor,
-    className: 'w-col-adoptante',
+    className: 'w-col-adoptante tabla-media:hidden',
     celda: (animal) => (
       <span className="t-fila truncate text-negro">
         {animal.adoptadoPor ?? textosAdmin.animales.sinAdoptante}
@@ -244,12 +256,21 @@ function subtituloDe(animal: Animal): string {
 export function AdminAnimalesPage() {
   const textos = textosAdmin.animales;
   const movil = useVistaMovil();
+  const movilRef = useRef(movil);
+  useEffect(() => {
+    movilRef.current = movil;
+  }, [movil]);
   const [carga, setCarga] = useState<Carga>('cargando');
   const [intento, setIntento] = useState(0);
   const [datos, setDatos] = useState<Pagina<Animal> | null>(null);
-  const [pagina, setPagina] = useState(1);
   const [cambiando, setCambiando] = useState(false);
-  const [filtro, setFiltro] = useState<FiltroAnimales>('todos');
+  const { filtros, aplicar } = useFiltrosEnUrl(
+    CLAVE_FILTROS_ANIMALES,
+    leerFiltrosAnimales,
+    escribirFiltrosAnimales,
+  );
+  const filtro = filtros.filtro;
+  const pagina = filtros.pagina;
   const [seleccionId, setSeleccionId] = useState<string | null>(null);
   const [modal, setModal] = useState<Animal | null | 'crear'>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -257,22 +278,35 @@ export function AdminAnimalesPage() {
     null,
   );
   const [reintentandoFoto, setReintentandoFoto] = useState(false);
+  const {
+    texto: busqueda,
+    setTexto: setBusqueda,
+    consulta,
+    limpiar: limpiarBusqueda,
+  } = useBusquedaAdmin(filtros.q, (q) => {
+    setCambiando(true);
+    aplicar({ ...filtros, q, pagina: 1 }, 'replace');
+  });
   /** Animal que se debe seleccionar al terminar la próxima carga (el recién guardado). */
   const preferidoRef = useRef<string | undefined>(undefined);
 
-  // El backend filtra por estado y pagina; las fotos solo se piden de la página visible.
+  // El backend filtra por estado, búsqueda y página; las fotos solo se piden de la página visible.
   useEffect(() => {
+    const controlador = new AbortController();
     let vivo = true;
-    listAnimales({ filtro, pagina, limite: TAMANO_PAGINA_ADMIN })
+    listAnimales(
+      { filtro, pagina, limite: TAMANO_PAGINA_ADMIN, q: consulta || undefined },
+      { signal: controlador.signal },
+    )
       .then((respuesta) => {
         if (!vivo) return;
         // Tras eliminar el último animal de una página, se retrocede a una que exista.
-        if (respuesta.items.length === 0 && pagina > 1 && !movil) {
-          setPagina(Math.max(1, respuesta.totalPaginas));
+        if (pagina > Math.max(1, respuesta.totalPaginas)) {
+          aplicar({ filtro, q: consulta, pagina: 1 }, 'replace');
           return;
         }
         setDatos((actual) => {
-          if (!movil || pagina === 1 || !actual) return respuesta;
+          if (!movilRef.current || pagina === 1 || !actual) return respuesta;
           const ids = new Set(actual.items.map((animal) => animal.id));
           return {
             ...respuesta,
@@ -284,15 +318,16 @@ export function AdminAnimalesPage() {
         setCarga('listo');
         setCambiando(false);
       })
-      .catch(() => {
-        if (!vivo) return;
+      .catch((error: unknown) => {
+        if (!vivo || esPeticionCancelada(error)) return;
         setCarga('error');
         setCambiando(false);
       });
     return () => {
       vivo = false;
+      controlador.abort();
     };
-  }, [intento, pagina, filtro, movil]);
+  }, [intento, pagina, filtro, consulta, aplicar]);
 
   useEffect(() => {
     if (!toast) return;
@@ -303,16 +338,39 @@ export function AdminAnimalesPage() {
   const visibles = datos?.items ?? [];
   const seleccionado = visibles.find((animal) => animal.id === seleccionId) ?? null;
 
+  const [exportacionAbierta, setExportacionAbierta] = useState(false);
+  const [nombreExportacion, setNombreExportacion] = useState('');
+  const sinRegistros = !datos || datos.total === 0;
+  const sugeridoExportacion = nombreSugerido('animales');
+
+  function alExportar() {
+    if (sinRegistros) return;
+    setNombreExportacion(sugeridoExportacion);
+    setExportacionAbierta(true);
+  }
+
+  function resumenExportacion(): string {
+    const partes: string[] = [];
+    if (filtro === 'adoptados') partes.push(textosAdmin.exportar.estado(textos.filtros.adoptados));
+    if (filtro === 'en-la-fundacion') {
+      partes.push(textosAdmin.exportar.estado(textos.filtros.enLaFundacion));
+    }
+    const texto = filtros.q;
+    if (texto) partes.push(textosAdmin.exportar.busqueda(texto));
+    if (partes.length === 0 || !datos) return textosAdmin.exportar.todosLosAnimales;
+    return textosAdmin.exportar.animalesConFiltros(datos.total, partes.join(' · '));
+  }
+
   function elegirFiltro(siguiente: FiltroAnimales) {
     if (siguiente === filtro) return;
     setCambiando(true);
-    setPagina(1);
-    setFiltro(siguiente);
+    aplicar({ ...filtros, filtro: siguiente, pagina: 1 }, 'push');
   }
 
   function irAPagina(siguiente: number) {
+    if (siguiente === filtros.pagina) return;
     setCambiando(true);
-    setPagina(siguiente);
+    aplicar({ ...filtros, pagina: siguiente }, 'push');
   }
 
   /** Vuelve a pedir la página actual. `preferido` queda seleccionado si sigue en ella. */
@@ -378,7 +436,7 @@ export function AdminAnimalesPage() {
   return (
     <div
       className={cn(
-        'flex min-h-0 flex-1 flex-col',
+        'flex min-h-0 w-full min-w-0 flex-1 flex-col',
         movil ? 'gap-(--spacing-bloque-movil)' : 'gap-(--spacing-bloque-gap-admin)',
       )}
     >
@@ -411,23 +469,25 @@ export function AdminAnimalesPage() {
       ) : null}
 
       {carga === 'cargando' && !movil ? (
+        <div className="@container/lienzo min-w-0">
         <Card
           radius="admin"
           elevated="panel"
-          className="flex min-h-(--size-panel-vacio-admin)"
+          className="flex min-h-(--size-panel-vacio-admin) min-w-0 flex-col lienzo-fila:flex-row"
           aria-busy="true"
         >
           <p className="sr-only">{textosAdmin.supuestos.cargando}</p>
-          <div className="flex flex-1 flex-col gap-3 px-3 py-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-3 px-3 py-4">
             <div className="h-(--size-control-admin) animate-pulse rounded-btn bg-crema-tono" />
             <div className="h-fila-admin animate-pulse rounded-btn bg-crema-tono" />
             <div className="h-fila-admin animate-pulse rounded-btn bg-crema-tono" />
             <div className="h-fila-admin animate-pulse rounded-btn bg-crema-tono" />
           </div>
-          <div className="w-panel-detalle shrink-0 border-l border-linea p-7">
+          <div className="w-full shrink-0 border-t border-linea p-7 lienzo-fila:w-(--spacing-panel-detalle) lienzo-fila:border-t-0 lienzo-fila:border-l">
             <div className="h-foto-detalle animate-pulse rounded-btn bg-crema-tono" />
           </div>
         </Card>
+        </div>
       ) : null}
 
       {carga === 'error' ? (
@@ -455,35 +515,88 @@ export function AdminAnimalesPage() {
           onEditar={(animal) => setModal(animal)}
           onCargarMas={() => irAPagina(pagina + 1)}
           cargandoMas={cambiando}
+          onExport={alExportar}
+          exportarDeshabilitado={sinRegistros}
+          tituloExportar={sinRegistros ? textosAdmin.exportar.sinRegistros : undefined}
+          busqueda={busqueda}
+          onBusqueda={setBusqueda}
+          consulta={consulta}
+          onLimpiarBusqueda={limpiarBusqueda}
+          seleccionId={seleccionId}
+          onSeleccionar={setSeleccionId}
         />
       ) : null}
 
       {carga === 'listo' && datos && !movil ? (
-        <Card radius="admin" elevated="panel" className="flex items-stretch">
+        <div className="@container/lienzo min-w-0">
+        <Card radius="admin" elevated="panel" className="flex min-w-0 flex-col lienzo-fila:flex-row lienzo-fila:items-stretch">
           <div className="flex min-w-0 flex-1 flex-col gap-3 px-3 py-4">
-            <div className="flex h-(--size-control-admin) items-center justify-between gap-4 px-3">
-              <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex min-w-0 items-center gap-4 px-3">
+              <div className="flex flex-[0_0_auto] items-center gap-2.5 whitespace-nowrap">
                 <h2 className="t-barra text-negro">{textos.todos}</h2>
                 <p className="t-small text-negro">
                   {formatNumber(datos.total, 'es')} {textos.registros}
                 </p>
               </div>
-              <BotonPildora onClick={() => setModal('crear')}>{textos.registrar}</BotonPildora>
+              <SearchInput
+                className="h-(--size-toque-admin) min-w-0 flex-[1_1_auto]"
+                value={busqueda}
+                onChange={setBusqueda}
+                onClear={() => setBusqueda('')}
+                placeholder={textos.buscar}
+                ariaLabel={textos.buscar}
+              />
+              <button
+                type="button"
+                onClick={alExportar}
+                disabled={sinRegistros}
+                title={sinRegistros ? textosAdmin.exportar.sinRegistros : undefined}
+                className="t-nav inline-flex flex-[0_0_auto] items-center gap-1.5 whitespace-nowrap text-negro disabled:opacity-50"
+              >
+                <ArrowDown className="size-4" aria-hidden="true" />
+                {textos.exportar}
+              </button>
+              <BotonPildora
+                className="flex-[0_0_auto] whitespace-nowrap"
+                onClick={() => setModal('crear')}
+              >
+                {textos.registrar}
+              </BotonPildora>
             </div>
-            <div className="flex h-(--size-control-admin) items-center gap-2 rounded-btn bg-crema-tono px-4">
-              <ChipFiltro activo={filtro === 'todos'} onClick={() => elegirFiltro('todos')}>
+            <div className="flex min-h-(--size-control-admin) flex-wrap content-center items-center gap-2 rounded-btn bg-crema-tono px-4">
+              <ChipFiltro
+                activo={filtro === 'todos'}
+                className="shrink-0 whitespace-nowrap"
+                onClick={() => elegirFiltro('todos')}
+              >
                 {textos.filtros.todos}
               </ChipFiltro>
-              <ChipFiltro activo={filtro === 'adoptados'} onClick={() => elegirFiltro('adoptados')}>
+              <ChipFiltro
+                activo={filtro === 'adoptados'}
+                className="shrink-0 whitespace-nowrap"
+                onClick={() => elegirFiltro('adoptados')}
+              >
                 {textos.filtros.adoptados}
               </ChipFiltro>
               <ChipFiltro
                 activo={filtro === 'en-la-fundacion'}
+                className="shrink-0 whitespace-nowrap"
                 onClick={() => elegirFiltro('en-la-fundacion')}
               >
                 {textos.filtros.enLaFundacion}
               </ChipFiltro>
             </div>
+            {/* Si las columnas fijas no caben, se ocultan Adoptado por y luego Sexo y Edad.
+                El scroll, si aún hace falta, queda en este contenedor. */}
+            {consulta && datos.total === 0 ? (
+              <div className="flex flex-col items-start gap-4 px-3 py-4">
+                <p className="t-control text-negro">{textos.sinResultados(consulta)}</p>
+                <BotonPildora variante="ghost" onClick={limpiarBusqueda}>
+                  {textos.limpiarBusqueda}
+                </BotonPildora>
+              </div>
+            ) : (
+            <div className="@container/tabla min-w-0 overflow-x-auto">
             <TablaSeleccion
               etiqueta={textos.todos}
               columnas={COLUMNAS}
@@ -491,6 +604,8 @@ export function AdminAnimalesPage() {
               seleccionId={seleccionId}
               onSeleccionar={setSeleccionId}
             />
+            </div>
+            )}
             <div className="mt-auto flex flex-wrap items-center justify-between gap-3 px-3">
               <p className="t-small text-negro">{textoMostrando(datos)}</p>
               <Paginacion
@@ -503,6 +618,7 @@ export function AdminAnimalesPage() {
           </div>
           {seleccionado ? (
             <PanelDetalle
+              className="w-full border-t lienzo-fila:w-(--spacing-panel-detalle) lienzo-fila:border-l lienzo-fila:border-t-0"
               titulo={seleccionado.nombre}
               subtitulo={subtituloDe(seleccionado)}
               fotos={[
@@ -528,6 +644,7 @@ export function AdminAnimalesPage() {
             />
           ) : null}
         </Card>
+        </div>
       ) : null}
 
       {toast ? (
@@ -550,7 +667,7 @@ export function AdminAnimalesPage() {
             setFotoPendiente(fotos ? { ...fotos, id } : null);
             setToast(fotos ? null : textosAdmin.supuestos.guardado);
             // Un animal nuevo aparece primero (orden por fecha de creación).
-            if (modal === 'crear') setPagina(1);
+            if (modal === 'crear') aplicar({ ...filtros, pagina: 1 }, 'replace');
             recargar(id);
           }}
           onEliminado={() => {
@@ -562,6 +679,26 @@ export function AdminAnimalesPage() {
           }}
         />
       ) : null}
+
+      <PanelExportacion
+        key={exportacionAbierta ? 'abierta' : 'cerrada'}
+        abierto={exportacionAbierta}
+        titulo={textosAdmin.exportar.animales}
+        resumen={resumenExportacion()}
+        nombre={nombreExportacion}
+        onNombre={setNombreExportacion}
+        nombreSugerido={sugeridoExportacion}
+        onCerrar={() => setExportacionAbierta(false)}
+        onDescargarCsv={(nombreArchivo) =>
+          descargarAnimalesCsv(
+            {
+              adoptado: filtro === 'todos' ? null : filtro === 'adoptados',
+              q: filtros.q,
+            },
+            nombreArchivo,
+          )
+        }
+      />
     </div>
   );
 }

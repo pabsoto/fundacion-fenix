@@ -10,6 +10,7 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { Auditoria } from '../auditoria/entities/auditoria.entity.js';
 import { StorageService } from '../storage/storage.service.js';
+import { aplicarBusqueda, expresionBusqueda } from '../../common/busqueda-texto.js';
 import {
   datosDePagina,
   resolverPagina,
@@ -37,16 +38,34 @@ export class AnimalesAdminService {
   async listarParaExportar(
     consulta: ConsultaAnimalesDto = {},
   ): Promise<AnimalDto[]> {
+    const q = consulta.q?.trim();
+    const donde = {
+      eliminadoEn: IsNull(),
+      ...(consulta.adoptado !== undefined && { adoptado: consulta.adoptado }),
+    };
     try {
-      const animales = await this.repositorio.find({
-        where: {
-          eliminadoEn: IsNull(),
-          ...(consulta.adoptado !== undefined && {
-            adoptado: consulta.adoptado,
-          }),
-        },
-        order: { creadoEn: 'DESC', id: 'ASC' },
-      });
+      let animales: Animal[];
+      if (!q) {
+        animales = await this.repositorio.find({
+          where: donde,
+          order: { creadoEn: 'DESC', id: 'ASC' },
+        });
+      } else {
+        const consultaFiltrada = () => {
+          const qb = this.repositorio
+            .createQueryBuilder('a')
+            .where('a.eliminadoEn IS NULL');
+          if (consulta.adoptado !== undefined) {
+            qb.andWhere('a.adoptado = :adoptado', { adoptado: consulta.adoptado });
+          }
+          aplicarBusqueda(qb, expresionBusqueda(`coalesce(a.nombre, '')`), q);
+          return qb;
+        };
+        animales = await consultaFiltrada()
+          .orderBy('a.creadoEn', 'DESC')
+          .addOrderBy('a.id', 'ASC')
+          .getMany();
+      }
       return animales.map((animal) => this.aDto(animal));
     } catch {
       throw new ServiceUnavailableException(
@@ -59,18 +78,37 @@ export class AnimalesAdminService {
     consulta: ConsultaAnimalesDto = {},
   ): Promise<PaginaAnimalesDto> {
     const { pagina, limite, desde } = resolverPagina(consulta);
+    const q = consulta.q?.trim();
     try {
-      const [animales, total] = await this.repositorio.findAndCount({
-        where: {
-          eliminadoEn: IsNull(),
-          ...(consulta.adoptado !== undefined && {
-            adoptado: consulta.adoptado,
-          }),
-        },
-        order: { creadoEn: 'DESC', id: 'ASC' },
-        skip: desde,
-        take: limite,
-      });
+      let animales: Animal[];
+      let total: number;
+      if (!q) {
+        [animales, total] = await this.repositorio.findAndCount({
+          where: {
+            eliminadoEn: IsNull(),
+            ...(consulta.adoptado !== undefined && {
+              adoptado: consulta.adoptado,
+            }),
+          },
+          order: { creadoEn: 'DESC', id: 'ASC' },
+          skip: desde,
+          take: limite,
+        });
+      } else {
+        const qb = this.repositorio
+          .createQueryBuilder('a')
+          .where('a.eliminadoEn IS NULL');
+        if (consulta.adoptado !== undefined) {
+          qb.andWhere('a.adoptado = :adoptado', { adoptado: consulta.adoptado });
+        }
+        aplicarBusqueda(qb, expresionBusqueda(`coalesce(a.nombre, '')`), q);
+        [animales, total] = await qb
+          .orderBy('a.creadoEn', 'DESC')
+          .addOrderBy('a.id', 'ASC')
+          .offset(desde)
+          .limit(limite)
+          .getManyAndCount();
+      }
       return {
         items: animales.map((animal) => this.aDto(animal)),
         ...datosDePagina(total, pagina, limite),

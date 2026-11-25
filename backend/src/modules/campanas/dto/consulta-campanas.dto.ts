@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import {
   ConsultaPaginaDto,
   DatosPaginaDto,
@@ -27,6 +27,20 @@ export class ConsultaCampanasDto extends ConsultaPaginaDto {
   @Min(1, { message: 'El mes debe ser un entero entre 1 y 12' })
   @Max(12, { message: 'El mes debe ser un entero entre 1 y 12' })
   mes?: number;
+
+  @ApiPropertyOptional({
+    maxLength: 120,
+    description: 'Busca en título y lugar. Varias palabras exigen todas.',
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value !== 'string') return value;
+    const limpio = value.trim().replace(/\s+/g, ' ');
+    return limpio === '' ? undefined : limpio;
+  })
+  @IsString()
+  @MaxLength(120)
+  q?: string;
 }
 
 /** Filtros de la lista más el formato; `pagina` y `limite` se ignoran. */

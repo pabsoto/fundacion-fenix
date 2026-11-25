@@ -1,12 +1,22 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { AdminAnimalesPage } from '@/pages/admin/AdminAnimalesPage';
 
 // DEMO: estas pruebas usan los datos simulados del panel.
 vi.mock('@/lib/demo', () => ({ DEMO_SHOWCASE: true }));
 
+function renderPagina() {
+  return render(
+    <MemoryRouter initialEntries={['/admin/animales']}>
+      <AdminAnimalesPage />
+    </MemoryRouter>,
+  );
+}
+
 afterEach(() => {
   cleanup();
+  sessionStorage.clear();
 });
 
 function hoy(): string {
@@ -18,7 +28,7 @@ function hoy(): string {
 
 describe('AdminAnimalesPage', () => {
   it('selecciona a Max, filtra en el cliente y abre el registro', async () => {
-    render(<AdminAnimalesPage />);
+    renderPagina();
 
     const seleccionada = await screen.findByRole(
       'row',
@@ -60,7 +70,31 @@ describe('AdminAnimalesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar animal' }));
     expect(screen.getByRole('dialog', { name: 'Eliminar animal' })).toBeTruthy();
     expect(screen.getByText('Esta acción no se puede deshacer.')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /Exportar/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Exportar' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Importar' })).toBeNull();
+    expect(screen.queryByText('Próximamente')).toBeNull();
+  });
+
+  it('busca sin tildes en el nombre y se combina con el filtro', async () => {
+    renderPagina();
+    await screen.findByText('Mostrando 1–8 de 8 animales', {}, { timeout: 2000 });
+
+    fireEvent.click(screen.getByRole('button', { name: 'En la fundación' }));
+    expect(await screen.findByText('Mostrando 1–4 de 4 animales')).toBeTruthy();
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar por nombre' }), {
+      target: { value: 'mishi' },
+    });
+    expect(await screen.findByText('Mostrando 1–1 de 1 animales', {}, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getByRole('complementary').textContent).toContain('Mishi');
+    expect(screen.queryByText('Apolo')).toBeNull();
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar por nombre' }), {
+      target: { value: 'max' },
+    });
+    expect(await screen.findByText('Sin resultados para «max»', {}, { timeout: 3000 })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar búsqueda' }));
+    expect(await screen.findByText('Mostrando 1–4 de 4 animales', {}, { timeout: 3000 })).toBeTruthy();
   });
 
   it('en móvil lista tarjetas, filtra, abre el detalle y el registro', async () => {
@@ -77,7 +111,7 @@ describe('AdminAnimalesPage', () => {
     })) as typeof window.matchMedia;
 
     try {
-      render(<AdminAnimalesPage />);
+      renderPagina();
 
       expect(await screen.findByPlaceholderText('Buscar por nombre', {}, { timeout: 2000 })).toBeTruthy();
       expect(screen.getByText('Mostrando 8 de 8 animales')).toBeTruthy();
@@ -88,7 +122,8 @@ describe('AdminAnimalesPage', () => {
       expect(await screen.findByText('Mostrando 4 de 4 animales')).toBeTruthy();
       expect(screen.getByText('animales · 0 adoptados')).toBeTruthy();
 
-      fireEvent.click(screen.getByRole('button', { name: /Apolo/ }));
+      const apolo = screen.getByRole('button', { name: /Apolo/ });
+      if (apolo.getAttribute('aria-expanded') !== 'true') fireEvent.click(apolo);
       expect(screen.getByText('Al ingresar')).toBeTruthy();
       expect(screen.queryByText('En su adopción')).toBeNull();
       expect(screen.queryByText('Adoptado por')).toBeNull();

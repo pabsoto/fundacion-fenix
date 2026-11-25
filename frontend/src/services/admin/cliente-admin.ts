@@ -76,3 +76,40 @@ export function soloFecha(valor: string | null | undefined): string | null {
 export function borrar(endpoint: string): Promise<void> {
   return solicitar<void>(endpoint, { method: 'DELETE' });
 }
+
+/**
+ * Descarga un archivo con la cookie de sesión. El nombre lo pone el cliente
+ * en el enlace de descarga, no la cabecera del servidor.
+ */
+export async function descargarBlob(
+  endpoint: string,
+  parametros: Record<string, string | undefined>,
+  nombreArchivo: string,
+): Promise<void> {
+  const consulta = new URLSearchParams();
+  for (const [clave, valor] of Object.entries(parametros)) {
+    if (valor) consulta.set(clave, valor);
+  }
+  const response = await fetch(`${API_URL}${endpoint}?${consulta.toString()}`, {
+    credentials: 'include',
+    headers: { Accept: 'text/csv, application/octet-stream, */*' },
+  });
+  if (response.status === 401) {
+    window.location.assign('/admin/login');
+    return;
+  }
+  if (!response.ok) {
+    const cuerpo = (await response.json().catch(() => null)) as CuerpoError;
+    const mensaje = Array.isArray(cuerpo?.message) ? cuerpo.message[0] : cuerpo?.message;
+    throw new ErrorApiAdmin(response.status, mensaje ?? `Error del servicio (${response.status})`);
+  }
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = nombreArchivo;
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  URL.revokeObjectURL(url);
+}

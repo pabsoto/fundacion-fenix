@@ -581,6 +581,25 @@ describe('CampanasAdminService', () => {
     expect(llamadas).toContainEqual({ metodo: 'limit', args: [5] });
   });
 
+  it('busca en título y lugar sin tildes y exige todas las palabras', async () => {
+    const { qb, llamadas } = crearQb({});
+    createQueryBuilder.mockReturnValue(qb);
+
+    await servicio.listar({ q: 'Satélite alto' });
+
+    expect(llamadas).toContainEqual({
+      metodo: 'andWhere',
+      args: [
+        expect.stringContaining('c.tituloEs'),
+        { q0: 'satelite' },
+      ],
+    });
+    expect(llamadas).toContainEqual({
+      metodo: 'andWhere',
+      args: [expect.stringContaining('c.lugar'), { q1: 'alto' }],
+    });
+  });
+
   it('sin resultados devuelve una sola página y ceros', async () => {
     const { qb } = crearQb({ suma: {} });
     createQueryBuilder.mockReturnValue(qb);

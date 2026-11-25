@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { AdminAnimalesPage } from '@/pages/admin/AdminAnimalesPage';
 import { AdminCampanasPage } from '@/pages/admin/AdminCampanasPage';
 import { listAnimales } from '@/services/admin/animales.service';
@@ -84,19 +85,37 @@ beforeEach(() => {
   }));
 });
 
+function renderCampanas() {
+  return render(
+    <MemoryRouter initialEntries={['/admin/campanas']}>
+      <AdminCampanasPage />
+    </MemoryRouter>,
+  );
+}
+
+function renderAnimales() {
+  return render(
+    <MemoryRouter initialEntries={['/admin/animales']}>
+      <AdminAnimalesPage />
+    </MemoryRouter>,
+  );
+}
+
 afterEach(() => {
   cleanup();
+  sessionStorage.clear();
   vi.clearAllMocks();
 });
 
 describe('paginación del panel', () => {
   it('campañas: pide cada página al backend y muestra el rango y el total del filtro', async () => {
-    render(<AdminCampanasPage />);
+    renderCampanas();
 
     expect(await screen.findByText('Mostrando 1–10 de 23 jornadas')).toBeTruthy();
     expect(screen.getByText('Página 1 de 3')).toBeTruthy();
     expect(vi.mocked(listCampanas)).toHaveBeenLastCalledWith(
       expect.objectContaining({ pagina: 1, limite: 10 }),
+      expect.anything(),
     );
     expect(screen.getByText('23 jornadas')).toBeTruthy();
     expect((screen.getByRole('button', { name: /Anterior/ }) as HTMLButtonElement).disabled).toBe(
@@ -107,6 +126,7 @@ describe('paginación del panel', () => {
     expect(await screen.findByText('Mostrando 11–20 de 23 jornadas')).toBeTruthy();
     expect(vi.mocked(listCampanas)).toHaveBeenLastCalledWith(
       expect.objectContaining({ pagina: 2 }),
+      expect.anything(),
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }));
@@ -117,7 +137,7 @@ describe('paginación del panel', () => {
   });
 
   it('campañas: al cambiar el filtro vuelve a la página 1 y lo envía al backend', async () => {
-    render(<AdminCampanasPage />);
+    renderCampanas();
     await screen.findByText('Mostrando 1–10 de 23 jornadas');
     fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }));
     await screen.findByText('Mostrando 11–20 de 23 jornadas');
@@ -128,25 +148,28 @@ describe('paginación del panel', () => {
     await waitFor(() =>
       expect(vi.mocked(listCampanas)).toHaveBeenLastCalledWith(
         expect.objectContaining({ pagina: 1, anio: 2026 }),
+        expect.anything(),
       ),
     );
     expect(await screen.findByText('Mostrando 1–10 de 23 jornadas · 2026')).toBeTruthy();
   });
 
   it('animales: pide cada página al backend y el filtro reinicia la página', async () => {
-    render(<AdminAnimalesPage />);
+    renderAnimales();
 
     expect(await screen.findByText('Mostrando 1–10 de 23 animales')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }));
     expect(await screen.findByText('Mostrando 11–20 de 23 animales')).toBeTruthy();
     expect(vi.mocked(listAnimales)).toHaveBeenLastCalledWith(
       expect.objectContaining({ pagina: 2, filtro: 'todos', limite: 10 }),
+      expect.anything(),
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Adoptados' }));
     await waitFor(() =>
       expect(vi.mocked(listAnimales)).toHaveBeenLastCalledWith(
         expect.objectContaining({ pagina: 1, filtro: 'adoptados' }),
+        expect.anything(),
       ),
     );
     expect(await screen.findByText('Mostrando 1–10 de 23 animales')).toBeTruthy();
@@ -160,7 +183,7 @@ describe('paginación del panel', () => {
       limite: 10,
       totalPaginas: 1,
     });
-    render(<AdminAnimalesPage />);
+    renderAnimales();
 
     expect(await screen.findByText('Mostrando 1–1 de 1 animales')).toBeTruthy();
     expect(screen.queryByRole('navigation', { name: 'Paginación' })).toBeNull();

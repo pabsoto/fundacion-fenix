@@ -1,11 +1,12 @@
-import { useEffect, useId, useState } from 'react';
-import { Calendar, Cat, ChevronDown, ChevronUp, Ellipsis, PawPrint, Plus, Search, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Calendar, Cat, ChevronDown, ChevronUp, Download, PawPrint, Plus, X } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { formatNumber } from '@/lib/format';
 import type { PeriodoCampanas } from '@/services/admin/cifras-campanas';
 import type { CampanaConTotales, PaginaCampanas } from '@/types/admin';
 import { totalesDe } from '@/types/admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
+import { SearchInput } from '@/components/admin/ui/SearchInput';
 import { SelectFiltro } from '@/components/admin/ui/SelectFiltro';
 import { cn } from '@/lib/cn';
 
@@ -41,6 +42,16 @@ type AdminCampanasMovilProps = {
   onEditar: (campana: CampanaConTotales) => void;
   onCargarMas: () => void;
   cargandoMas: boolean;
+  onExport: () => void;
+  exportarDeshabilitado: boolean;
+  tituloExportar?: string;
+  busqueda: string;
+  onBusqueda: (valor: string) => void;
+  consulta: string;
+  onLimpiarBusqueda: () => void;
+  onLimpiarFiltros: () => void;
+  seleccionId: string | null;
+  onSeleccionar: (id: string | null) => void;
 };
 
 export function AdminCampanasMovil({
@@ -51,21 +62,21 @@ export function AdminCampanasMovil({
   onEditar,
   onCargarMas,
   cargandoMas,
+  onExport,
+  exportarDeshabilitado,
+  tituloExportar,
+  busqueda,
+  onBusqueda,
+  consulta,
+  onLimpiarBusqueda,
+  onLimpiarFiltros,
+  seleccionId,
+  onSeleccionar,
 }: AdminCampanasMovilProps) {
   const textos = textosAdmin.campanas;
-  const menuId = useId();
-  const [busqueda, setBusqueda] = useState('');
   const [resumenAbierto, setResumenAbierto] = useState(false);
-  const [expandidaId, setExpandidaId] = useState<string | null>(null);
-  const [menuAbierto, setMenuAbierto] = useState(false);
   const [fabCompacto, setFabCompacto] = useState(false);
-  const consulta = busqueda.trim();
   const hayFiltro = periodo.anio !== null || periodo.mes !== null;
-  const visibles = datos.items.filter((campana) => {
-    if (!consulta) return true;
-    const texto = `${campana.titulo} ${campana.lugar ?? ''}`.toLocaleLowerCase('es');
-    return texto.includes(consulta.toLocaleLowerCase('es'));
-  });
   const totales = totalesDe(datos.contadores);
   const hayMas = datos.pagina < datos.totalPaginas;
   const periodoTexto = [periodo.mes ? textos.filtros.meses[periodo.mes - 1] : null, periodo.anio]
@@ -81,37 +92,16 @@ export function AdminCampanasMovil({
     return () => window.removeEventListener('scroll', alScroll);
   }, []);
 
-  useEffect(() => {
-    if (!menuAbierto) return;
-    function cerrar(event: KeyboardEvent) {
-      if (event.key === 'Escape') setMenuAbierto(false);
-    }
-    document.addEventListener('keydown', cerrar);
-    return () => document.removeEventListener('keydown', cerrar);
-  }, [menuAbierto]);
-
   return (
-    <div className="flex flex-col gap-(--spacing-bloque-movil) pb-(--spacing-libre-fab)">
-      <label className="border-negro bg-blanco flex h-(--size-control-admin) items-center gap-2.5 rounded-card border pr-3 pl-4">
-        <Search className="size-5 shrink-0" aria-hidden="true" />
-        <span className="sr-only">{textos.buscar}</span>
-        <input
-          value={busqueda}
-          placeholder={textos.buscar}
-          onChange={(event) => setBusqueda(event.target.value)}
-          className="t-control text-negro placeholder:text-placeholder min-w-0 flex-1 bg-transparent outline-none"
-        />
-        {busqueda ? (
-          <button
-            type="button"
-            className="flex size-8 shrink-0 items-center justify-center"
-            aria-label={textos.borrarBusqueda}
-            onClick={() => setBusqueda('')}
-          >
-            <X className="size-4" aria-hidden="true" />
-          </button>
-        ) : null}
-      </label>
+    <div className="flex min-w-0 flex-col gap-(--spacing-bloque-movil) pb-(--spacing-libre-fab)">
+      <SearchInput
+        className="h-(--size-control-admin) w-full"
+        value={busqueda}
+        onChange={onBusqueda}
+        onClear={onLimpiarBusqueda}
+        placeholder={textos.buscar}
+        ariaLabel={textos.buscar}
+      />
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -145,45 +135,23 @@ export function AdminCampanasMovil({
             <button
               type="button"
               className="t-chip text-negro inline-flex min-h-11 items-center gap-1.5 px-1.5"
-              onClick={() => onPeriodo({ anio: null, mes: null })}
+              onClick={onLimpiarFiltros}
             >
               {textos.filtros.limpiarCorto}
               <X className="size-3.5" aria-hidden="true" />
             </button>
           ) : null}
         </div>
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            className="border-negro bg-blanco flex size-11 items-center justify-center rounded-pill border"
-            aria-expanded={menuAbierto}
-            aria-controls={menuId}
-            aria-label={textos.acciones}
-            onClick={() => setMenuAbierto((abierto) => !abierto)}
-          >
-            <Ellipsis className="size-5" aria-hidden="true" />
-          </button>
-          {menuAbierto ? (
-            <div
-              id={menuId}
-              role="menu"
-              className="border-negro bg-blanco shadow-menu-admin absolute top-full right-0 z-30 mt-2 w-(--spacing-menu-avatar) rounded-admin border p-2"
-            >
-              {[textos.importar, textos.exportar].map((accion) => (
-                <button
-                  key={accion}
-                  type="button"
-                  role="menuitem"
-                  disabled
-                  className="flex w-full flex-col items-start rounded-btn px-3 py-2 text-left opacity-50"
-                >
-                  <span className="t-nav text-negro">{accion}</span>
-                  <span className="t-nota text-negro">{textos.proximamente}</span>
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        <button
+          type="button"
+          className="border-negro bg-blanco flex size-11 shrink-0 items-center justify-center rounded-pill border disabled:opacity-50"
+          aria-label={textos.exportar}
+          title={tituloExportar ?? textos.exportar}
+          disabled={exportarDeshabilitado}
+          onClick={onExport}
+        >
+          <Download className="size-5" aria-hidden="true" />
+        </button>
       </div>
 
       <div className={cn('flex flex-col', resumenAbierto && 'bg-crema-tono rounded-admin p-4')}>
@@ -224,6 +192,15 @@ export function AdminCampanasMovil({
         ) : null}
       </div>
 
+      {datos.total === 0 && consulta ? (
+        <div className="flex flex-col items-start gap-4">
+          <p className="t-control text-negro">{textos.sinResultados(consulta)}</p>
+          <BotonPildora variante="ghost" onClick={onLimpiarBusqueda}>
+            {textos.limpiarBusqueda}
+          </BotonPildora>
+        </div>
+      ) : null}
+
       {datos.total === 0 && !consulta ? (
         <div className="border-linea flex flex-col items-center gap-4 rounded-admin border px-6 py-10 text-center">
           <Calendar className="size-8" aria-hidden="true" />
@@ -232,37 +209,20 @@ export function AdminCampanasMovil({
         </div>
       ) : null}
 
-      {datos.total > 0 && visibles.length === 0 ? (
-        <div className="flex flex-col items-start gap-4">
-          <p className="t-control text-negro">
-            {consulta ? textos.sinResultados(consulta) : textos.sinResultados(periodoTexto)}
-          </p>
-          <BotonPildora
-            variante="ghost"
-            onClick={() => {
-              setBusqueda('');
-              onPeriodo({ anio: null, mes: null });
-            }}
-          >
-            {textos.filtros.limpiar}
-          </BotonPildora>
-        </div>
-      ) : null}
-
-      <ul className="flex flex-col gap-3">
-        {visibles.map((campana) => {
-          const abierta = expandidaId === campana.id;
+      <ul className="flex min-w-0 flex-col gap-3">
+        {datos.items.map((campana) => {
+          const abierta = seleccionId === campana.id;
           const lugarFecha = [campana.lugar, fechaCorta(campana.fecha)].filter(Boolean).join(' · ');
           return (
             <li
               key={campana.id}
-              className="border-negro bg-blanco shadow-tarjeta-movil rounded-admin border p-4"
+              className="border-negro bg-blanco shadow-tarjeta-movil min-w-0 rounded-admin border p-(--spacing-pagina-admin-movil)"
             >
               <button
                 type="button"
                 className="flex w-full items-center gap-3 text-left"
                 aria-expanded={abierta}
-                onClick={() => setExpandidaId(abierta ? null : campana.id)}
+                onClick={() => onSeleccionar(abierta ? null : campana.id)}
               >
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="t-barra text-negro truncate">{campana.titulo}</span>
@@ -281,29 +241,31 @@ export function AdminCampanasMovil({
                 )}
               </button>
               {abierta ? (
-                <div className="border-linea mt-4 flex flex-col gap-4 border-t pt-4">
-                  <div className="flex gap-2">
+                <div className="border-linea mt-4 flex min-w-0 flex-col gap-4 border-t pt-4">
+                  <div
+                    className="tira-fotos-campana"
+                    data-ajusta={campana.fotos.length <= 3 ? '' : undefined}
+                  >
                     {campana.fotos.length === 0
                       ? [0, 1, 2].map((indice) => (
-                          <span
-                            key={indice}
-                            className="bg-crema-tono size-(--spacing-mini-movil) shrink-0 rounded-btn"
-                          />
+                          <span key={indice} className="bg-crema-tono rounded-btn" />
                         ))
                       : campana.fotos.map((foto, indice) => {
                           const src = fuenteVisible(foto);
                           return (
                             <span
                               key={`${foto}-${indice}`}
-                              className="bg-crema-tono size-(--spacing-mini-movil) shrink-0 overflow-hidden rounded-btn"
+                              className="bg-crema-tono overflow-hidden rounded-btn"
                             >
-                              {src ? <img src={src} alt="" className="size-full object-cover" /> : null}
+                              {src ? (
+                                <img src={src} alt="" className="size-full object-cover object-top" />
+                              ) : null}
                             </span>
                           );
                         })}
                     <button
                       type="button"
-                      className="border-linea bg-crema-tono t-detalle flex size-(--spacing-mini-movil) shrink-0 items-center justify-center rounded-btn border border-dashed"
+                      className="border-linea bg-crema-tono t-detalle flex items-center justify-center rounded-btn border border-dashed"
                       disabled={!campana.editable}
                       aria-label={textosAdmin.nuevaCampana.agregarFotos}
                       onClick={() => onEditar(campana)}
@@ -356,14 +318,12 @@ export function AdminCampanasMovil({
 
       {datos.total > 0 ? (
         <p className="t-nota text-negro text-center">
-          {consulta
-            ? textos.mostrandoDe(visibles.length, datos.items.length)
-            : textos.mostrandoDe(datos.items.length, datos.total)}
+          {textos.mostrandoDe(datos.items.length, datos.total)}
           {periodoTexto ? ` · ${periodoTexto}` : ''}
         </p>
       ) : null}
 
-      {hayMas && !consulta ? (
+      {hayMas ? (
         <BotonPildora variante="ghost" className="w-full" disabled={cargandoMas} onClick={onCargarMas}>
           {textos.cargarMas}
         </BotonPildora>
