@@ -8,10 +8,12 @@ import { CampanasModule } from '../campanas/campanas.module.js';
 import { CanalesContactoModule } from '../canales-contacto/canales-contacto.module.js';
 import { ContenidoInstitucionalModule } from '../contenido-institucional/contenido-institucional.module.js';
 import { DonacionesModule } from '../donaciones/donaciones.module.js';
+import { HistoriasModule } from '../historias/historias.module.js';
 import { AdminAnimalesController } from './admin-animales.controller.js';
 import { AdminCanalesController } from './admin-canales.controller.js';
 import { AdminContenidoController } from './admin-contenido.controller.js';
 import { AdminCampanasController } from './admin-campanas.controller.js';
+import { AdminHistoriasController } from './admin-historias.controller.js';
 import { AdminResumenController } from './admin-resumen.controller.js';
 import { AdminController } from './admin.controller.js';
 import { ResumenAdminService } from './resumen-admin.service.js';
@@ -32,6 +34,7 @@ import { ResumenAdminService } from './resumen-admin.service.js';
     AnimalesModule,
     ContenidoInstitucionalModule,
     CanalesContactoModule,
+    HistoriasModule,
   ],
   controllers: [
     AdminController,
@@ -40,6 +43,7 @@ import { ResumenAdminService } from './resumen-admin.service.js';
     AdminResumenController,
     AdminContenidoController,
     AdminCanalesController,
+    AdminHistoriasController,
   ],
   providers: [SesionAdminGuard, CsrfGuard, ResumenAdminService],
 })

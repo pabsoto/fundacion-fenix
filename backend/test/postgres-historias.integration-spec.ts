@@ -6,6 +6,12 @@ import { CrearTablaFotosCampana1731000000000 } from '../src/database/migrations/
 import { CrearTablaAnimales1732000000000 } from '../src/database/migrations/1732000000000-CrearTablaAnimales.js';
 import { AgregarBorradoLogicoCampanas1733000000000 } from '../src/database/migrations/1733000000000-AgregarBorradoLogicoCampanas.js';
 import { CrearTablaHistorias1734000000000 } from '../src/database/migrations/1734000000000-CrearTablaHistorias.js';
+import { Administrador } from '../src/modules/administradores/entities/administrador.entity.js';
+import { Historia } from '../src/modules/historias/entities/historia.entity.js';
+import { FotosHistoriaService } from '../src/modules/historias/fotos-historia.service.js';
+import { HistoriasAdminService } from '../src/modules/historias/historias-admin.service.js';
+import type { StorageService } from '../src/modules/storage/storage.service.js';
+import { crearJpg } from './utils/imagenes.js';
 
 const URL_PRUEBAS = process.env.TEST_DATABASE_URL;
 const CA_PRUEBAS = process.env.TEST_DATABASE_CA_CERT_PATH;
@@ -26,6 +32,7 @@ function conexion(base: string): DataSource {
     type: 'postgres',
     url: url.toString(),
     ssl: CA_PRUEBAS ? { rejectUnauthorized: true } : false,
+    entities: [Administrador, Historia],
     migrations: MIGRACIONES,
     synchronize: false,
     migrationsRun: false,
@@ -176,6 +183,81 @@ describe.skipIf(!URL_PRUEBAS)('historias en PostgreSQL (integración)', () => {
       new Date(antes.actualizado_en).getTime(),
     );
     expect(auditoria.total).toBe(1);
+  });
+
+  it('audita cada escritura del panel una sola vez y con su administrador', async () => {
+    const [{ id: administradorId }] = await dataSource.query(
+      `INSERT INTO public.administradores (email, nombre)
+       VALUES ('historias@fenix.test', 'Administración') RETURNING id`,
+    );
+    const storage = {
+      subir: async () => undefined,
+      eliminar: async () => undefined,
+      obtenerUrlPublica: (ruta: string) => `https://cdn.test/${ruta}`,
+    } as unknown as StorageService;
+    const repositorio = dataSource.getRepository(Historia);
+    const historias = new HistoriasAdminService(
+      repositorio,
+      dataSource,
+      storage,
+    );
+    const fotos = new FotosHistoriaService(repositorio, dataSource, storage);
+    const entrada = {
+      animalNombre: 'Luna',
+      tituloEs: 'Título',
+      tituloEn: 'Title',
+      textoEs: 'Texto',
+      textoEn: 'Text',
+      fechaHistoria: '2026-10-01',
+    };
+    const jpg = crearJpg(1600, 900, 6);
+
+    const primera = await historias.crear(entrada, administradorId);
+    const segunda = await historias.crear(entrada, administradorId);
+    const conFoto = await fotos.subir(
+      primera.id,
+      { buffer: jpg, mimetype: 'image/jpeg', size: jpg.length },
+      administradorId,
+    );
+    await historias.actualizar(
+      primera.id,
+      { ...entrada, visible: true },
+      administradorId,
+    );
+    await historias.reordenar([segunda.id, primera.id], administradorId);
+    await historias.eliminar(primera.id, administradorId);
+
+    expect([primera.orden, segunda.orden]).toEqual([1, 2]);
+    expect(conFoto.fechaHistoria).toBe('2026-10-01');
+    expect(conFoto.foto).toMatchObject({ ancho: 900, alto: 1600 });
+    expect((await historias.listar()).map((h) => h.id)).toEqual([segunda.id]);
+
+    const registros: Array<{
+      administrador_id: string;
+      accion: string;
+      campos_modificados: string[];
+    }> = await dataSource.query(
+      `SELECT administrador_id, accion, campos_modificados
+         FROM public.auditoria
+        WHERE tabla = 'historias' AND registro_id = $1
+        ORDER BY creado_en`,
+      [primera.id],
+    );
+    // Alta, foto, publicación, reordenamiento y borrado lógico.
+    expect(registros.map((registro) => registro.accion)).toEqual([
+      'INSERT',
+      'UPDATE',
+      'UPDATE',
+      'UPDATE',
+      'UPDATE',
+    ]);
+    expect(registros.every((r) => r.administrador_id === administradorId)).toBe(
+      true,
+    );
+    expect(registros[3].campos_modificados).toContain('orden');
+    expect(registros[4].campos_modificados).toEqual(
+      expect.arrayContaining(['eliminado_en', 'foto_ruta', 'visible']),
+    );
   });
 
   it('conserva la fila con borrado lógico', async () => {

@@ -152,6 +152,10 @@ describe('application bootstrap (e2e)', () => {
         '/api/admin/canales/{tipo}',
         '/api/admin/contenido',
         '/api/admin/contenido/{clave}',
+        '/api/admin/historias',
+        '/api/admin/historias/orden',
+        '/api/admin/historias/{id}',
+        '/api/admin/historias/{id}/foto',
         '/api/admin/resumen',
         '/api/admin/donaciones',
         '/api/admin/donaciones/qr',
@@ -208,6 +212,16 @@ describe('application bootstrap (e2e)', () => {
     );
     expect(document.paths['/api/admin/canales']).toHaveProperty('get');
     expect(document.paths['/api/admin/canales/{tipo}']).toHaveProperty('put');
+    expect(document.paths['/api/admin/historias']).toHaveProperty('get');
+    expect(document.paths['/api/admin/historias']).toHaveProperty('post');
+    expect(document.paths['/api/admin/historias/orden']).toHaveProperty('put');
+    expect(document.paths['/api/admin/historias/{id}']).toHaveProperty('put');
+    expect(document.paths['/api/admin/historias/{id}']).toHaveProperty(
+      'delete',
+    );
+    expect(document.paths['/api/admin/historias/{id}/foto']).toHaveProperty(
+      'post',
+    );
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('get');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('put');
     expect(document.paths['/api/admin/donaciones']).toHaveProperty('delete');
