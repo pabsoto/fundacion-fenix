@@ -34,9 +34,10 @@ export class ContenidoInstitucionalPublicoService {
         imagenUrl: contenido.imagenRuta,
         orden: contenido.orden,
       }));
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'El contenido institucional no está disponible temporalmente',
+        { cause: error },
       );
     }
   }

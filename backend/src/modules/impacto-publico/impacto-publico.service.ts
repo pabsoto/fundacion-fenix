@@ -105,9 +105,10 @@ export class ImpactoPublicoService {
           order by campana.fecha desc, campana.id`,
         parametros,
       );
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
+        { cause: error },
       );
     }
   }
@@ -167,9 +168,10 @@ export class ImpactoPublicoService {
           hembras: Number(fila?.gatos_hembras ?? 0),
         },
       };
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las estadísticas no están disponibles temporalmente',
+        { cause: error },
       );
     }
   }

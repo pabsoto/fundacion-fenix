@@ -28,9 +28,10 @@ export class ContenidoInstitucionalAdminService {
         order: { orden: 'ASC', clave: 'ASC' },
       });
       return filas.map((fila) => this.aDto(fila));
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'El contenido del sitio no está disponible temporalmente',
+        { cause: error },
       );
     }
   }
@@ -80,6 +81,7 @@ export class ContenidoInstitucionalAdminService {
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException(
         'No fue posible guardar el contenido del sitio',
+        { cause: error },
       );
     }
   }

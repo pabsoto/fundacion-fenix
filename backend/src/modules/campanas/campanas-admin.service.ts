@@ -98,9 +98,10 @@ export class CampanasAdminService {
         .addOrderBy('c.id', 'ASC')
         .getMany();
       return campanas.map((campana) => this.aDto(campana));
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
+        { cause: error },
       );
     }
   }
@@ -163,9 +164,10 @@ export class CampanasAdminService {
         anios: aniosRaw.map((fila) => Number(fila.valor)),
         meses: mesesRaw.map((fila) => Number(fila.valor)),
       };
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
+        { cause: error },
       );
     }
   }
@@ -192,9 +194,10 @@ export class CampanasAdminService {
         order: { fecha: 'ASC', creadoEn: 'ASC' },
       });
       detalle = await this.aDtos(campanas);
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
+        { cause: error },
       );
     }
 
@@ -223,9 +226,10 @@ export class CampanasAdminService {
         where: { id, eliminadoEn: IsNull() },
       });
       if (campana) fotos = (await this.urlsDeFotos([id])).get(id) ?? [];
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
+        { cause: error },
       );
     }
     if (!campana) throw new NotFoundException('La campaña no existe');
@@ -573,7 +577,7 @@ export class CampanasAdminService {
           'Los datos de la campaña no cumplen las reglas de publicación',
         );
       }
-      throw new ServiceUnavailableException(mensajeFallo);
+      throw new ServiceUnavailableException(mensajeFallo, { cause: error });
     }
   }
 

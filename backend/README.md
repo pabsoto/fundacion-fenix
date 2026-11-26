@@ -50,6 +50,10 @@ No agregues `ssl`, `sslmode`, `sslrootcert`, `sslcert` ni `sslkey` a `DATABASE_U
 
 TypeORM está configurado con `synchronize: false`, `dropSchema: false`, `migrationsRun: false` e `installExtensions: false`. Las migraciones versionadas están en `src/database/migrations/` y se aplican explícitamente con `npm run build` seguido de `npm run db:migrate`; no se ejecutan automáticamente al iniciar el servicio. Revisa las secciones de sesiones y fotos de campaña para conocer las migraciones pendientes de autorización o aplicación.
 
+### Auditoría
+
+El backend registra en `auditoria` los cambios de campañas, animales, contenido institucional, canales de contacto y donaciones. `administradores` e `historias` se auditan con un disparador de la base. La migración `QuitarAuditoriaDuplicada` elimina los disparadores que duplicaban las filas de campañas, canales y donaciones, por lo que **los cambios hechos directamente en la base sobre esas tres tablas no quedan auditados**.
+
 ## Swagger / OpenAPI
 
 En desarrollo, con el backend ejecutándose en el puerto predeterminado:

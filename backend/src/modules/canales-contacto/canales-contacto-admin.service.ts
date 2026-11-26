@@ -31,9 +31,10 @@ export class CanalesContactoAdminService {
         order: { orden: 'ASC', tipo: 'ASC' },
       });
       return filas.map((fila) => this.aDto(fila));
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Los canales de contacto no están disponibles temporalmente',
+        { cause: error },
       );
     }
   }
@@ -80,6 +81,7 @@ export class CanalesContactoAdminService {
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException(
         'No fue posible guardar el canal de contacto',
+        { cause: error },
       );
     }
   }

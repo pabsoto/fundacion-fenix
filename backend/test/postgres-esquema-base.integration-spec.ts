@@ -6,6 +6,8 @@ import { CrearTablaFotosCampana1731000000000 } from '../src/database/migrations/
 import { CrearTablaAnimales1732000000000 } from '../src/database/migrations/1732000000000-CrearTablaAnimales.js';
 import { AgregarBorradoLogicoCampanas1733000000000 } from '../src/database/migrations/1733000000000-AgregarBorradoLogicoCampanas.js';
 import { CrearTablaHistorias1734000000000 } from '../src/database/migrations/1734000000000-CrearTablaHistorias.js';
+import { ExigirUnidadDeEdad1735000000000 } from '../src/database/migrations/1735000000000-ExigirUnidadDeEdad.js';
+import { QuitarAuditoriaDuplicada1736000000000 } from '../src/database/migrations/1736000000000-QuitarAuditoriaDuplicada.js';
 
 const URL_PRUEBAS = process.env.TEST_DATABASE_URL;
 const CA_PRUEBAS = process.env.TEST_DATABASE_CA_CERT_PATH;
@@ -17,6 +19,8 @@ const MIGRACIONES = [
   CrearTablaAnimales1732000000000,
   AgregarBorradoLogicoCampanas1733000000000,
   CrearTablaHistorias1734000000000,
+  ExigirUnidadDeEdad1735000000000,
+  QuitarAuditoriaDuplicada1736000000000,
 ];
 
 const TABLAS = [
@@ -104,6 +108,17 @@ describe.skipIf(!URL_PRUEBAS)(
       expect(sinRls).toEqual([]);
     });
 
+    it('solo audita con disparador lo que el backend no audita', async () => {
+      const filas = await base.query(
+        `SELECT tgname FROM pg_trigger
+          WHERE tgname LIKE 'trg\\_%\\_auditoria' ORDER BY tgname`,
+      );
+      expect(filas.map(({ tgname }) => tgname)).toEqual([
+        'trg_administradores_auditoria',
+        'trg_historias_auditoria',
+      ]);
+    });
+
     it('es idempotente: volver a aplicarla no falla ni cambia nada', async () => {
       const antes = await base.query(
         `SELECT count(*)::int AS n FROM pg_constraint
@@ -171,14 +186,6 @@ describe.skipIf(!URL_PRUEBAS)(
         await expect(
           base.query(`DELETE FROM public.campanas WHERE id = $1`, [cerrada.id]),
         ).rejects.toThrow(/No se puede borrar una campaña cerrada/);
-      });
-
-      it('registra los cambios de las campañas en auditoria', async () => {
-        const [{ n }] = await base.query(
-          `SELECT count(*)::int AS n FROM public.auditoria
-            WHERE tabla = 'campanas' AND accion = 'INSERT'`,
-        );
-        expect(n).toBeGreaterThanOrEqual(2);
       });
     });
   },

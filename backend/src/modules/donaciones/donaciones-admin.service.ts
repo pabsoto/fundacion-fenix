@@ -71,6 +71,7 @@ export class DonacionesAdminService {
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException(
         'Los datos administrativos de donación no están disponibles temporalmente',
+        { cause: error },
       );
     }
   }
@@ -94,6 +95,7 @@ export class DonacionesAdminService {
       }
       throw new ServiceUnavailableException(
         'No fue posible guardar los datos de donación',
+        { cause: error },
       );
     }
   }
@@ -145,6 +147,7 @@ export class DonacionesAdminService {
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException(
         'No fue posible desactivar los datos de donaciÃ³n',
+        { cause: error },
       );
     }
   }

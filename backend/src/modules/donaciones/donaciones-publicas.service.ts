@@ -31,9 +31,10 @@ export class DonacionesPublicasService {
         where: { activo: true },
         take: 2,
       });
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Los datos de donación no están disponibles temporalmente',
+        { cause: error },
       );
     }
 

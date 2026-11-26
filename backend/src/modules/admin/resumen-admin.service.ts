@@ -131,9 +131,10 @@ export class ResumenAdminService {
           dias: Number(fila.dias),
         })),
       };
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'El resumen no está disponible temporalmente',
+        { cause: error },
       );
     }
   }
