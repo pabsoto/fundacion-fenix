@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GOOGLE_OAUTH_SCOPES } from '../../../config/google-oauth.js';
 import {
@@ -10,7 +10,9 @@ import {
   discovery,
   type Configuration,
 } from 'openid-client';
+import { trazaDeError } from '../../../common/utils/traza-error.js';
 import { GoogleAuthError } from './google-auth.errors.js';
+
 export interface SolicitudAutorizacionGoogle {
   readonly state: string;
   readonly nonce: string;
@@ -45,6 +47,7 @@ export interface RespuestaCanjeGoogle {
  */
 @Injectable()
 export class ClienteOAuthGoogleService {
+  private readonly logger = new Logger(ClienteOAuthGoogleService.name);
   private configuracion: Promise<Configuration> | undefined;
 
   constructor(private readonly config: ConfigService) {}
@@ -89,21 +92,30 @@ export class ClienteOAuthGoogleService {
         pkceCodeVerifier: canje.codeVerifier,
       });
     } catch (error) {
-      throw this.traducirError(error);
+      const traducido = this.traducirError(error);
+      this.registrarFallo('canje_codigo', traducido.codigo, error);
+      throw traducido;
     }
 
     if (!tokens.id_token) {
-      throw new GoogleAuthError(
+      const error = new GoogleAuthError(
         'token_claims_invalidos',
         'Google no devolvió un ID token en la respuesta de autenticación',
       );
+      this.registrarFallo('canje_codigo', error.codigo, error);
+      throw error;
     }
 
     return { idToken: tokens.id_token };
   }
 
   private async obtenerConfiguracion(): Promise<Configuration> {
-    this.configuracion ??= this.descubrirProveedor();
+    // Un descubrimiento fallido no se conserva: el siguiente intento vuelve a
+    // consultar a Google sin necesidad de reiniciar el servidor.
+    this.configuracion ??= this.descubrirProveedor().catch((error: unknown) => {
+      this.configuracion = undefined;
+      throw error;
+    });
     return this.configuracion;
   }
 
@@ -131,12 +143,29 @@ export class ClienteOAuthGoogleService {
         ClientSecretPost(clientSecret),
       );
     } catch (error) {
+      this.registrarFallo('descubrimiento', 'proveedor_no_disponible', error);
       throw new GoogleAuthError(
         'proveedor_no_disponible',
         'No fue posible obtener los metadatos de OpenID Connect de Google',
         error,
       );
     }
+  }
+
+  private registrarFallo(
+    operacion: 'descubrimiento' | 'canje_codigo',
+    codigo: string,
+    error: unknown,
+  ): void {
+    this.logger.error(
+      {
+        evento: 'fallo_google_oauth',
+        operacion,
+        codigo,
+        stack: trazaDeError(error),
+      },
+      'Fallo de Google OAuth',
+    );
   }
 
   private traducirError(error: unknown): GoogleAuthError {

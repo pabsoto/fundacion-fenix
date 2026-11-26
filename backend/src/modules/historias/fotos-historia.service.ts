@@ -48,8 +48,8 @@ export class FotosHistoriaService {
     const ruta = `historias/${historiaId}/${randomUUID()}.${FORMATOS[tipo]}`;
     try {
       await this.storage.subir(ruta, buffer, tipo);
-    } catch {
-      throw new ServiceUnavailableException(MENSAJE_FALLO);
+    } catch (error) {
+      throw new ServiceUnavailableException(MENSAJE_FALLO, { cause: error });
     }
 
     let rutaAnterior: string | null;
@@ -82,7 +82,7 @@ export class FotosHistoriaService {
     } catch (error) {
       await this.limpiar(ruta);
       if (error instanceof HttpException) throw error;
-      throw new ServiceUnavailableException(MENSAJE_FALLO);
+      throw new ServiceUnavailableException(MENSAJE_FALLO, { cause: error });
     }
 
     if (rutaAnterior) await this.limpiar(rutaAnterior);
@@ -93,9 +93,10 @@ export class FotosHistoriaService {
     let existe: boolean;
     try {
       existe = await this.historias.existsBy({ id, eliminadoEn: IsNull() });
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las historias no están disponibles temporalmente',
+        { cause: error },
       );
     }
     if (!existe) throw new NotFoundException('La historia no existe');

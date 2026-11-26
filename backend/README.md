@@ -50,6 +50,10 @@ No agregues `ssl`, `sslmode`, `sslrootcert`, `sslcert` ni `sslkey` a `DATABASE_U
 
 TypeORM está configurado con `synchronize: false`, `dropSchema: false`, `migrationsRun: false` e `installExtensions: false`. Las migraciones versionadas están en `src/database/migrations/` y se aplican explícitamente con `npm run build` seguido de `npm run db:migrate`; no se ejecutan automáticamente al iniciar el servicio. Revisa las secciones de sesiones y fotos de campaña para conocer las migraciones pendientes de autorización o aplicación.
 
+### Auditoría
+
+El backend registra en `auditoria` los cambios de campañas, animales, contenido institucional, canales de contacto y donaciones. `administradores` e `historias` se auditan con un disparador de la base. La migración `QuitarAuditoriaDuplicada` elimina los disparadores que duplicaban las filas de campañas, canales y donaciones, por lo que **los cambios hechos directamente en la base sobre esas tres tablas no quedan auditados**.
+
 ## Swagger / OpenAPI
 
 En desarrollo, con el backend ejecutándose en el puerto predeterminado:
@@ -136,6 +140,26 @@ escuchar. Así la base de datos está disponible desde la primera petición (los
 endpoints de sesión la necesitan). Si la base de datos no estuviera disponible
 en el arranque, la aplicación arrancaría igualmente y esta ruta informs del
 estado. Si PostgreSQL no está disponible, responde HTTP 503 con `status: "error"` y `database: "down"`, sin incluir detalles internos de la conexión.
+
+## Logging de operaciones
+
+La salida es JSON (legible con `pino-pretty` en desarrollo) y el nivel se configura con `LOG_LEVEL` (`info` por defecto). Cada petición devuelve la cabecera `x-request-id`, y ese mismo id aparece como `req.id` en todos los registros de la petición.
+
+Los errores 5xx se registran como `error` con el stack y sus causas; los 4xx, como `warn` sin stack. Los eventos se filtran por el campo `evento`:
+
+| `evento` | Nivel | Cuándo se registra |
+|---|---|---|
+| `aplicacion_iniciada` | info | La aplicación empieza a escuchar. |
+| `arranque_fallido` | fatal | El arranque falla y el proceso termina. |
+| `base_datos_no_disponible` | error | PostgreSQL no responde al arrancar. |
+| `migracion_aplicada` | info | `db:migrate` aplica una migración. |
+| `migraciones_fallidas` | error | `db:migrate` no puede completarse. |
+| `error_http` | warn / error | Una petición termina con 4xx o 5xx. |
+| `inicio_sesion_rechazado` | warn | Se rechaza el callback de Google (código y motivo interno). |
+| `fallo_google_oauth` | error | Falla el descubrimiento, el canje del código o la descarga de claves. |
+| `fallo_supabase_storage` | error | Falla subir, eliminar o firmar un archivo. |
+
+No se registran cuerpos, cabeceras, cadenas de consulta ni URLs firmadas. Al registrar un error nuevo, usa su traza (`trazaDeError`) en lugar del objeto completo: algunos errores llevan consultas SQL y parámetros.
 
 ## Integración continua
 

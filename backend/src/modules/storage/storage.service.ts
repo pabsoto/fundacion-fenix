@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
@@ -15,6 +15,7 @@ export class StorageOperacionError extends Error {
 
 @Injectable()
 export class StorageService {
+  private readonly logger = new Logger(StorageService.name);
   private readonly bucket: string | undefined;
   private readonly bucketPrivado: string | undefined;
   private readonly client: SupabaseClient | undefined;
@@ -50,6 +51,7 @@ export class StorageService {
     });
 
     if (error) {
+      this.registrarFallo('subir', ruta, privado, error);
       throw new StorageOperacionError(
         'No fue posible subir el archivo a Supabase Storage',
         error,
@@ -62,6 +64,7 @@ export class StorageService {
     const { error } = await bucket.remove([ruta]);
 
     if (error) {
+      this.registrarFallo('eliminar', ruta, privado, error);
       throw new StorageOperacionError(
         'No fue posible eliminar el archivo de Supabase Storage',
         error,
@@ -80,12 +83,32 @@ export class StorageService {
     const { data, error } = await bucket.createSignedUrl(ruta, segundos);
 
     if (error || !data) {
+      this.registrarFallo('firmar', ruta, true, error);
       throw new StorageOperacionError(
         'No fue posible firmar el archivo de Supabase Storage',
         error,
       );
     }
     return data.signedUrl;
+  }
+
+  /** Nunca registra el contenido del archivo, la clave ni URLs firmadas. */
+  private registrarFallo(
+    operacion: 'subir' | 'eliminar' | 'firmar',
+    ruta: string,
+    privado: boolean,
+    error: Error | null,
+  ): void {
+    this.logger.error(
+      {
+        evento: 'fallo_supabase_storage',
+        operacion,
+        bucket: privado ? 'privado' : 'publico',
+        ruta,
+        detalle: error?.message ?? 'Respuesta sin datos',
+      },
+      'Fallo de Supabase Storage',
+    );
   }
 
   private obtenerBucket(privado = false) {

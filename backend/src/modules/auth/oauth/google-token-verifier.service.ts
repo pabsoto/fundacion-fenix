@@ -1,7 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { errors, jwtVerify, type JWTPayload } from 'jose';
 import { comparacionSegura } from '../../../common/utils/comparacion-segura.js';
+import { trazaDeError } from '../../../common/utils/traza-error.js';
 import type { IdentidadGoogleVerificada } from '../../administradores/dto/identidad-google-verificada.js';
 import { GoogleAuthError } from './google-auth.errors.js';
 import {
@@ -20,8 +21,24 @@ const EMISORES_ACEPTADOS = [
   'accounts.google.com',
 ];
 
+/**
+ * Distingue un fallo al obtener las claves de Google (red, tiempo agotado o
+ * respuesta inservible) de un ID token que no supera la verificación.
+ */
+function esFalloDeClaves(error: unknown): boolean {
+  return (
+    !(error instanceof errors.JOSEError) ||
+    error instanceof errors.JWKSTimeout ||
+    error instanceof errors.JWKSInvalid ||
+    // `jose` usa el error genérico para respuestas HTTP o JSON inválidos.
+    error.code === errors.JOSEError.code
+  );
+}
+
 @Injectable()
 export class VerificadorIdTokenGoogleService {
+  private readonly logger = new Logger(VerificadorIdTokenGoogleService.name);
+
   constructor(
     private readonly config: ConfigService,
     @Inject(PROVEEDOR_CLAVES_GOOGLE)
@@ -73,6 +90,17 @@ export class VerificadorIdTokenGoogleService {
       );
       payload = resultado.payload;
     } catch (error) {
+      if (esFalloDeClaves(error)) {
+        this.logger.error(
+          {
+            evento: 'fallo_google_oauth',
+            operacion: 'claves',
+            stack: trazaDeError(error),
+          },
+          'No fue posible obtener las claves públicas de Google',
+        );
+      }
+
       throw this.traducirError(error);
     }
 

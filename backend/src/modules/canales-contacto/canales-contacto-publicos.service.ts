@@ -31,9 +31,10 @@ export class CanalesContactoPublicosService {
         texto: { es: canal.textoEs, en: canal.textoEn },
         orden: canal.orden,
       }));
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Los canales de contacto no están disponibles temporalmente',
+        { cause: error },
       );
     }
   }

@@ -35,6 +35,7 @@ import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
 import { leerConfiguracionSesion } from '../../config/sesion.js';
 import { AutorizacionAdministradorService } from '../administradores/services/autorizacion-administrador.service.js';
 import { SesionActualDto } from './dto/sesion-actual.dto.js';
+import { GoogleAuthError } from './oauth/google-auth.errors.js';
 import { GoogleAuthService } from './services/google-auth.service.js';
 import { CookieSesionService } from './services/cookie-sesion.service.js';
 import {
@@ -185,15 +186,20 @@ export class AuthController {
   ): Promise<void> {
     const vinculacion = request.signedCookies?.[COOKIE_TRANSACCION_OAUTH];
 
-    const resultado = await this.googleAuth.completar({
-      code: query.code,
-      state: query.state,
-      issuer: query.iss,
-      error: query.error,
-      vinculacionNavegador:
-        typeof vinculacion === 'string' ? vinculacion : undefined,
-      rutaRecibida: rutaDePeticion(request),
-    });
+    const resultado = await this.googleAuth
+      .completar({
+        code: query.code,
+        state: query.state,
+        issuer: query.iss,
+        error: query.error,
+        vinculacionNavegador:
+          typeof vinculacion === 'string' ? vinculacion : undefined,
+        rutaRecibida: rutaDePeticion(request),
+      })
+      .catch((error: unknown) => {
+        this.registrarRechazo(error);
+        throw error;
+      });
 
     if (resultado.estado !== 'autorizado') {
       throw new UnauthorizedException(
@@ -321,20 +327,33 @@ export class AuthController {
       return await this.sesiones.crear(administradorId);
     } catch (error) {
       if (error instanceof AlmacenSesionesNoDisponibleError) {
-        this.logger.error(
-          'No se pudo crear la sesión administrativa',
-          error.causa instanceof Error
-            ? error.causa.stack
-            : String(error.causa),
-        );
-
         throw new ServiceUnavailableException(
           'No es posible crear la sesión administrativa en este momento',
+          { cause: error.causa },
         );
       }
 
       throw error;
     }
+  }
+
+  /**
+   * Deja constancia de un inicio de sesión rechazado. Los fallos del servidor
+   * o de Google (5xx) no son rechazos y se registran como errores aparte.
+   */
+  private registrarRechazo(error: unknown): void {
+    if (!(error instanceof GoogleAuthError) || error.getStatus() >= 500) {
+      return;
+    }
+
+    this.logger.warn(
+      {
+        evento: 'inicio_sesion_rechazado',
+        codigo: error.codigo,
+        ...error.detalle,
+      },
+      'Inicio de sesión rechazado',
+    );
   }
 
   /**

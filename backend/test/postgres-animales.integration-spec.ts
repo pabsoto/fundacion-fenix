@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { createDatabaseOptions } from '../src/database/database-options.js';
 import { CrearTablaAnimales1732000000000 } from '../src/database/migrations/1732000000000-CrearTablaAnimales.js';
+import { ExigirUnidadDeEdad1735000000000 } from '../src/database/migrations/1735000000000-ExigirUnidadDeEdad.js';
 
 const URL_PRUEBAS = process.env.TEST_DATABASE_URL;
 const CA_PRUEBAS = process.env.TEST_DATABASE_CA_CERT_PATH;
@@ -29,6 +30,7 @@ describe.skipIf(!URL_PRUEBAS)('animales en PostgreSQL (integración)', () => {
     const migracion = new CrearTablaAnimales1732000000000();
     await migracion.down(queryRunner);
     await migracion.up(queryRunner);
+    await new ExigirUnidadDeEdad1735000000000().up(queryRunner);
     await queryRunner.release();
   }, 60_000);
 
@@ -84,6 +86,24 @@ describe.skipIf(!URL_PRUEBAS)('animales en PostgreSQL (integración)', () => {
         'anios',
       ]),
     ).rejects.toThrow();
+  });
+
+  it('no corrige la restricción mientras haya edades sin unidad', async () => {
+    const queryRunner = dataSource.createQueryRunner();
+    const correccion = new ExigirUnidadDeEdad1735000000000();
+    try {
+      await correccion.down(queryRunner);
+      await insertar('nombre, especie, edad', ['Misu', 'gato', 3]);
+
+      await expect(correccion.up(queryRunner)).rejects.toThrow(
+        'Hay 1 animales con edad y sin unidad',
+      );
+
+      await queryRunner.query('DELETE FROM public.animales');
+    } finally {
+      await correccion.up(queryRunner);
+      await queryRunner.release();
+    }
   });
 
   it('rechaza datos de adopción cuando el animal no está adoptado', async () => {

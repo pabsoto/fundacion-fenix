@@ -101,9 +101,10 @@ export class FotosCampanaService {
 
     try {
       await this.storage.subir(ruta, buffer, tipo);
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'No fue posible guardar la fotografía',
+        { cause: error },
       );
     }
 
@@ -131,7 +132,7 @@ export class FotosCampanaService {
         orden: foto.orden,
         url: this.storage.obtenerUrlPublica(ruta),
       };
-    } catch {
+    } catch (error) {
       await this.storage.eliminar(ruta).catch((error: unknown) => {
         this.logger.error(
           `Limpieza pendiente de Supabase Storage para ${ruta}`,
@@ -140,6 +141,7 @@ export class FotosCampanaService {
       });
       throw new ServiceUnavailableException(
         'No fue posible guardar la fotografía',
+        { cause: error },
       );
     }
   }
@@ -151,18 +153,20 @@ export class FotosCampanaService {
     let foto: FotoCampana | null;
     try {
       foto = await this.fotos.findOne({ where: { id: fotoId, campanaId } });
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las fotografías no están disponibles temporalmente',
+        { cause: error },
       );
     }
     if (!foto) throw new NotFoundException('La fotografía no existe');
 
     try {
       await this.fotos.delete({ id: foto.id });
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'No fue posible quitar la fotografía',
+        { cause: error },
       );
     }
 
@@ -190,9 +194,10 @@ export class FotosCampanaService {
         where: { campanaId },
         order: { orden: 'ASC' },
       });
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las fotografías no están disponibles temporalmente',
+        { cause: error },
       );
     }
 
@@ -214,9 +219,10 @@ export class FotosCampanaService {
 
     try {
       await this.fotos.save(reordenadas);
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'No fue posible reordenar las fotografías',
+        { cause: error },
       );
     }
 
@@ -234,9 +240,10 @@ export class FotosCampanaService {
       campana = await this.campanas.findOne({
         where: { id: campanaId, eliminadoEn: IsNull() },
       });
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las campañas no están disponibles temporalmente',
+        { cause: error },
       );
     }
     if (!campana) throw new NotFoundException('La campaña no existe');

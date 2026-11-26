@@ -174,5 +174,7 @@ describe('ContenidoInstitucionalAdminService', () => {
 
     expect(error).toBeInstanceOf(ServiceUnavailableException);
     expect((error as Error).message).not.toContain('secreto');
+    // La causa se conserva para el log, no para la respuesta.
+    expect((error as Error).cause).toEqual(new Error('detalle secreto'));
   });
 });

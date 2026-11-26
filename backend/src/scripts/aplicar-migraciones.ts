@@ -39,7 +39,9 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { pino } from 'pino';
 import type { DataSource, Migration } from 'typeorm';
+import { trazaDeError } from '../common/utils/traza-error.js';
 import dataSource from '../database/typeorm.datasource.js';
 import {
   asegurarTablaMigrations,
@@ -47,6 +49,9 @@ import {
 } from '../database/proteger-migrations.js';
 
 const ARGUMENTO_CONFIRMAR = '--confirmar';
+
+/** Log JSON de la aplicación de migraciones; nunca incluye la URL de destino. */
+const registro = pino();
 
 /**
  * Vista mínima de las opciones de TypeORM que usa este script. Se evita
@@ -233,9 +238,25 @@ async function main(): Promise<void> {
       );
     }
 
-    const aplicadas = await dataSource.runMigrations({
-      transaction: 'each',
-    });
+    const previas = await migracionesAplicadas(dataSource, opciones);
+    let aplicadas: Migration[];
+
+    try {
+      aplicadas = await dataSource.runMigrations({ transaction: 'each' });
+    } catch (error) {
+      // Cada migración tiene su transacción: las anteriores a la que falló
+      // quedan aplicadas y también deben constar.
+      const actuales = await migracionesAplicadas(dataSource, opciones).catch(
+        () => previas,
+      );
+      actuales
+        .filter((nombre) => !previas.includes(nombre))
+        .forEach(registrarMigracion);
+
+      throw error;
+    }
+
+    aplicadas.forEach(({ name }) => registrarMigracion(name));
 
     console.log('');
     console.log('Migraciones aplicadas:');
@@ -244,7 +265,7 @@ async function main(): Promise<void> {
       console.log('  (ninguna: el esquema ya estaba actualizado)');
     }
 
-    for (const migracion of aplicadas as Migration[]) {
+    for (const migracion of aplicadas) {
       console.log(`  - ${migracion.name}`);
     }
   } finally {
@@ -252,4 +273,20 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+function registrarMigracion(migracion: string): void {
+  registro.info(
+    { evento: 'migracion_aplicada', migracion },
+    'Migración aplicada',
+  );
+}
+
+try {
+  await main();
+} catch (error) {
+  // Sólo la traza: el error de TypeORM completo incluye la consulta.
+  registro.error(
+    { evento: 'migraciones_fallidas', stack: trazaDeError(error) },
+    'No se pudieron aplicar las migraciones',
+  );
+  process.exitCode = 1;
+}

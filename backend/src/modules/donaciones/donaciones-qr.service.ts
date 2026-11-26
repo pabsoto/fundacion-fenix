@@ -96,6 +96,7 @@ export class DonacionesQrService {
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException(
         'No fue posible guardar el QR de donaciones',
+        { cause: error },
       );
     }
   }
@@ -134,6 +135,7 @@ export class DonacionesQrService {
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException(
         'No fue posible retirar el QR de donaciones',
+        { cause: error },
       );
     }
   }

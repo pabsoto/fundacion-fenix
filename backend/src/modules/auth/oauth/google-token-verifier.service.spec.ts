@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   SignJWT,
@@ -6,7 +7,9 @@ import {
   generateKeyPair,
   type JWK,
   type JWTVerifyGetKey,
+  errors,
 } from 'jose';
+import { vi } from 'vitest';
 import { VerificadorIdTokenGoogleService } from './google-token-verifier.service.js';
 
 const CLIENT_ID = '1234567890.apps.googleusercontent.com';
@@ -33,7 +36,9 @@ describe('VerificadorIdTokenGoogleService', () => {
     });
   });
 
-  function crearServicio(): VerificadorIdTokenGoogleService {
+  function crearServicio(
+    claves: JWTVerifyGetKey = resolver,
+  ): VerificadorIdTokenGoogleService {
     const valores: Record<string, string | undefined> = {
       GOOGLE_CLIENT_ID: CLIENT_ID,
     };
@@ -42,7 +47,7 @@ describe('VerificadorIdTokenGoogleService', () => {
     } as unknown as ConfigService;
 
     return new VerificadorIdTokenGoogleService(config, {
-      obtenerResolver: () => resolver,
+      obtenerResolver: () => claves,
     });
   }
 
@@ -83,6 +88,46 @@ describe('VerificadorIdTokenGoogleService', () => {
       email: 'administrador@fundacionfenix.org',
       emailVerified: true,
     });
+  });
+
+  it.each([
+    ['un error de red', new TypeError('fetch failed')],
+    ['tiempo agotado', new errors.JWKSTimeout()],
+    ['una respuesta inservible', new errors.JOSEError('Expected 200 OK')],
+  ])(
+    'registra como fallo de Google %s al obtener las claves',
+    async (_, fallo) => {
+      const error = vi
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation(() => {});
+      const token = await firmarToken(claimsBase());
+
+      await expect(
+        crearServicio(() => Promise.reject(fallo)).verificar(token, {
+          nonce: NONCE_ESPERADO,
+        }),
+      ).rejects.toMatchObject({ codigo: 'token_claims_invalidos' });
+
+      expect(error.mock.calls[0]?.[0]).toMatchObject({
+        evento: 'fallo_google_oauth',
+        operacion: 'claves',
+      });
+      error.mockRestore();
+    },
+  );
+
+  it('no registra como fallo de Google un token que no se verifica', async () => {
+    const error = vi
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => {});
+    const token = await firmarToken(claimsBase(), { clave: claveAjenaPrivada });
+
+    await expect(
+      crearServicio().verificar(token, { nonce: NONCE_ESPERADO }),
+    ).rejects.toMatchObject({ codigo: 'token_firma_invalida' });
+
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 
   it('rechaza un ID token expirado', async () => {

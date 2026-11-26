@@ -67,9 +67,10 @@ export class AnimalesAdminService {
           .getMany();
       }
       return animales.map((animal) => this.aDto(animal));
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Los animales no están disponibles temporalmente',
+        { cause: error },
       );
     }
   }
@@ -113,9 +114,10 @@ export class AnimalesAdminService {
         items: animales.map((animal) => this.aDto(animal)),
         ...datosDePagina(total, pagina, limite),
       };
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Los animales no están disponibles temporalmente',
+        { cause: error },
       );
     }
   }
@@ -126,9 +128,10 @@ export class AnimalesAdminService {
       animal = await this.repositorio.findOne({
         where: { id, eliminadoEn: IsNull() },
       });
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Los animales no están disponibles temporalmente',
+        { cause: error },
       );
     }
     if (!animal) throw new NotFoundException('El animal no existe');
@@ -186,6 +189,7 @@ export class AnimalesAdminService {
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException(
         'No fue posible registrar el animal',
+        { cause: error },
       );
     }
   }
@@ -262,6 +266,7 @@ export class AnimalesAdminService {
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException(
         'No fue posible actualizar el animal',
+        { cause: error },
       );
     }
 
@@ -319,6 +324,7 @@ export class AnimalesAdminService {
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException(
         'No fue posible eliminar el animal',
+        { cause: error },
       );
     }
 

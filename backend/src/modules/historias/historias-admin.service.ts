@@ -44,9 +44,10 @@ export class HistoriasAdminService {
         order: { orden: 'ASC', fechaHistoria: 'DESC', id: 'ASC' },
       });
       return historias.map((historia) => this.aDto(historia));
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Las historias no están disponibles temporalmente',
+        { cause: error },
       );
     }
   }
@@ -219,7 +220,7 @@ export class HistoriasAdminService {
       return await this.dataSource.transaction('READ COMMITTED', operacion);
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      throw new ServiceUnavailableException(mensajeFallo);
+      throw new ServiceUnavailableException(mensajeFallo, { cause: error });
     }
   }
 
