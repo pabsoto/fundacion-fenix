@@ -341,7 +341,6 @@ export const textosAdmin = {
     ayudaNombre: 'Se agregará .csv o .pdf automáticamente.',
     pdf: 'PDF',
     csv: 'CSV (Excel)',
-    proximamente: 'Próximamente',
     generando: 'Generando…',
     sinRegistros: 'No hay registros para exportar',
     error: 'No se pudo generar el archivo.',

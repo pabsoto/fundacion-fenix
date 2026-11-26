@@ -8,7 +8,7 @@ import { App } from 'supertest/types.js';
 import { vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { PeticionConSesion } from '../src/common/types/peticion-sesion.js';
-import { fechaDeArchivo } from '../src/common/utils/csv.js';
+import { fechaDeArchivo } from '../src/common/utils/archivo-exportacion.js';
 import { configureApplication } from '../src/config/configure-application.js';
 import { AutorizacionAdministradorService } from '../src/modules/administradores/services/autorizacion-administrador.service.js';
 import { Animal } from '../src/modules/animales/entities/animal.entity.js';
@@ -17,6 +17,7 @@ import { SesionAdminService } from '../src/modules/auth/services/sesion-admin.se
 import { Campana } from '../src/modules/campanas/entities/campana.entity.js';
 import { FotoCampana } from '../src/modules/campanas/entities/foto-campana.entity.js';
 import { StorageService } from '../src/modules/storage/storage.service.js';
+import { fuentesDelPdf, leerPaginasPdf } from './utils/leer-pdf.js';
 
 const ADMIN_ID = '11111111-1111-1111-1111-111111111111';
 const COOKIE = 'fenix_session=sesion-valida';
@@ -80,7 +81,16 @@ const comoTexto = (
   );
 };
 
-describe('exportación a CSV del panel (e2e)', () => {
+const comoBinario = (
+  respuesta: request.Response,
+  callback: (error: Error | null, cuerpo: Buffer) => void,
+) => {
+  const trozos: Buffer[] = [];
+  respuesta.on('data', (trozo: Buffer) => trozos.push(trozo));
+  respuesta.on('end', () => callback(null, Buffer.concat(trozos)));
+};
+
+describe('exportación del panel (e2e)', () => {
   let app: INestApplication<App>;
   let campanas: Campana[];
   let animales: Animal[];
@@ -187,13 +197,19 @@ describe('exportación a CSV del panel (e2e)', () => {
   const descargar = (url: string) =>
     servidor().get(url).set('Cookie', COOKIE).buffer(true).parse(comoTexto);
 
+  const descargarPdf = (url: string) =>
+    servidor().get(url).set('Cookie', COOKIE).buffer(true).parse(comoBinario);
+
   describe.each([
     ['campañas', CAMPANAS],
     ['animales', ANIMALES],
   ])('autorización y validación de %s', (_modulo, url) => {
-    it('rechaza una petición anónima (401)', async () => {
-      await servidor().get(`${url}?formato=csv`).expect(401);
-    });
+    it.each(['csv', 'pdf'])(
+      'rechaza una petición anónima de %s (401)',
+      async (formato) => {
+        await servidor().get(`${url}?formato=${formato}`).expect(401);
+      },
+    );
 
     it('rechaza un administrador desactivado (403)', async () => {
       administradorActivo = false;
@@ -337,6 +353,65 @@ describe('exportación a CSV del panel (e2e)', () => {
       expect(opciones.where.adoptado).toBe(false);
       expect(opciones.skip).toBeUndefined();
       expect(opciones.take).toBeUndefined();
+    });
+  });
+
+  describe('PDF', () => {
+    it('devuelve las campañas con encabezado, filtros, acentos y fuente incrustada', async () => {
+      campanas = [
+        crearCampana({
+          tituloEs: 'Esterilización Señor de Mayo',
+          lugar: 'Ñuñumayani',
+          fecha: '2026-11-21',
+          perrosMachos: 2,
+          perrosHembras: 3,
+        }),
+      ];
+
+      const respuesta = await descargarPdf(
+        `${CAMPANAS}?formato=pdf&anio=2026&mes=11&q=se%C3%B1or`,
+      ).expect(200);
+
+      expect(respuesta.headers['content-type']).toBe('application/pdf');
+      expect(respuesta.headers['content-disposition']).toBe(
+        `attachment; filename="campanas_${fechaDeArchivo()}.pdf"`,
+      );
+      expect(respuesta.headers['cache-control']).toBe('no-store');
+      const contenido = respuesta.body as Buffer;
+      expect(fuentesDelPdf(contenido).incrustadas).toBe(2);
+      const [pagina] = await leerPaginasPdf(contenido);
+      expect(pagina).toContain('Fénix LPB');
+      expect(pagina).toContain('Campañas de esterilización');
+      expect(pagina).toContain('Generado el');
+      expect(pagina).toContain(
+        'Filtros aplicados: Año: 2026 · Mes: noviembre · Búsqueda: «señor»',
+      );
+      expect(pagina).toContain('Esterilización Señor de Mayo');
+      expect(pagina).toContain('Ñuñumayani');
+      expect(pagina).toContain('21/11/2026');
+      expect(pagina).toContain('2 / 3');
+    });
+
+    it('incluye todos los animales del filtro en varias páginas', async () => {
+      animales = Array.from({ length: 75 }, (_, i) =>
+        crearAnimal({ nombre: `Peña ${i + 1}.` }),
+      );
+
+      const respuesta = await descargarPdf(
+        `${ANIMALES}?formato=pdf&adoptado=false&pagina=2&limite=10`,
+      ).expect(200);
+
+      expect(respuesta.headers['content-disposition']).toBe(
+        `attachment; filename="animales_${fechaDeArchivo()}.pdf"`,
+      );
+      const paginas = await leerPaginasPdf(respuesta.body as Buffer);
+      expect(paginas.length).toBeGreaterThan(1);
+      expect(paginas[0]).toContain(
+        'Filtros aplicados: Estado: En la fundación',
+      );
+      expect(paginas[0]).toContain('Registros: 75');
+      const texto = paginas.join(' ');
+      for (const { nombre } of animales) expect(texto).toContain(nombre);
     });
   });
 });

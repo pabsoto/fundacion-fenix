@@ -92,7 +92,7 @@ export async function descargarBlob(
   }
   const response = await fetch(`${API_URL}${endpoint}?${consulta.toString()}`, {
     credentials: 'include',
-    headers: { Accept: 'text/csv, application/octet-stream, */*' },
+    headers: { Accept: 'text/csv, application/pdf, application/octet-stream, */*' },
   });
   if (response.status === 401) {
     window.location.assign('/admin/login');

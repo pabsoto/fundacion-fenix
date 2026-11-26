@@ -28,7 +28,7 @@ import {
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
 import { PanelExportacion } from '@/components/admin/ui/PanelExportacion';
 import { nombreSugerido } from '@/lib/nombre-descarga';
-import { descargarAnimalesCsv } from '@/services/admin/exportacion.service';
+import { descargarAnimales } from '@/services/admin/exportacion.service';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
 import { ChipFiltro } from '@/components/admin/ui/ChipFiltro';
 import { MarcaEstado } from '@/components/admin/ui/MarcaEstado';
@@ -689,8 +689,9 @@ export function AdminAnimalesPage() {
         onNombre={setNombreExportacion}
         nombreSugerido={sugeridoExportacion}
         onCerrar={() => setExportacionAbierta(false)}
-        onDescargarCsv={(nombreArchivo) =>
-          descargarAnimalesCsv(
+        onDescargar={(formato, nombreArchivo) =>
+          descargarAnimales(
+            formato,
             {
               adoptado: filtro === 'todos' ? null : filtro === 'adoptados',
               q: filtros.q,

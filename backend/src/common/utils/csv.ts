@@ -42,13 +42,3 @@ export function generarCsv<T>(
   ].map((celdas) => celdas.join(SEPARADOR_CSV));
   return `${BOM_UTF8}${lineas.join('\r\n')}\r\n`;
 }
-
-/** Fecha calendario (AAAA-MM-DD) en la zona horaria de la fundación. */
-export function fechaDeArchivo(ahora: Date = new Date()): string {
-  return ahora.toLocaleDateString('en-CA', { timeZone: 'America/La_Paz' });
-}
-
-/** Nombre de archivo `modulo_AAAA-MM-DD.csv`. */
-export function nombreArchivoCsv(modulo: string, ahora?: Date): string {
-  return `${modulo}_${fechaDeArchivo(ahora)}.csv`;
-}
