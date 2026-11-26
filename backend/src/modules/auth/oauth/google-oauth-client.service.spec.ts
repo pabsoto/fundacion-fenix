@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { vi } from 'vitest';
 
@@ -137,6 +138,35 @@ describe('ClienteOAuthGoogleService', () => {
         redirectUri: CALLBACK_URL,
       }),
     ).rejects.toMatchObject({ codigo: 'proveedor_no_disponible' });
+  });
+
+  it('registra el fallo y reintenta el descubrimiento en la siguiente petición', async () => {
+    const error = vi
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => {});
+    dobles.descubrir.mockRejectedValueOnce(new Error('sin red'));
+    const servicio = crearServicio();
+    const solicitud = {
+      state: 'state',
+      nonce: 'nonce',
+      codeChallenge: 'desafio',
+      redirectUri: CALLBACK_URL,
+    };
+
+    await expect(
+      servicio.construirUrlAutorizacion(solicitud),
+    ).rejects.toMatchObject({ codigo: 'proveedor_no_disponible' });
+    await expect(
+      servicio.construirUrlAutorizacion(solicitud),
+    ).resolves.toBeInstanceOf(URL);
+
+    expect(dobles.descubrir).toHaveBeenCalledTimes(2);
+    expect(error).toHaveBeenCalledTimes(1);
+    expect(error.mock.calls[0]?.[0]).toMatchObject({
+      evento: 'fallo_google_oauth',
+      operacion: 'descubrimiento',
+    });
+    error.mockRestore();
   });
 
   it('falla cuando la configuración de Google no está disponible', async () => {

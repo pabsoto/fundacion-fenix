@@ -55,6 +55,8 @@ export class GoogleAuthError extends HttpException {
     readonly codigo: CodigoErrorGoogleAuth,
     message: string,
     cause?: unknown,
+    /** Contexto interno para el log; nunca forma parte de la respuesta. */
+    readonly detalle?: Readonly<Record<string, string>>,
   ) {
     super(
       { error: 'Error de autenticación', message },

@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getDataSourceToken } from '@nestjs/typeorm';
@@ -185,6 +185,27 @@ describe('autenticación administrativa con Google (e2e)', () => {
       .get('/api/auth/google/callback')
       .query({ code: 'codigo-de-autorizacion' })
       .expect(400);
+  });
+
+  it('registra una sola vez cada inicio de sesión rechazado', async () => {
+    const warn = vi.spyOn(Logger.prototype, 'warn');
+
+    await request(app.getHttpServer())
+      .get('/api/auth/google/callback')
+      .query({ error: 'texto <inyectado>' })
+      .expect(400);
+
+    const rechazos = warn.mock.calls
+      .map(([datos]) => datos as Record<string, unknown>)
+      .filter((datos) => datos.evento === 'inicio_sesion_rechazado');
+    expect(rechazos).toEqual([
+      {
+        evento: 'inicio_sesion_rechazado',
+        codigo: 'error_proveedor',
+        errorGoogle: 'desconocido',
+      },
+    ]);
+    warn.mockRestore();
   });
 
   it('rechaza la cancelación del proceso en Google', async () => {

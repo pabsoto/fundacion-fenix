@@ -61,9 +61,10 @@ export class FotosAnimalService {
 
     try {
       await this.storage.subir(ruta, buffer, tipo, true);
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'No fue posible guardar la fotografía',
+        { cause: error },
       );
     }
 
@@ -75,10 +76,11 @@ export class FotosAnimalService {
         actualizadoPorId: administradorId,
         actualizadoEn: new Date(),
       });
-    } catch {
+    } catch (error) {
       await this.limpiar(ruta);
       throw new ServiceUnavailableException(
         'No fue posible guardar la fotografía',
+        { cause: error },
       );
     }
 
@@ -115,9 +117,10 @@ export class FotosAnimalService {
         actualizadoPorId: administradorId,
         actualizadoEn: new Date(),
       });
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'No fue posible quitar la fotografía',
+        { cause: error },
       );
     }
 
@@ -133,9 +136,10 @@ export class FotosAnimalService {
       animal = await this.animales.findOne({
         where: { id: animalId, eliminadoEn: IsNull() },
       });
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'Los animales no están disponibles temporalmente',
+        { cause: error },
       );
     }
     if (!animal) throw new NotFoundException('El animal no existe');
@@ -154,9 +158,10 @@ export class FotosAnimalService {
         url: await this.storage.crearUrlFirmada(ruta, SEGUNDOS_URL_FIRMADA),
         expiraEnSegundos: SEGUNDOS_URL_FIRMADA,
       };
-    } catch {
+    } catch (error) {
       throw new ServiceUnavailableException(
         'No fue posible generar el acceso a la fotografía',
+        { cause: error },
       );
     }
   }

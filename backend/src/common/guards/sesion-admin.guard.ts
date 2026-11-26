@@ -100,13 +100,9 @@ export class SesionAdminGuard implements CanActivate {
     try {
       return await this.autorizacion.cargarParaSesion(administradorId);
     } catch (error) {
-      this.logger.error(
-        'No se pudo comprobar el estado de la cuenta administrativa',
-        error instanceof Error ? error.stack : String(error),
-      );
-
       throw new ServiceUnavailableException(
         'No es posible comprobar la autorización administrativa en este momento',
+        { cause: error },
       );
     }
   }
@@ -134,13 +130,9 @@ export class SesionAdminGuard implements CanActivate {
 
   private traducirError(error: unknown): Error {
     if (error instanceof AlmacenSesionesNoDisponibleError) {
-      this.logger.error(
-        'El almacén de sesiones administrativas no está disponible',
-        error.causa instanceof Error ? error.causa.stack : String(error.causa),
-      );
-
       return new ServiceUnavailableException(
         'El servicio de sesiones administrativas no está disponible en este momento',
+        { cause: error.causa },
       );
     }
 
@@ -150,6 +142,7 @@ export class SesionAdminGuard implements CanActivate {
 
     return new ServiceUnavailableException(
       'No es posible comprobar la sesión administrativa en este momento',
+      { cause: error },
     );
   }
 }

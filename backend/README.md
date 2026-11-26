@@ -137,6 +137,26 @@ endpoints de sesión la necesitan). Si la base de datos no estuviera disponible
 en el arranque, la aplicación arrancaría igualmente y esta ruta informs del
 estado. Si PostgreSQL no está disponible, responde HTTP 503 con `status: "error"` y `database: "down"`, sin incluir detalles internos de la conexión.
 
+## Logging de operaciones
+
+La salida es JSON (legible con `pino-pretty` en desarrollo) y el nivel se configura con `LOG_LEVEL` (`info` por defecto). Cada petición devuelve la cabecera `x-request-id`, y ese mismo id aparece como `req.id` en todos los registros de la petición.
+
+Los errores 5xx se registran como `error` con el stack y sus causas; los 4xx, como `warn` sin stack. Los eventos se filtran por el campo `evento`:
+
+| `evento` | Nivel | Cuándo se registra |
+|---|---|---|
+| `aplicacion_iniciada` | info | La aplicación empieza a escuchar. |
+| `arranque_fallido` | fatal | El arranque falla y el proceso termina. |
+| `base_datos_no_disponible` | error | PostgreSQL no responde al arrancar. |
+| `migracion_aplicada` | info | `db:migrate` aplica una migración. |
+| `migraciones_fallidas` | error | `db:migrate` no puede completarse. |
+| `error_http` | warn / error | Una petición termina con 4xx o 5xx. |
+| `inicio_sesion_rechazado` | warn | Se rechaza el callback de Google (código y motivo interno). |
+| `fallo_google_oauth` | error | Falla el descubrimiento, el canje del código o la descarga de claves. |
+| `fallo_supabase_storage` | error | Falla subir, eliminar o firmar un archivo. |
+
+No se registran cuerpos, cabeceras, cadenas de consulta ni URLs firmadas. Al registrar un error nuevo, usa su traza (`trazaDeError`) en lugar del objeto completo: algunos errores llevan consultas SQL y parámetros.
+
 ## Integración continua
 
 El workflow `.github/workflows/ci.yml` comprueba el backend cuando se abre o actualiza un Pull Request hacia `develop` o `main`, cuando se publica un cambio en esas ramas y cuando se inicia manualmente desde GitHub Actions.

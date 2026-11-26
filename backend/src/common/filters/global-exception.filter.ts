@@ -7,7 +7,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { GoogleAuthError } from '../../modules/auth/oauth/google-auth.errors.js';
 import { ErrorResponseDto } from '../dto/error-response.dto.js';
+import { trazaDeError } from '../utils/traza-error.js';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -23,24 +25,54 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
     const details = this.getDetails(exception, statusCode);
 
-    if (!(exception instanceof HttpException)) {
-      this.logger.error(
-        'Error no controlado',
-        exception instanceof Error ? exception.stack : String(exception),
-      );
-    }
+    // Se omite la cadena de consulta: puede contener códigos de
+    // autorización u otros datos sensibles que no deben devolverse.
+    const path = request.originalUrl.split('?')[0];
+
+    this.registrar(exception, statusCode, request.method, path);
 
     const body: ErrorResponseDto = {
       statusCode,
       error: details.error,
       message: details.message,
       timestamp: new Date().toISOString(),
-      // Se omite la cadena de consulta: puede contener códigos de
-      // autorización u otros datos sensibles que no deben devolverse.
-      path: request.originalUrl.split('?')[0],
+      path,
     };
 
     response.status(statusCode).json(body);
+  }
+
+  /**
+   * Los 5xx se registran como error, con el stack y sus causas; los 4xx, como
+   * advertencia y sin stack ni mensaje, que pueden repetir datos recibidos.
+   * El id de la petición lo añade el logger.
+   */
+  private registrar(
+    exception: unknown,
+    statusCode: number,
+    metodo: string,
+    ruta: string,
+  ): void {
+    const datos = {
+      evento: 'error_http',
+      statusCode,
+      metodo,
+      ruta,
+      error: exception instanceof Error ? exception.name : typeof exception,
+      ...(exception instanceof GoogleAuthError
+        ? { codigo: exception.codigo }
+        : {}),
+    };
+
+    if (statusCode >= 500) {
+      this.logger.error(
+        { ...datos, stack: trazaDeError(exception) },
+        'Error del servidor',
+      );
+      return;
+    }
+
+    this.logger.warn(datos, 'Petición rechazada');
   }
 
   private getDetails(

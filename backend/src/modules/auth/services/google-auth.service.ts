@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'node:crypto';
 import {
@@ -44,8 +44,6 @@ export interface ResultadoAutenticacionGoogle {
 
 @Injectable()
 export class GoogleAuthService {
-  private readonly logger = new Logger(GoogleAuthService.name);
-
   constructor(
     private readonly config: ConfigService,
     private readonly cliente: ClienteOAuthGoogleService,
@@ -116,12 +114,11 @@ export class GoogleAuthService {
     const configuracion = this.leerConfiguracion();
 
     if (parametros.error) {
-      this.logger.warn(
-        `Google devolvió un error en la respuesta de autorización: ${parametros.error}`,
-      );
       throw new GoogleAuthError(
         'error_proveedor',
         'La autenticación con Google no fue completada',
+        undefined,
+        { errorGoogle: codigoOAuthSeguro(parametros.error) },
       );
     }
 
@@ -189,22 +186,20 @@ export class GoogleAuthService {
     resultado: ResultadoAutorizacion,
   ): ResultadoAutenticacionGoogle {
     if (resultado.estado === 'no_autorizado') {
-      this.logger.warn(
-        `Autorización denegada para la identidad verificada de Google (motivo interno: ${resultado.motivo})`,
-      );
       throw new GoogleAuthError(
         'autorizacion_denegada',
         'Las credenciales de Google no corresponden a una cuenta administrativa autorizada',
+        undefined,
+        { motivo: resultado.motivo },
       );
     }
 
     if (resultado.estado === 'vinculacion_pendiente') {
-      this.logger.warn(
-        `La cuenta administrativa ${resultado.administrador.id} requiere vinculación inicial de identidad Google`,
-      );
       throw new GoogleAuthError(
         'vinculacion_pendiente',
         'La cuenta administrativa requiere el procedimiento de vinculación inicial de identidad Google',
+        undefined,
+        { administradorId: resultado.administrador.id },
       );
     }
 
@@ -250,6 +245,14 @@ export class GoogleAuthService {
 
     return { callbackUrl, ttlSegundos };
   }
+}
+
+/**
+ * El parámetro `error` del callback lo controla quien hace la petición: sólo
+ * se registra si tiene la forma de un código OAuth.
+ */
+function codigoOAuthSeguro(valor: string): string {
+  return /^[a-z_]{1,64}$/.test(valor) ? valor : 'desconocido';
 }
 
 function normalizarRuta(ruta: string): string {
