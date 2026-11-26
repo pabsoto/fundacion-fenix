@@ -38,15 +38,15 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../../common/dto/error-response.dto.js';
-import {
-  generarCsv,
-  nombreArchivoCsv,
-  TIPO_CONTENIDO_CSV,
-} from '../../common/utils/csv.js';
+import { crearArchivoExportado } from '../../common/utils/exportacion.js';
 import { CsrfGuard } from '../../common/guards/csrf.guard.js';
 import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
 import { COLUMNAS_CSV_CAMPANAS } from '../campanas/campanas-csv.js';
+import {
+  COLUMNAS_PDF_CAMPANAS,
+  describirFiltrosCampanas,
+} from '../campanas/campanas-pdf.js';
 import { CampanasAdminService } from '../campanas/campanas-admin.service.js';
 import { CampanaAdminDto } from '../campanas/dto/campana-admin.dto.js';
 import {
@@ -141,13 +141,16 @@ export class AdminCampanasController {
   @Header('Cache-Control', 'no-store')
   @ApiSecurity('cookieAuth')
   @ApiOperation({
-    summary: 'Exportar campañas a CSV',
+    summary: 'Exportar campañas a CSV o PDF',
     description:
-      'Descarga todas las campañas que cumplen los filtros `anio` y `mes` (no solo la página visible). UTF-8 con BOM, separador `;` y celdas que empiezan con `=`, `+`, `-` o `@` neutralizadas. El archivo se llama `campanas_AAAA-MM-DD.csv`.',
+      'Descarga todas las campañas que cumplen los filtros `anio`, `mes` y `q` (no solo la página visible). El CSV va en UTF-8 con BOM, separador `;` y celdas que empiezan con `=`, `+`, `-` o `@` neutralizadas. El PDF lleva logo, título, fecha de generación, filtros aplicados y fuente incrustada. El archivo se llama `campanas_AAAA-MM-DD.csv` o `.pdf`.',
   })
   @ApiOkResponse({
-    description: 'Archivo CSV.',
-    content: { 'text/csv': { schema: { type: 'string' } } },
+    description: 'Archivo CSV o PDF, según `formato`.',
+    content: {
+      'text/csv': { schema: { type: 'string' } },
+      'application/pdf': { schema: { type: 'string', format: 'binary' } },
+    },
   })
   @ApiBadRequestResponse({
     description: 'El formato, el año o el mes no son válidos.',
@@ -161,13 +164,17 @@ export class AdminCampanasController {
     @Query() consulta: ConsultaExportarCampanasDto,
   ): Promise<StreamableFile> {
     const campanas = await this.campanas.listarParaExportar(consulta);
-    return new StreamableFile(
-      Buffer.from(generarCsv(COLUMNAS_CSV_CAMPANAS, campanas), 'utf8'),
-      {
-        type: TIPO_CONTENIDO_CSV,
-        disposition: `attachment; filename="${nombreArchivoCsv('campanas')}"`,
+    return crearArchivoExportado({
+      modulo: 'campanas',
+      formato: consulta.formato,
+      filas: campanas,
+      columnasCsv: COLUMNAS_CSV_CAMPANAS,
+      pdf: {
+        titulo: 'Campañas de esterilización',
+        filtros: describirFiltrosCampanas(consulta),
+        columnas: COLUMNAS_PDF_CAMPANAS,
       },
-    );
+    });
   }
 
   @Get(':id')

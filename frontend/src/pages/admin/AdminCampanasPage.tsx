@@ -14,7 +14,7 @@ import { formatNumber } from '@/lib/format';
 import { PanelExportacion } from '@/components/admin/ui/PanelExportacion';
 import { nombreSugerido } from '@/lib/nombre-descarga';
 import { listCampanas, subirFotosCampana } from '@/services/admin/campanas.service';
-import { descargarCampanasCsv } from '@/services/admin/exportacion.service';
+import { descargarCampanas } from '@/services/admin/exportacion.service';
 import type { PeriodoCampanas } from '@/services/admin/cifras-campanas';
 import type { CampanaConTotales, ContadoresCampana, PaginaCampanas } from '@/types/admin';
 import { TAMANO_PAGINA_ADMIN, totalesDe } from '@/types/admin';
@@ -810,8 +810,9 @@ export function AdminCampanasPage() {
         onNombre={setNombreExportacion}
         nombreSugerido={sugeridoExportacion}
         onCerrar={() => setExportacionAbierta(false)}
-        onDescargarCsv={(nombreArchivo) =>
-          descargarCampanasCsv(
+        onDescargar={(formato, nombreArchivo) =>
+          descargarCampanas(
+            formato,
             { anio: filtros.anio, mes: filtros.mes, q: filtros.q },
             nombreArchivo,
           )

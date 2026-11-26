@@ -38,15 +38,15 @@ import {
   ApiUnsupportedMediaTypeResponse,
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../../common/dto/error-response.dto.js';
-import {
-  generarCsv,
-  nombreArchivoCsv,
-  TIPO_CONTENIDO_CSV,
-} from '../../common/utils/csv.js';
+import { crearArchivoExportado } from '../../common/utils/exportacion.js';
 import { CsrfGuard } from '../../common/guards/csrf.guard.js';
 import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
 import { COLUMNAS_CSV_ANIMALES } from '../animales/animales-csv.js';
+import {
+  COLUMNAS_PDF_ANIMALES,
+  describirFiltrosAnimales,
+} from '../animales/animales-pdf.js';
 import { AnimalesAdminService } from '../animales/animales-admin.service.js';
 import { AnimalDto } from '../animales/dto/animal.dto.js';
 import {
@@ -108,26 +108,33 @@ export class AdminAnimalesController {
   @Header('Cache-Control', 'no-store')
   @ApiSecurity('cookieAuth')
   @ApiOperation({
-    summary: 'Exportar animales a CSV',
+    summary: 'Exportar animales a CSV o PDF',
     description:
-      'Descarga todos los animales que cumplen el filtro `adoptado` (no solo la página visible). UTF-8 con BOM, separador `;` y celdas que empiezan con `=`, `+`, `-` o `@` neutralizadas. El archivo se llama `animales_AAAA-MM-DD.csv`.',
+      'Descarga todos los animales que cumplen los filtros `adoptado` y `q` (no solo la página visible). El CSV va en UTF-8 con BOM, separador `;` y celdas que empiezan con `=`, `+`, `-` o `@` neutralizadas. El PDF lleva logo, título, fecha de generación, filtros aplicados y fuente incrustada. El archivo se llama `animales_AAAA-MM-DD.csv` o `.pdf`.',
   })
   @ApiOkResponse({
-    description: 'Archivo CSV.',
-    content: { 'text/csv': { schema: { type: 'string' } } },
+    description: 'Archivo CSV o PDF, según `formato`.',
+    content: {
+      'text/csv': { schema: { type: 'string' } },
+      'application/pdf': { schema: { type: 'string', format: 'binary' } },
+    },
   })
   @ApiBadRequestResponse({ type: ErrorResponseDto })
   async exportar(
     @Query() consulta: ConsultaExportarAnimalesDto,
   ): Promise<StreamableFile> {
     const animales = await this.animales.listarParaExportar(consulta);
-    return new StreamableFile(
-      Buffer.from(generarCsv(COLUMNAS_CSV_ANIMALES, animales), 'utf8'),
-      {
-        type: TIPO_CONTENIDO_CSV,
-        disposition: `attachment; filename="${nombreArchivoCsv('animales')}"`,
+    return crearArchivoExportado({
+      modulo: 'animales',
+      formato: consulta.formato,
+      filas: animales,
+      columnasCsv: COLUMNAS_CSV_ANIMALES,
+      pdf: {
+        titulo: 'Animales de la fundación',
+        filtros: describirFiltrosAnimales(consulta),
+        columnas: COLUMNAS_PDF_ANIMALES,
       },
-    );
+    });
   }
 
   @Get(':id')

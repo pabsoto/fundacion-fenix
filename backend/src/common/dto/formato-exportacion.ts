@@ -2,7 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn } from 'class-validator';
 
-export const FORMATOS_EXPORTACION = ['csv'] as const;
+export const FORMATOS_EXPORTACION = ['csv', 'pdf'] as const;
 export type FormatoExportacion = (typeof FORMATOS_EXPORTACION)[number];
 
 /** Decorador del parámetro obligatorio `formato` de los endpoints de exportación. */

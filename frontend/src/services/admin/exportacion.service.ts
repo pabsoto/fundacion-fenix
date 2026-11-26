@@ -1,4 +1,4 @@
-import { exportacionAdmin } from '@/config/exportacion-admin';
+import { exportacionAdmin, type FormatoExportacion } from '@/config/exportacion-admin';
 import { descargarBlob } from '@/services/admin/cliente-admin';
 
 export type FiltrosExportarCampanas = {
@@ -13,16 +13,17 @@ export type FiltrosExportarAnimales = {
   q: string;
 };
 
-function consultaComun(q: string): Record<string, string | undefined> {
-  const { parametros, formatoCsv } = exportacionAdmin;
+function consultaComun(formato: FormatoExportacion, q: string): Record<string, string | undefined> {
+  const { parametros } = exportacionAdmin;
   const texto = q.trim();
   return {
-    [parametros.formato]: formatoCsv,
+    [parametros.formato]: formato,
     [parametros.q]: texto || undefined,
   };
 }
 
-export function descargarCampanasCsv(
+export function descargarCampanas(
+  formato: FormatoExportacion,
   filtros: FiltrosExportarCampanas,
   nombreArchivo: string,
 ): Promise<void> {
@@ -30,7 +31,7 @@ export function descargarCampanasCsv(
   return descargarBlob(
     campanas,
     {
-      ...consultaComun(filtros.q),
+      ...consultaComun(formato, filtros.q),
       [parametros.anio]: filtros.anio === null ? undefined : String(filtros.anio),
       [parametros.mes]: filtros.mes === null ? undefined : String(filtros.mes),
     },
@@ -38,7 +39,8 @@ export function descargarCampanasCsv(
   );
 }
 
-export function descargarAnimalesCsv(
+export function descargarAnimales(
+  formato: FormatoExportacion,
   filtros: FiltrosExportarAnimales,
   nombreArchivo: string,
 ): Promise<void> {
@@ -46,7 +48,7 @@ export function descargarAnimalesCsv(
   return descargarBlob(
     animales,
     {
-      ...consultaComun(filtros.q),
+      ...consultaComun(formato, filtros.q),
       [parametros.adoptado]:
         filtros.adoptado === null ? undefined : filtros.adoptado ? 'true' : 'false',
     },

@@ -1,9 +1,4 @@
-import {
-  BOM_UTF8,
-  generarCsv,
-  neutralizarFormula,
-  nombreArchivoCsv,
-} from './csv.js';
+import { BOM_UTF8, generarCsv, neutralizarFormula } from './csv.js';
 
 describe('csv', () => {
   describe('neutralizarFormula', () => {
@@ -63,15 +58,6 @@ describe('csv', () => {
         [{}],
       );
       expect(csv).toBe(`${BOM_UTF8}A;B;C\r\n;Sí;No\r\n`);
-    });
-  });
-
-  describe('nombreArchivoCsv', () => {
-    it('usa el módulo y la fecha de La Paz', () => {
-      // 2026-11-20 02:00 UTC sigue siendo 19 de noviembre en Bolivia (UTC-4).
-      expect(
-        nombreArchivoCsv('campanas', new Date('2026-11-20T02:00:00Z')),
-      ).toBe('campanas_2026-11-19.csv');
     });
   });
 });

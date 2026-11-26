@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { EXPORT_PDF_ENABLED } from '@/config/exportacion-admin';
+import type { FormatoExportacion } from '@/config/exportacion-admin';
 import { textosAdmin } from '@/content/textos-admin';
 import { nombreDeDescarga } from '@/lib/nombre-descarga';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
@@ -15,7 +15,7 @@ type PanelExportacionProps = {
   onNombre: (valor: string) => void;
   nombreSugerido: string;
   onCerrar: () => void;
-  onDescargarCsv: (nombreArchivo: string) => Promise<void>;
+  onDescargar: (formato: FormatoExportacion, nombreArchivo: string) => Promise<void>;
 };
 
 const SELECCION =
@@ -33,7 +33,7 @@ export function PanelExportacion({
   onNombre,
   nombreSugerido,
   onCerrar,
-  onDescargarCsv,
+  onDescargar,
 }: PanelExportacionProps) {
   const textos = textosAdmin.exportar;
   const tituloId = useId();
@@ -41,12 +41,13 @@ export function PanelExportacion({
   const nombreRef = useRef<HTMLInputElement>(null);
   const cerrarRef = useRef(onCerrar);
   const generandoRef = useRef(false);
-  const [generando, setGenerando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [enCurso, setEnCurso] = useState<FormatoExportacion | null>(null);
+  const [fallo, setFallo] = useState<{ formato: FormatoExportacion; mensaje: string } | null>(null);
+  const generando = enCurso !== null;
 
-  function marcarGenerando(valor: boolean) {
-    generandoRef.current = valor;
-    setGenerando(valor);
+  function marcarEnCurso(formato: FormatoExportacion | null) {
+    generandoRef.current = formato !== null;
+    setEnCurso(formato);
   }
 
   useEffect(() => {
@@ -99,16 +100,16 @@ export function PanelExportacion({
 
   if (!abierto) return null;
 
-  async function descargar() {
+  async function descargar(formato: FormatoExportacion) {
     if (generando) return;
-    marcarGenerando(true);
-    setError(null);
+    marcarEnCurso(formato);
+    setFallo(null);
     try {
-      await onDescargarCsv(nombreDeDescarga(nombre, nombreSugerido, 'csv'));
+      await onDescargar(formato, nombreDeDescarga(nombre, nombreSugerido, formato));
       cerrarRef.current();
     } catch (causa) {
-      setError(causa instanceof ErrorApiAdmin ? causa.message : textos.error);
-      marcarGenerando(false);
+      setFallo({ formato, mensaje: causa instanceof ErrorApiAdmin ? causa.message : textos.error });
+      marcarEnCurso(null);
     }
   }
 
@@ -156,33 +157,27 @@ export function PanelExportacion({
             />
             <span className="t-small text-texto-secundario">{textos.ayudaNombre}</span>
           </label>
-          {error ? (
+          {fallo ? (
             <div className="flex flex-wrap items-center gap-3" role="alert">
-              <p className="t-small text-negro">{error}</p>
-              <BotonPildora variante="ghost" disabled={generando} onClick={() => void descargar()}>
+              <p className="t-small text-negro">{fallo.mensaje}</p>
+              <BotonPildora variante="ghost" disabled={generando} onClick={() => void descargar(fallo.formato)}>
                 {textosAdmin.supuestos.reintentar}
               </BotonPildora>
             </div>
           ) : null}
           <div className="flex gap-3">
-            <BotonPildora
-              variante="ghost"
-              className="min-h-(--size-control-admin) flex-1"
-              disabled={!EXPORT_PDF_ENABLED || generando}
-              title={EXPORT_PDF_ENABLED ? undefined : textos.proximamente}
-              aria-label={EXPORT_PDF_ENABLED ? textos.pdf : `${textos.pdf}. ${textos.proximamente}`}
-            >
-              {EXPORT_PDF_ENABLED ? textos.pdf : `${textos.pdf} · ${textos.proximamente}`}
-            </BotonPildora>
-            <BotonPildora
-              variante="ghost"
-              className="min-h-(--size-control-admin) flex-1"
-              disabled={generando}
-              aria-busy={generando}
-              onClick={() => void descargar()}
-            >
-              {generando ? textos.generando : textos.csv}
-            </BotonPildora>
+            {(['pdf', 'csv'] as const).map((formato) => (
+              <BotonPildora
+                key={formato}
+                variante="ghost"
+                className="min-h-(--size-control-admin) flex-1"
+                disabled={generando}
+                aria-busy={enCurso === formato}
+                onClick={() => void descargar(formato)}
+              >
+                {enCurso === formato ? textos.generando : textos[formato]}
+              </BotonPildora>
+            ))}
           </div>
         </div>
       </div>
