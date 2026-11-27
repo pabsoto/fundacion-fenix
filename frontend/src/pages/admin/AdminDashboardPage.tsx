@@ -4,7 +4,6 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Calendar, Heart, LayoutGrid, Link2, LogOut, PawPrint } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
-import { FlameIcon } from '@/components/ui/icons';
 import { useAdminSesion } from '@/app/admin-sesion';
 import { useVistaMovil } from '@/hooks/useVistaMovil';
 import { cn } from '@/lib/cn';
@@ -42,9 +41,14 @@ function Marca() {
       to="/admin"
       className="flex w-fit shrink-0 items-center gap-(--spacing-marca-admin) justify-self-start no-underline"
     >
-      <span className="rounded-pill bg-amarillo flex size-(--size-marca-admin) shrink-0 items-center justify-center">
-        <FlameIcon className="size-(--size-icono-marca-admin)" />
-      </span>
+      <img
+        src="/images/logo-fundacion-fenix.svg"
+        alt=""
+        aria-hidden="true"
+        width={48}
+        height={48}
+        className="size-(--size-marca-admin) shrink-0 object-contain"
+      />
       <span className="text-negro whitespace-nowrap">
         <span className="t-marca block">{textosAdmin.marca.nombre}</span>
         <span className="t-marca-sub block">{textosAdmin.marca.fundacion}</span>

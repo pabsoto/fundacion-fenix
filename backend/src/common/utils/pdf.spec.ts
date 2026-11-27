@@ -26,6 +26,12 @@ const crear = (filas: Fila[], filtros: string[] = []) =>
   });
 
 describe('pdf', () => {
+  it('incrusta el recurso oficial del logo en el encabezado', async () => {
+    const contenido = await crear([]);
+
+    expect(contenido.toString('latin1')).toContain('/Subtype /Image');
+  });
+
   it('muestra acentos y ñ en el encabezado y en la tabla', async () => {
     const contenido = await crear(
       [{ nombre: 'Señor Ñandú · Esterilización ÁÉÍÓÚ ü', activo: true }],

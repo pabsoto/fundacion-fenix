@@ -42,6 +42,13 @@ export function AdminLoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-crema px-6 py-12">
       <section className="w-full max-w-md rounded-card border border-linea bg-blanco p-8 text-center shadow-soft">
+        <img
+          src="/images/logo-fundacion-fenix.svg"
+          alt="Logotipo oficial de Fundación FÉNIX LPB"
+          width={96}
+          height={96}
+          className="mx-auto mb-4 size-24 object-contain"
+        />
         <h1 className="t-heading-lg">Fundación FÉNIX</h1>
         <p className="t-body mt-2">Acceso administrativo</p>
 

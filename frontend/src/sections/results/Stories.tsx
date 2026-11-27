@@ -58,7 +58,7 @@ export function Stories() {
                   src={story.photo}
                   alt={story.animalName}
                   radius="card"
-                  className="h-[260px] w-full rounded-none rounded-t-card"
+                  className="h-[260px] w-full rounded-none rounded-t-card bg-blanco object-contain"
                 />
               ) : (
                 <div className="flex h-[260px] flex-col items-center justify-center gap-2.5 bg-linea">

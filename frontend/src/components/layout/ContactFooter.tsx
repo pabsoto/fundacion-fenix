@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { Mail } from 'lucide-react';
 import {
   FacebookIcon,
-  FlameIcon,
   InstagramIcon,
   TikTokIcon,
   WhatsAppIcon,
@@ -65,11 +64,14 @@ export function ContactFooter() {
             )}
           </div>
 
-          {/* Provisional: sustituir por el logo oficial cuando esté listo. */}
-          <div className="mx-auto flex size-[220px] shrink-0 flex-col items-center justify-center gap-3 rounded-full border-2 border-negro bg-crema sm:size-[300px] lg:mx-0">
-            <FlameIcon className="h-[72px] w-[72px] sm:h-[120px] sm:w-[120px]" />
-            <p className="t-heading-card text-negro">{t('footer.brand')}</p>
-            <p className="t-eyebrow text-negro">{t('footer.brand_sub')}</p>
+          <div className="mx-auto flex size-[220px] shrink-0 items-center justify-center rounded-full border-2 border-negro bg-blanco sm:size-[300px] lg:mx-0">
+            <img
+              src="/images/logo-fundacion-fenix.svg"
+              alt={t('footer.brand')}
+              width={1019}
+              height={1019}
+              className="size-[200px] object-contain sm:size-[276px]"
+            />
           </div>
         </div>
 

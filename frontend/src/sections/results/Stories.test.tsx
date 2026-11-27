@@ -5,7 +5,16 @@ import { storiesMock } from '@/data/stories.mock';
 import { Stories } from './Stories';
 
 vi.mock('@/hooks/useStories', () => ({
-  useStories: () => ({ data: storiesMock, isPending: false, isError: false }),
+  useStories: () => ({
+    data: storiesMock.map((story, index) => ({
+      ...story,
+      photo: `/fotos/${story.id}.jpg`,
+      photoWidth: index === 0 ? 900 : 1600,
+      photoHeight: index === 0 ? 1600 : 900,
+    })),
+    isPending: false,
+    isError: false,
+  }),
 }));
 
 vi.mock('@/hooks/useCarousel', () => ({
@@ -36,5 +45,17 @@ describe('Stories en modo demostración', () => {
     expect(screen.queryByText('Adoptado')).toBeNull();
     expect(screen.queryByText('En recuperación')).toBeNull();
     expect(screen.getAllByText(/Historia ficticia de demostración:/)).toHaveLength(3);
+  });
+
+  it('conserva las proporciones de fotos verticales y horizontales', async () => {
+    await i18n.changeLanguage('es');
+    render(<Stories />);
+
+    const photos = screen.getAllByRole('img');
+    expect(photos).toHaveLength(3);
+    photos.forEach((photo) => {
+      expect(photo.className).toContain('object-contain');
+      expect(photo.className).not.toContain('object-cover');
+    });
   });
 });
