@@ -214,9 +214,13 @@
   },
   "facebook": {
     "eyebrow": "Facebook",
-    "title": "Our community, live",
-    "placeholder": "Facebook feed goes here (embedded plugin)",
-    "note": "Facebook Page Plugin widget · final design is defined when we integrate it"
+    "title": "Our community on Facebook",
+    "iframeTitle": "Recent posts from the foundation's Facebook Page",
+    "open": "View on Facebook",
+    "note": "Recent posts from our Page. Content may vary.",
+    "loading": "Loading Facebook posts…",
+    "error": "The Facebook link could not be loaded right now.",
+    "unavailable": "The official Facebook Page has not been configured yet."
   },
   "footer": {
     "title": "Contact",

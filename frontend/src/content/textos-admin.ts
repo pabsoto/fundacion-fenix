@@ -19,6 +19,7 @@ export const textosAdmin = {
     campanas: 'Campañas',
     animales: 'Animales',
     donaciones: 'Donaciones',
+    canales: 'Canales',
     salir: 'Salir',
     /** Menú del avatar (Campañas móvil, nodo 464:537). El nombre sale de la sesión. */
     rol: 'Administrador del panel',
@@ -379,6 +380,16 @@ export const textosAdmin = {
     vistaBanco: 'Banco',
     vistaTelefono: 'Teléfono',
     vistaReferencia: 'Referencia',
+  },
+  canales: {
+    titulo: 'Canales de contacto',
+    subtitulo: 'Administra los enlaces públicos de las redes sociales.',
+    facebookUrl: 'URL de la página oficial de Facebook',
+    ayudaUrl: 'Usa la dirección pública de la página. Debe comenzar con https://www.facebook.com/.',
+    urlInvalida: 'Escribe una URL HTTPS válida de Facebook.',
+    inactivo: 'El canal Facebook está desactivado; su enlace no se muestra en el sitio público.',
+    guardar: 'Guardar URL',
+    guardado: 'La URL oficial de Facebook se guardó correctamente.',
   },
   /**
    * Panel de exportación. No está dibujado en Figma: modal en escritorio y hoja inferior en móvil.

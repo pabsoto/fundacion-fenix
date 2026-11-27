@@ -214,9 +214,13 @@
   },
   "facebook": {
     "eyebrow": "Facebook",
-    "title": "Nuestra comunidad en vivo",
-    "placeholder": "Aquí va el feed de Facebook (plugin embebido)",
-    "note": "Widget del plugin de Facebook · el diseño final se define al integrarlo"
+    "title": "Nuestra comunidad en Facebook",
+    "iframeTitle": "Publicaciones recientes de la página de Facebook de la fundación",
+    "open": "Ver en Facebook",
+    "note": "Publicaciones recientes de nuestra página. El contenido puede variar.",
+    "loading": "Cargando publicaciones de Facebook…",
+    "error": "No se pudo cargar el enlace de Facebook en este momento.",
+    "unavailable": "La página oficial de Facebook aún no está configurada."
   },
   "footer": {
     "title": "Contactos",
