@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   getDonationAvailability,
+  isDemoDonation,
   type PublicDonation,
 } from './donations.service';
 
@@ -48,5 +49,56 @@ describe('presentación pública de donaciones', () => {
       showOfficialQr: true,
       showQr: true,
     });
+  });
+
+  it('no oculta la donación si prueba, test y demo están solo en el aviso', () => {
+    const donation: PublicDonation = {
+      ...demoDonation,
+      titular: 'Fundación Fénix LPB',
+      banco: 'Banco oficial',
+      referencia: 'Donación',
+      aviso: { es: 'Texto de prueba y demo', en: 'A test notice' },
+    };
+
+    expect(isDemoDonation(donation)).toBe(false);
+    expect(getDonationAvailability(donation, false).canDonate).toBe(true);
+  });
+
+  it('oculta cuando el titular es DEMO - NO REALIZAR DONACIONES', () => {
+    const donation: PublicDonation = {
+      ...demoDonation,
+      titular: 'DEMO - NO REALIZAR DONACIONES',
+      banco: 'Banco oficial',
+      referencia: 'Donación',
+      aviso: { es: 'Verifique los datos', en: 'Verify the details' },
+    };
+
+    expect(isDemoDonation(donation)).toBe(true);
+    expect(getDonationAvailability(donation, false).canDonate).toBe(false);
+  });
+
+  it('oculta cuando el banco es BANCO FICTICIO DE PRUEBA', () => {
+    const donation: PublicDonation = {
+      ...demoDonation,
+      titular: 'Fundación Fénix LPB',
+      banco: 'BANCO FICTICIO DE PRUEBA',
+      referencia: 'Donación',
+      aviso: { es: 'Verifique los datos', en: 'Verify the details' },
+    };
+
+    expect(isDemoDonation(donation)).toBe(true);
+    expect(getDonationAvailability(donation, false).canDonate).toBe(false);
+  });
+
+  it('no confunde Contestación con test', () => {
+    const donation: PublicDonation = {
+      ...demoDonation,
+      titular: 'Fundación Fénix LPB',
+      banco: 'Banco oficial',
+      referencia: 'Contestación',
+      aviso: { es: 'Contestación', en: 'Contestación' },
+    };
+
+    expect(isDemoDonation(donation)).toBe(false);
   });
 });

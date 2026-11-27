@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { validarImagen } from '@/schemas/imagen';
+import { Photo } from '@/components/ui/Photo';
 
 type Vista = { nombre: string; url: string };
 
@@ -17,17 +18,78 @@ type ZonaFotosProps = {
   multiple?: boolean;
   archivos: File[];
   onArchivos: (archivos: File[]) => void;
-  variante?: 'apilada' | 'mosaico';
+  variante?: 'apilada' | 'mosaico' | 'qr';
   existentes?: FotoExistente[];
   onQuitarExistente?: (clave: string) => void;
   nota?: string;
+  /** Si se indica, sustituye el tope de 5 MB. El mensaje lo pasa quien llama. */
+  maximoBytes?: number;
+  mensajeInvalido?: string;
+  /** Área táctil de quitar y de cambiar imagen, solo en Donaciones móvil. */
+  toque?: boolean;
 };
+
+function mismosArchivos(a: readonly File[], b: readonly File[]): boolean {
+  return a.length === b.length && a.every((archivo, indice) => archivo === b[indice]);
+}
 
 function vistasDe(archivos: File[]): Vista[] {
   return archivos.map((archivo) => ({
     nombre: archivo.name,
     url: URL.createObjectURL(archivo),
   }));
+}
+
+function FilaQr({
+  id,
+  texto,
+  nota,
+  vista,
+  existente,
+  onQuitarVista,
+  onQuitarExistente,
+  toque = false,
+}: {
+  id: string;
+  texto: string;
+  nota?: string;
+  vista?: Vista;
+  existente?: FotoExistente;
+  onQuitarVista: () => void;
+  onQuitarExistente?: (clave: string) => void;
+  toque?: boolean;
+}) {
+  const src = vista?.url ?? existente?.src ?? null;
+  const nombre = vista?.nombre ?? existente?.nombre ?? '';
+  const quitar = vista
+    ? onQuitarVista
+    : existente && onQuitarExistente
+      ? () => onQuitarExistente(existente.clave)
+      : null;
+
+  return (
+    <div className="flex items-center gap-4">
+      <span className="relative size-qr-formulario shrink-0 overflow-hidden rounded-admin-control bg-crema-tono/60">
+        {src ? (
+          <Photo key={src} src={src} alt={nombre} radius="btn" className="size-full" />
+        ) : null}
+        {quitar ? <BotonQuitar onClick={quitar} /> : null}
+      </span>
+      <span className={toque ? 'flex min-w-0 flex-1 flex-col gap-1.5' : 'flex min-w-0 flex-col gap-1.5'}>
+        <label
+          htmlFor={id}
+          className={
+            toque
+              ? 't-nav inline-flex min-h-(--size-toque-admin) w-fit cursor-pointer items-center text-negro underline'
+              : 't-nav w-fit cursor-pointer text-negro underline'
+          }
+        >
+          {texto}
+        </label>
+        {nota ? <p className="t-small text-texto-secundario">{nota}</p> : null}
+      </span>
+    </div>
+  );
 }
 
 function BotonQuitar({ onClick }: { onClick: () => void }) {
@@ -53,11 +115,15 @@ export function ZonaFotos({
   existentes = [],
   onQuitarExistente,
   nota,
+  maximoBytes,
+  mensajeInvalido,
+  toque = false,
 }: ZonaFotosProps) {
   const errorId = useId();
   const [error, setError] = useState<string | null>(null);
   const [vistos, setVistos] = useState<Vista[]>([]);
   const vistosRef = useRef(vistos);
+  const archivosRef = useRef(archivos);
 
   useEffect(() => {
     vistosRef.current = vistos;
@@ -69,7 +135,20 @@ export function ZonaFotos({
     };
   }, []);
 
+  useEffect(() => {
+    if (mismosArchivos(archivosRef.current, archivos)) {
+      archivosRef.current = archivos;
+      return;
+    }
+    archivosRef.current = archivos;
+    setVistos((previos) => {
+      previos.forEach((visto) => URL.revokeObjectURL(visto.url));
+      return vistasDe(archivos);
+    });
+  }, [archivos]);
+
   function publicar(siguientes: File[]) {
+    archivosRef.current = siguientes;
     vistos.forEach((visto) => URL.revokeObjectURL(visto.url));
     setVistos(vistasDe(siguientes));
     onArchivos(siguientes);
@@ -78,8 +157,12 @@ export function ZonaFotos({
   function recibir(lista: FileList | null) {
     if (!lista || lista.length === 0) return;
     const elegidos = [...lista];
+    const limite =
+      maximoBytes !== undefined && mensajeInvalido
+        ? { maximoBytes, mensaje: mensajeInvalido }
+        : undefined;
     for (const archivo of elegidos) {
-      const mensaje = validarImagen(archivo);
+      const mensaje = validarImagen(archivo, limite);
       if (mensaje) {
         setError(mensaje);
         return;
@@ -106,7 +189,18 @@ export function ZonaFotos({
           event.target.value = '';
         }}
       />
-      {variante === 'mosaico' ? (
+      {variante === 'qr' ? (
+        <FilaQr
+          id={id}
+          texto={texto}
+          nota={nota}
+          vista={archivos.length > 0 ? vistos[0] : undefined}
+          existente={existentes[0]}
+          onQuitarVista={() => quitar(0)}
+          onQuitarExistente={onQuitarExistente}
+          toque={toque}
+        />
+      ) : variante === 'mosaico' ? (
         <div className="flex flex-wrap items-start gap-3">
           <label
             htmlFor={id}
@@ -177,7 +271,7 @@ export function ZonaFotos({
           </label>
         </div>
       )}
-      {nota ? <p className="t-small text-negro">{nota}</p> : null}
+      {nota && variante !== 'qr' ? <p className="t-small text-negro">{nota}</p> : null}
       {error ? (
         <p id={errorId} className="t-small text-naranja">
           {error}

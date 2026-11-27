@@ -13,6 +13,10 @@ type CampoTextoProps = {
   error?: string;
   deshabilitado?: boolean;
   idioma?: string;
+  /** Solo el teléfono de donaciones. No cambia la validación. */
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  /** 16 px y margen de scroll para que el teclado no tape el campo. */
+  toque?: boolean;
 };
 
 export function CampoTexto({
@@ -28,8 +32,13 @@ export function CampoTexto({
   error,
   deshabilitado = false,
   idioma,
+  inputMode,
+  toque = false,
 }: CampoTextoProps) {
   const errorId = error ? `${id}-error` : undefined;
+  const claseToque = toque
+    ? 'max-w-full text-base! scroll-mb-[calc(var(--spacing-contenido-bajo-barra)+env(safe-area-inset-bottom,0px))]'
+    : null;
   const claseCampo = cn(
     'w-full rounded-admin-control border border-linea bg-blanco px-4 t-control text-negro placeholder:text-placeholder',
     multilinea ? 'h-area-admin resize-none pt-3.5' : 'h-(--size-control-admin)',
@@ -58,12 +67,13 @@ export function CampoTexto({
             aria-invalid={error ? true : undefined}
             aria-describedby={errorId}
             onChange={(event) => onChange(event.target.value)}
-            className={claseCampo}
+            className={claseToque ? cn(claseCampo, claseToque) : claseCampo}
           />
         ) : (
         <input
           id={id}
           type={tipo}
+          inputMode={inputMode}
           value={valor}
           placeholder={placeholder}
           disabled={deshabilitado}
@@ -71,7 +81,7 @@ export function CampoTexto({
           aria-invalid={error ? true : undefined}
           aria-describedby={errorId}
           onChange={(event) => onChange(event.target.value)}
-          className={claseCampo}
+          className={claseToque ? cn(claseCampo, claseToque) : claseCampo}
         />
         )}
         {tipo === 'date' && !valor && placeholder ? (

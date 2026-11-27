@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Header } from '@nestjs/common';
 import {
   ApiOkResponse,
   ApiOperation,
@@ -15,6 +15,7 @@ export class DonacionesPublicasController {
   constructor(private readonly servicio: DonacionesPublicasService) {}
 
   @Get()
+  @Header('Cache-Control', 'no-cache')
   @ApiOperation({
     summary: 'Consultar datos oficiales de donación',
     description:

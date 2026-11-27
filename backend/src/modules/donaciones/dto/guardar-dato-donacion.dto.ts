@@ -1,9 +1,12 @@
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsBoolean,
+  IsDateString,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
   ValidateIf,
 } from 'class-validator';
@@ -78,4 +81,21 @@ export class GuardarDatoDonacionDto {
   @MaxLength(2_000)
   @IsOptional()
   avisoEn?: string | null;
+
+  @ApiPropertyOptional({ example: true })
+  @ValidateIf((_objeto, valor) => valor !== undefined)
+  @IsBoolean()
+  activo?: boolean;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    format: 'date',
+    example: '2027-12-31',
+    description:
+      'Fecha inclusive de vigencia del QR ya guardado. null la quita. Omitirla conserva la actual. No sustituye la imagen.',
+  })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsDateString({ strict: true, strictSeparator: true })
+  qrVenceEl?: string | null;
 }

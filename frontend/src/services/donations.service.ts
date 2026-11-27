@@ -19,13 +19,7 @@ export async function getPublicDonation(): Promise<PublicDonation | null> {
 }
 
 export function isDemoDonation(donation: PublicDonation): boolean {
-  const content = [
-    donation.titular,
-    donation.banco,
-    donation.referencia,
-    donation.aviso.es ?? '',
-    donation.aviso.en ?? '',
-  ].join(' ');
+  const content = [donation.titular, donation.banco, donation.referencia].join(' ');
   return /\b(DEMO|PRUEBA|TEST|FICTICI[OA])\b/i.test(content);
 }
 

@@ -53,7 +53,9 @@ describe.skipIf(!URL_PRUEBAS)(
       await dataSource.initialize();
 
       const repositorio = dataSource.getRepository(DatoDonacion);
-      servicio = new DonacionesAdminService(repositorio, dataSource);
+      servicio = new DonacionesAdminService(repositorio, dataSource, {
+        obtenerUrlPublica: (ruta: string) => `https://storage.example/${ruta}`,
+      } as StorageService);
       servicioPublico = new DonacionesPublicasService(repositorio, {
         obtenerUrlPublica: (ruta: string) => `https://storage.example/${ruta}`,
       } as StorageService);

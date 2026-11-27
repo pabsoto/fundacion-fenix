@@ -10,6 +10,8 @@ type ModalAdminProps = {
   onCerrar: () => void;
   children: React.ReactNode;
   pie?: React.ReactNode;
+  /** Diálogo centrado, sin ocupar toda la pantalla, con el pie en columna. */
+  apilado?: boolean;
 };
 
 const SELECCION =
@@ -25,6 +27,7 @@ export function ModalAdmin({
   onCerrar,
   children,
   pie,
+  apilado = false,
 }: ModalAdminProps) {
   const tituloId = useId();
   const subtituloId = useId();
@@ -87,7 +90,11 @@ export function ModalAdmin({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-velo px-6 pt-8"
+      className={
+        apilado
+          ? 'fixed inset-0 z-50 flex items-center justify-center bg-velo px-6'
+          : 'fixed inset-0 z-50 flex items-start justify-center bg-velo px-6 pt-8'
+      }
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) cerrarRef.current();
       }}
@@ -99,7 +106,11 @@ export function ModalAdmin({
         aria-labelledby={tituloId}
         aria-describedby={subtitulo ? subtituloId : undefined}
         tabIndex={-1}
-        className="flex max-h-[calc(100dvh-4rem)] w-(--size-modal-admin) max-w-full flex-col overflow-hidden rounded-admin border border-linea bg-blanco shadow-modal-admin outline-none"
+        className={
+          apilado
+            ? 'flex max-h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden rounded-admin border border-linea bg-blanco shadow-modal-admin outline-none'
+            : 'flex max-h-[calc(100dvh-4rem)] w-(--size-modal-admin) max-w-full flex-col overflow-hidden rounded-admin border border-linea bg-blanco shadow-modal-admin outline-none'
+        }
       >
         <div className="flex items-start justify-between gap-4 px-7 pt-6 pb-5">
           <div className="flex min-w-0 flex-col gap-1">
@@ -116,7 +127,11 @@ export function ModalAdmin({
             type="button"
             onClick={() => cerrarRef.current()}
             aria-label={textosAdmin.registrarAnimal.cerrar}
-            className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-linea text-negro"
+            className={
+              apilado
+                ? 'flex size-(--size-toque-admin) shrink-0 cursor-pointer items-center justify-center rounded-full border border-linea text-negro'
+                : 'flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-linea text-negro'
+            }
           >
             <X className="size-4" aria-hidden="true" />
           </button>
@@ -126,7 +141,15 @@ export function ModalAdmin({
         {pie ? (
           <>
             <div className="h-px bg-linea" />
-            <div className="flex items-center justify-end gap-3 px-7 py-5">{pie}</div>
+            <div
+              className={
+                apilado
+                  ? 'flex flex-col gap-3 px-7 py-5'
+                  : 'flex items-center justify-end gap-3 px-7 py-5'
+              }
+            >
+              {pie}
+            </div>
           </>
         ) : null}
       </div>

@@ -151,6 +151,12 @@
   --spacing-mini-movil: 72px;
   --spacing-resumen-movil: 68px;
   --radius-resumen-movil: 20px;
+
+  /* Admin — Donaciones (nodo 553:244). */
+  --spacing-qr-formulario: 112px;
+  --spacing-hueco-qr: 202px;
+  --radius-vista-donar: 24px;
+  --border-hueco-qr: 1.5px;
 }
 
 @utility t-hero {
@@ -480,6 +486,24 @@
   letter-spacing: -0.01em;
 }
 
+/** Título de bloque en Donaciones (nodo 553:413): 22 px, tracking −1.5 px. */
+@utility t-cuenta {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.375rem;
+  line-height: normal;
+  letter-spacing: -0.068em;
+}
+
+/** Título de sección en Donaciones móvil (nodo 566:379): 20 px, tracking −1.5 px. */
+@utility t-seccion-movil {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  line-height: normal;
+  letter-spacing: -0.075em;
+}
+
 @utility t-total-vivo {
   font-family: var(--font-display);
   font-weight: 600;
@@ -615,6 +639,40 @@ html {
 .bg-negro:focus-visible,
 .bg-negro :focus-visible {
   outline-color: var(--color-crema);
+}
+
+@keyframes aviso-exito-entrar {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes aviso-exito-salir {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, 0.35rem);
+  }
+}
+
+.aviso-exito-entrar {
+  animation-name: aviso-exito-entrar;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+.aviso-exito-salir {
+  animation-name: aviso-exito-salir;
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+  animation-fill-mode: forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

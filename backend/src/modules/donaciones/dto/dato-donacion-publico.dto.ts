@@ -20,15 +20,12 @@ export class DatoDonacionPublicoDto {
   @ApiProperty({ type: () => TextoBilingueDto })
   readonly aviso: TextoBilingueDto;
 
-  /**
-   * Reservado para una URL pública autorizada por la integración futura con
-   * Supabase Storage. Nunca contiene `qr_ruta` ni una ubicación interna.
-   */
   @ApiProperty({
     nullable: true,
-    example: null,
+    example:
+      'https://proyecto.supabase.co/storage/v1/object/public/fenix-donaciones/qr/id/archivo.png',
     description:
-      'URL pública autorizada del QR. Permanece null hasta implementar Storage.',
+      'URL pública del QR vigente. Es null si no hay archivo, si está vencido en America/La_Paz o si no se puede armar la URL. No es la ruta interna.',
   })
   readonly qrUrl: string | null;
 }

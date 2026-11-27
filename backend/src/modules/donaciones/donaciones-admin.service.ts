@@ -11,6 +11,7 @@ import {
   QueryFailedError,
   Repository,
 } from 'typeorm';
+import { StorageService } from '../storage/storage.service.js';
 import { Auditoria } from '../auditoria/entities/auditoria.entity.js';
 import {
   DatoDonacionAdminDto,
@@ -37,6 +38,7 @@ export class DonacionesAdminService {
     @InjectRepository(DatoDonacion)
     private readonly repositorio: Repository<DatoDonacion>,
     @InjectDataSource() private readonly dataSource: DataSource,
+    private readonly storage: StorageService,
   ) {}
 
   async obtenerActiva(): Promise<RespuestaDonacionAdminDto> {
@@ -53,6 +55,7 @@ export class DonacionesAdminService {
           activo: true,
           qrRuta: true,
           qrVenceEl: true,
+          actualizadoEn: true,
         },
         where: { activo: true },
         take: 2,
@@ -175,33 +178,31 @@ export class DonacionesAdminService {
     const accion = existente ? 'UPDATE' : 'INSERT';
     const datosAntes = existente ? this.aSnapshot(existente) : null;
     const ahora = new Date();
+    const activo = entrada.activo ?? true;
+    const qrVenceEl =
+      entrada.qrVenceEl === undefined
+        ? (existente?.qrVenceEl ?? null)
+        : entrada.qrVenceEl;
+    const datos = {
+      titular: entrada.titular,
+      banco: entrada.banco,
+      telefono: entrada.telefono,
+      referencia: entrada.referencia,
+      numeroCuenta: entrada.numeroCuenta ?? null,
+      avisoEs: entrada.avisoEs ?? null,
+      avisoEn: entrada.avisoEn ?? null,
+      activo,
+      qrVenceEl,
+      actualizadoPorId: administradorId,
+      actualizadoEn: ahora,
+    };
 
     const donacion = existente
-      ? Object.assign(existente, {
-          titular: entrada.titular,
-          banco: entrada.banco,
-          telefono: entrada.telefono,
-          referencia: entrada.referencia,
-          numeroCuenta: entrada.numeroCuenta ?? null,
-          avisoEs: entrada.avisoEs ?? null,
-          avisoEn: entrada.avisoEn ?? null,
-          activo: true,
-          actualizadoPorId: administradorId,
-          actualizadoEn: ahora,
-        })
+      ? Object.assign(existente, datos)
       : donaciones.create({
-          titular: entrada.titular,
-          banco: entrada.banco,
-          telefono: entrada.telefono,
-          referencia: entrada.referencia,
-          numeroCuenta: entrada.numeroCuenta ?? null,
-          avisoEs: entrada.avisoEs ?? null,
-          avisoEn: entrada.avisoEn ?? null,
-          activo: true,
+          ...datos,
           creadoPorId: administradorId,
-          actualizadoPorId: administradorId,
           creadoEn: ahora,
-          actualizadoEn: ahora,
         });
 
     const guardada = await donaciones.save(donacion);
@@ -236,11 +237,22 @@ export class DonacionesAdminService {
       avisoEs: donacion.avisoEs,
       avisoEn: donacion.avisoEn,
       activo: donacion.activo,
+      qrUrl: this.urlPublicaQr(donacion.qrRuta),
+      actualizadoEn: new Date(donacion.actualizadoEn).toISOString(),
       qr: {
         disponible: donacion.qrRuta !== null,
         venceEl: donacion.qrVenceEl,
       },
     };
+  }
+
+  private urlPublicaQr(ruta: string | null): string | null {
+    if (!ruta) return null;
+    try {
+      return this.storage.obtenerUrlPublica(ruta);
+    } catch {
+      return null;
+    }
   }
 
   private aSnapshot(donacion: DatoDonacion): Record<string, unknown> {
@@ -269,7 +281,14 @@ export class DonacionesAdminService {
     accion: 'INSERT' | 'UPDATE',
   ): string[] {
     if (accion === 'INSERT') {
-      return [...CAMPOS_EDITABLES, 'activo', 'creado_por', 'actualizado_por'];
+      const campos: string[] = [
+        ...CAMPOS_EDITABLES,
+        'activo',
+        'creado_por',
+        'actualizado_por',
+      ];
+      if (despues.qr_vence_el != null) campos.push('qr_vence_el');
+      return campos;
     }
 
     return Object.keys(despues).filter(
