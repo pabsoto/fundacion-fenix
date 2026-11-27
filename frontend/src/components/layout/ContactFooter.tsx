@@ -64,13 +64,13 @@ export function ContactFooter() {
             )}
           </div>
 
-          <div className="mx-auto flex size-[220px] shrink-0 items-center justify-center rounded-full border-2 border-negro bg-blanco sm:size-[300px] lg:mx-0">
+          <div className="mx-auto flex size-[220px] shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-negro bg-blanco sm:size-[300px] lg:mx-0">
             <img
               src="/images/logo-fundacion-fenix.svg"
               alt={t('footer.brand')}
               width={1019}
               height={1019}
-              className="size-[200px] object-contain sm:size-[276px]"
+              className="size-[192px] object-contain sm:size-[264px]"
             />
           </div>
         </div>
