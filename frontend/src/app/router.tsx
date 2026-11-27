@@ -7,6 +7,7 @@ import { AdminGuard } from '@/app/AdminGuard';
 import { AdminLoginPage } from '@/pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 import { AdminDonacionesPage } from '@/pages/admin/AdminDonacionesPage';
+import { AdminCanalesPage } from '@/pages/admin/AdminCanalesPage';
 import { AdminCampanasPage } from '@/pages/admin/AdminCampanasPage';
 import { AdminAnimalesPage } from '@/pages/admin/AdminAnimalesPage';
 import { AdminResumenPage } from '@/pages/admin/AdminResumenPage';
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
               {
                 path: 'donaciones',
                 element: <AdminDonacionesPage />,
+              },
+              {
+                path: 'canales',
+                element: <AdminCanalesPage />,
               },
             ],
           },

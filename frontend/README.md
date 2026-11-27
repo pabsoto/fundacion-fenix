@@ -73,3 +73,13 @@ vacía o con una URL inválida, el botón permanece oculto. Las rutas `/admin` y
 
 El contacto oficial se administra en `public.canales_contacto`; no se configura
 un número alternativo en React ni mediante variables de entorno del frontend.
+
+## Feed público de Facebook
+
+La sección de inicio utiliza el Page Plugin oficial de Meta y muestra la pestaña
+`timeline` de la URL activa del canal `facebook` recibida desde
+`GET /api/public/contactos`. El enlace «Ver en Facebook» se muestra junto al
+iframe como alternativa cuando el plugin no carga o un bloqueador lo impide.
+La URL se administra desde `/admin/canales` y se guarda con
+`PUT /api/admin/canales/facebook`; solo se aceptan direcciones HTTPS de Facebook.
+Sin un canal configurado no se genera iframe ni se usa una URL de respaldo fija.

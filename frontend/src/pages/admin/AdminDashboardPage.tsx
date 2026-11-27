@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Calendar, Heart, LayoutGrid, LogOut, PawPrint } from 'lucide-react';
+import { Calendar, Heart, LayoutGrid, Link2, LogOut, PawPrint } from 'lucide-react';
 import { textosAdmin } from '@/content/textos-admin';
 import { BotonPildora } from '@/components/admin/ui/BotonPildora';
 import { FlameIcon } from '@/components/ui/icons';
@@ -15,6 +15,7 @@ const PESTANAS = [
   { to: '/admin/campanas', end: false, label: textosAdmin.nav.campanas, icono: Calendar },
   { to: '/admin/animales', end: false, label: textosAdmin.nav.animales, icono: PawPrint },
   { to: '/admin/donaciones', end: false, label: textosAdmin.nav.donaciones, icono: Heart },
+  { to: '/admin/canales', end: false, label: textosAdmin.nav.canales, icono: Link2 },
 ] as const;
 
 const ENFOCABLES =

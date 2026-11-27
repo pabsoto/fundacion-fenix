@@ -39,6 +39,22 @@ export function isSafePublicContact(contact: PublicContactChannel): boolean {
   }
 }
 
+export function isValidFacebookPageUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return (
+      url.protocol === 'https:' &&
+      ['facebook.com', 'www.facebook.com', 'm.facebook.com'].includes(
+        url.hostname.toLowerCase(),
+      ) &&
+      !url.username &&
+      !url.password
+    )
+  } catch {
+    return false
+  }
+}
+
 export function isValidWhatsAppUrl(value: string): boolean {
   try {
     const url = new URL(value)
