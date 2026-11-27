@@ -84,27 +84,7 @@ try {
       `insert into public.contenido_institucional
         (clave, titulo_es, titulo_en, texto_es, texto_en, imagen_ruta, orden, visible)
        values ($1, $2, $3, $4, $5, null, $6, true)
-       on conflict (clave) do update
-         set titulo_es = excluded.titulo_es,
-             titulo_en = excluded.titulo_en,
-             texto_es = excluded.texto_es,
-             texto_en = excluded.texto_en,
-             orden = excluded.orden,
-             visible = true,
-             actualizado_en = now()
-       where (contenido_institucional.titulo_es,
-              contenido_institucional.titulo_en,
-              contenido_institucional.texto_es,
-              contenido_institucional.texto_en,
-              contenido_institucional.orden,
-              contenido_institucional.visible)
-          is distinct from
-             (excluded.titulo_es,
-              excluded.titulo_en,
-              excluded.texto_es,
-              excluded.texto_en,
-              excluded.orden,
-              excluded.visible)`,
+       on conflict (clave) do nothing`,
       [
         entry.clave,
         entry.tituloEs,
@@ -133,7 +113,7 @@ try {
   console.log(
     JSON.stringify(
       {
-        insertedOrUpdated: verification.rowCount,
+        verifiedCount: verification.rowCount,
         keys: verification.rows.map((row) => row.clave),
         manifest: path.relative(repositoryRoot, manifestPath),
       },
