@@ -169,6 +169,8 @@
     "photo_placeholder": "Photo · Pet",
     "prev": "Previous stories",
     "next": "More stories",
+    "loading": "Loading stories…",
+    "error": "Stories could not be loaded right now.",
     "empty": "No official stories have been published yet."
   },
   "collaborate": {
