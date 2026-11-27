@@ -6,14 +6,14 @@ import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
 
 export function About() {
   const { t } = useTranslation();
-  const { text } = useInstitutionalContent();
+  const { text, image } = useInstitutionalContent();
 
   return (
     <div className="flex flex-col gap-16 lg:gap-20">
       <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-20">
         <div className="relative">
           <Photo
-            src="/images/fundadora-con-perrito.jpg"
+            src={image('quienes_somos_fundadora') ?? '/images/fundadora-con-perrito.jpg'}
             alt={t('about.founder_alt')}
             radius="panel"
             width={520}
@@ -44,7 +44,7 @@ export function About() {
 
         <div className="lg:ml-auto">
           <Photo
-            src="/images/gatito-rescatado.jpg"
+            src={image('quienes_somos_fenix') ?? '/images/gatito-rescatado.jpg'}
             alt={t('about.kitten_alt')}
             radius="panel"
             width={360}

@@ -6,7 +6,7 @@ import { Pillars } from './Pillars';
 const institutionalText = vi.fn<(key: string, field?: 'titulo' | 'descripcion') => string>();
 
 vi.mock('@/hooks/useInstitutionalContent', () => ({
-  useInstitutionalContent: () => ({ text: institutionalText }),
+  useInstitutionalContent: () => ({ text: institutionalText, image: () => null }),
 }));
 
 afterEach(() => {

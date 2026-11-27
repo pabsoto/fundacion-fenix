@@ -9,7 +9,7 @@ import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
 
 export function Hero() {
   const { t } = useTranslation();
-  const { text } = useInstitutionalContent();
+  const { text, image } = useInstitutionalContent();
   const title = text('hero_principal', 'titulo').split('\n');
   const context = text('hero_contexto').split('\n');
 
@@ -51,7 +51,7 @@ export function Hero() {
 
             <div className="relative">
               <Photo
-                src="/images/hero-perros.jpg"
+                src={image('hero_principal') ?? '/images/hero-perros.jpg'}
                 alt={t('hero.alt')}
                 radius="panel"
                 width={1504}

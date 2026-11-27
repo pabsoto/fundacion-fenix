@@ -137,7 +137,14 @@ describe('AdminDashboardPage', () => {
   it('cierra la sesión usando el token CSRF y vuelve al login', async () => {
     renderDashboard();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Salir' }));
+    expect(await screen.findByRole('button', { name: 'Salir' })).toBeTruthy();
+    expect(
+      screen
+        .getAllByRole('link', { name: 'Contenido del sitio' })
+        .map((enlace) => enlace.getAttribute('href')),
+    ).toEqual(['/admin/contenido', '/admin/contenido']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salir' }));
 
     await waitFor(() =>
       expect(cerrarSesion).toHaveBeenCalledWith(sesion.csrfToken),
@@ -162,11 +169,15 @@ describe('AdminDashboardPage', () => {
       renderDashboard();
 
       expect(await screen.findByRole('link', { name: 'Donaciones' })).toBeTruthy();
+      expect(screen.queryByRole('link', { name: 'Contenido del sitio' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Salir' })).toBeNull();
 
       fireEvent.click(screen.getByRole('button', { name: 'Abrir menú de la cuenta' }));
       expect(screen.getByText('Administración FÉNIX')).toBeTruthy();
       expect(screen.getByText('Administrador del panel')).toBeTruthy();
+      expect(screen.getByRole('menuitem', { name: 'Contenido del sitio' }).getAttribute('href')).toBe(
+        '/admin/contenido',
+      );
 
       fireEvent.click(screen.getByRole('menuitem', { name: 'Salir' }));
       await waitFor(() => expect(cerrarSesion).toHaveBeenCalledWith(sesion.csrfToken));

@@ -1,6 +1,7 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { StorageService } from '../storage/storage.service.js';
 import { ContenidoInstitucionalPublicoDto } from './dto/contenido-institucional-publico.dto.js';
 import { ContenidoInstitucional } from './entities/contenido-institucional.entity.js';
 
@@ -9,6 +10,7 @@ export class ContenidoInstitucionalPublicoService {
   constructor(
     @InjectRepository(ContenidoInstitucional)
     private readonly repositorio: Repository<ContenidoInstitucional>,
+    private readonly storage: StorageService,
   ) {}
 
   async listarVisibles(): Promise<ContenidoInstitucionalPublicoDto[]> {
@@ -31,7 +33,9 @@ export class ContenidoInstitucionalPublicoService {
         clave: contenido.clave,
         titulo: { es: contenido.tituloEs, en: contenido.tituloEn },
         descripcion: { es: contenido.textoEs, en: contenido.textoEn },
-        imagenUrl: contenido.imagenRuta,
+        imagenUrl: contenido.imagenRuta
+          ? this.storage.obtenerUrlPublica(contenido.imagenRuta)
+          : null,
         orden: contenido.orden,
       }));
     } catch (error) {

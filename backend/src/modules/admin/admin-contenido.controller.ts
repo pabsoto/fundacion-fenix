@@ -4,27 +4,40 @@ import {
   Get,
   Header,
   Param,
+  Post,
   Put,
   Req,
   UnauthorizedException,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiPayloadTooLargeResponse,
   ApiSecurity,
   ApiServiceUnavailableResponse,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiUnsupportedMediaTypeResponse,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ErrorResponseDto } from '../../common/dto/error-response.dto.js';
 import { CsrfGuard } from '../../common/guards/csrf.guard.js';
 import { SesionAdminGuard } from '../../common/guards/sesion-admin.guard.js';
 import type { PeticionConSesion } from '../../common/types/peticion-sesion.js';
+import {
+  TAMANO_MAXIMO_FOTO,
+  type ArchivoFotoCargado,
+} from '../campanas/fotos-campana.service.js';
+import { ArchivoFotoSwaggerDto } from '../campanas/dto/foto-campana.dto.js';
 import { ContenidoInstitucionalAdminService } from '../contenido-institucional/contenido-institucional-admin.service.js';
 import {
   ActualizarContenidoDto,
@@ -105,5 +118,48 @@ export class AdminContenidoController {
       );
     }
     return administradorId;
+  }
+
+  @Post(':clave/imagen')
+  @UseGuards(CsrfGuard)
+  @UseInterceptors(
+    FileInterceptor('archivo', { limits: { fileSize: TAMANO_MAXIMO_FOTO } }),
+  )
+  @Header('Cache-Control', 'no-store')
+  @ApiSecurity({ cookieAuth: [], csrfToken: [] })
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Subir o reemplazar la imagen de una sección',
+    description:
+      'Acepta JPG, PNG o WebP de hasta 5 MB, validando el contenido real del archivo. La ruta queda en contenido/{clave}/{uuid}.{ext}.',
+  })
+  @ApiBody({ type: ArchivoFotoSwaggerDto })
+  @ApiCreatedResponse({ type: ContenidoInstitucionalAdminDto })
+  @ApiBadRequestResponse({
+    description: 'Falta el archivo.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'La sección no existe.',
+    type: ErrorResponseDto,
+  })
+  @ApiPayloadTooLargeResponse({
+    description: 'La imagen supera 5 MB.',
+    type: ErrorResponseDto,
+  })
+  @ApiUnsupportedMediaTypeResponse({
+    description: 'El archivo no es un JPG, PNG o WebP válido.',
+    type: ErrorResponseDto,
+  })
+  reemplazarImagen(
+    @Param('clave') clave: string,
+    @UploadedFile() archivo: ArchivoFotoCargado | undefined,
+    @Req() request: PeticionConSesion,
+  ): Promise<ContenidoInstitucionalAdminDto> {
+    return this.contenido.reemplazarImagen(
+      clave,
+      archivo,
+      this.administradorId(request),
+    );
   }
 }

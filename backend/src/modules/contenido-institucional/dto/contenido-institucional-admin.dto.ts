@@ -21,6 +21,14 @@ export class ContenidoInstitucionalAdminDto {
   @ApiProperty({ nullable: true }) readonly textoEs: string | null;
   @ApiProperty({ nullable: true }) readonly textoEn: string | null;
   @ApiProperty({ nullable: true }) readonly imagenRuta: string | null;
+
+  @ApiProperty({
+    nullable: true,
+    description: 'URL pública de la imagen, armada por el backend.',
+    example:
+      'https://proyecto.supabase.co/storage/v1/object/public/fenix-donaciones/contenido/hero_principal/archivo.jpg',
+  })
+  readonly imagenUrl: string | null;
   @ApiProperty({ example: 1 }) readonly orden: number;
   @ApiProperty() readonly visible: boolean;
   @ApiProperty({ format: 'date-time' }) readonly actualizadoEn: Date;

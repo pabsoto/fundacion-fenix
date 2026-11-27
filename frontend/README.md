@@ -80,6 +80,7 @@ La sección de inicio utiliza el Page Plugin oficial de Meta y muestra la pesta�
 `timeline` de la URL activa del canal `facebook` recibida desde
 `GET /api/public/contactos`. El enlace «Ver en Facebook» se muestra junto al
 iframe como alternativa cuando el plugin no carga o un bloqueador lo impide.
-La URL se administra desde `/admin/canales` y se guarda con
-`PUT /api/admin/canales/facebook`; solo se aceptan direcciones HTTPS de Facebook.
-Sin un canal configurado no se genera iframe ni se usa una URL de respaldo fija.
+La URL se administra en `/admin/contenido` (pestaña Secciones, tarjeta Canales
+de contacto) y cada canal modificado se guarda con `PUT /api/admin/canales/{tipo}`.
+El enlace debe empezar por `https://` o `mailto:`. Sin un canal de Facebook
+configurado no se genera iframe ni se usa una URL de respaldo fija.

@@ -141,5 +141,11 @@ export function useInstitutionalContent() {
     return byKey.get(key);
   }
 
-  return { ...query, text, entry, language };
+  /** URL pública del bloque, o null si la base no tiene imagen. */
+  function image(key: string): string | null {
+    const url = byKey.get(key)?.imagenUrl;
+    return url ? url : null;
+  }
+
+  return { ...query, text, entry, image, language };
 }

@@ -7,26 +7,26 @@ import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
 
 export function Pillars() {
   const { t } = useTranslation();
-  const { text } = useInstitutionalContent();
+  const { text, image } = useInstitutionalContent();
 
   const pillars = [
     {
       id: 'rehabilitation',
-      image: '/images/pilar-rehabilitacion.jpg',
+      image: image('pilar_rehabilitacion') ?? '/images/pilar-rehabilitacion.jpg',
       alt: t('pillars.pilar1_alt'),
       title: text('pilar_rehabilitacion', 'titulo'),
       text: text('pilar_rehabilitacion'),
     },
     {
       id: 'education',
-      image: '/images/pilar-educacion.jpg',
+      image: image('pilar_educacion') ?? '/images/pilar-educacion.jpg',
       alt: t('pillars.pilar2_alt'),
       title: text('pilar_educacion', 'titulo'),
       text: text('pilar_educacion'),
     },
     {
       id: 'sterilization',
-      image: '/images/pilar-esterilizacion.jpg',
+      image: image('pilar_esterilizacion') ?? '/images/pilar-esterilizacion.jpg',
       alt: t('pillars.pilar3_alt'),
       title: text('pilar_esterilizacion', 'titulo'),
       text: text('pilar_esterilizacion'),

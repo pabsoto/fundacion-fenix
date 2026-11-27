@@ -54,9 +54,9 @@ export function AdminCanalesPage() {
       : textosAdmin.supuestos.error
 
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex w-full max-w-3xl flex-col items-start gap-6 rounded-card border border-linea bg-blanco p-6 md:p-8">
       <header className="flex flex-col gap-2">
-        <h1 className="t-section text-negro">{textosAdmin.canales.titulo}</h1>
+        <h2 className="t-heading-card text-negro">{textosAdmin.canales.titulo}</h2>
         <p className="t-body text-negro">{textosAdmin.canales.subtitulo}</p>
       </header>
 
@@ -76,7 +76,7 @@ export function AdminCanalesPage() {
       ) : (
         <form
           onSubmit={guardar}
-          className="flex w-full max-w-3xl flex-col items-start gap-6 rounded-card border border-linea bg-blanco p-6 md:p-8"
+          className="flex w-full flex-col items-start gap-6"
         >
           <div className="flex w-full flex-col gap-2">
             <label htmlFor="url-facebook" className="t-body-strong text-negro">

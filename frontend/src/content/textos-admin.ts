@@ -1,4 +1,4 @@
-import { formatNumber } from '@/lib/format';
+import { formatNumber } from '@/lib/format'
 
 /**
  * Textos del panel admin, solo en español.
@@ -6,7 +6,7 @@ import { formatNumber } from '@/lib/format';
  */
 
 function cifra(cantidad: number): string {
-  return formatNumber(cantidad, 'es');
+  return formatNumber(cantidad, 'es')
 }
 
 export const textosAdmin = {
@@ -19,11 +19,11 @@ export const textosAdmin = {
     campanas: 'Campañas',
     animales: 'Animales',
     donaciones: 'Donaciones',
-    canales: 'Canales',
+    contenido: 'Contenido del sitio',
     salir: 'Salir',
     /** Menú del avatar (Campañas móvil, nodo 464:537). El nombre sale de la sesión. */
     rol: 'Administrador del panel',
-    
+
     etiqueta: 'Secciones del panel',
     cuenta: 'Abrir menú de la cuenta',
   },
@@ -51,7 +51,8 @@ export const textosAdmin = {
     adopcionesLeyenda: 'Adopciones',
     espera: 'Los que más llevan esperando',
     esperaNota: 'Animales sin adoptar, del más antiguo',
-    dias: (cantidad: number) => (cantidad === 1 ? `${cifra(cantidad)} día` : `${cifra(cantidad)} días`),
+    dias: (cantidad: number) =>
+      cantidad === 1 ? `${cifra(cantidad)} día` : `${cifra(cantidad)} días`,
     /** Índice 0 = enero. El marco de Figma los muestra desde diciembre. */
     meses: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
   },
@@ -212,9 +213,9 @@ export const textosAdmin = {
     cargarMas: 'Cargar más',
     /** El número grande va aparte. Figma escribe «animales · 4 adoptados». */
     resumenLinea: (total: number, adoptados: number) => {
-      const animales = total === 1 ? 'animal' : 'animales';
-      const adopcion = adoptados === 1 ? '1 adoptado' : `${cifra(adoptados)} adoptados`;
-      return `${animales} · ${adopcion}`;
+      const animales = total === 1 ? 'animal' : 'animales'
+      const adopcion = adoptados === 1 ? '1 adoptado' : `${cifra(adoptados)} adoptados`
+      return `${animales} · ${adopcion}`
     },
     /** Desglose al abrir el resumen. Figma solo dibuja el resumen cerrado. */
     resumenTarjetas: {
@@ -316,8 +317,7 @@ export const textosAdmin = {
     subtitulo:
       'Los datos y el código QR que se muestran en la sección Donar de la página web pública.',
     /** Admin — Donaciones (móvil), nodo 566:260. */
-    subtituloMovil:
-      'Los datos y el código QR que se muestran en la sección Donar de la landing.',
+    subtituloMovil: 'Los datos y el código QR que se muestran en la sección Donar de la landing.',
     cuenta: 'Datos de la cuenta',
     cuentaNota: 'Quien quiera donar verá estos datos.',
     /** Admin — Donaciones (móvil), nodo 566:380. */
@@ -339,15 +339,13 @@ export const textosAdmin = {
     cambiarImagen: 'Cambiar imagen',
     notaQr: (megas: number) =>
       `JPG, PNG o WebP · máx. ${megas} MB · se muestra en la sección Donar`,
-    imagenInvalida: (megas: number) =>
-      `La imagen debe ser JPG, PNG o WebP de hasta ${megas} MB.`,
+    imagenInvalida: (megas: number) => `La imagen debe ser JPG, PNG o WebP de hasta ${megas} MB.`,
     aviso: 'Aviso en español (opcional)',
     /** Admin — Donaciones (móvil), nodos 566:430 y 566:431. */
     avisoSeccion: 'Aviso para quien dona',
     avisoSeccionNota: 'Aparece destacado en amarillo junto a los datos.',
     english: 'English',
-    englishNota:
-      'El aviso se traduce automáticamente al guardar. Podrás editarlo después.',
+    englishNota: 'El aviso se traduce automáticamente al guardar. Podrás editarlo después.',
     /** El Figma no nombra el campo de dentro del plegable. */
     avisoEn: 'Aviso en inglés (opcional)',
     descartar: 'Descartar',
@@ -380,6 +378,118 @@ export const textosAdmin = {
     vistaBanco: 'Banco',
     vistaTelefono: 'Teléfono',
     vistaReferencia: 'Referencia',
+  },
+  contenido: {
+    titulo: 'Contenido del sitio',
+    subtitulo: 'Edita los textos, imágenes y canales de contacto que se muestran en la landing.',
+    secciones: 'Secciones',
+    historias: 'Historias destacadas',
+    etiquetaPestanas: 'Partes del contenido del sitio',
+    bloques: 'Bloques de la landing',
+    textosDeSeccion: 'Textos de esta sección',
+    visible: 'Visible',
+    oculto: 'Oculto',
+    parcial: 'Algunos',
+    grupos: {
+      inicio: 'Inicio',
+      cifras: 'Cifras',
+      nosotros: 'Nosotros',
+      programa: 'Nuestro programa',
+      resultados: 'Resultados',
+      colaborar: 'Cómo colaborar',
+      donar: 'Donar',
+      contactos: 'Contactos',
+      otros: 'Otros',
+    },
+    mostrar: 'Mostrar en la landing',
+    mostrarNota: 'Si lo ocultas, este bloque no se verá en el sitio.',
+    espanol: 'Español (ES)',
+    ingles: 'English (EN)',
+    campoTitulo: 'Título *',
+    campoTituloEn: 'Title *',
+    campoTexto: 'Texto *',
+    campoTextoEn: 'Text *',
+    imagen: 'Imagen del bloque',
+    vista: 'Vista previa',
+    idiomaEs: 'ES',
+    idiomaEn: 'EN',
+    vistaNota: 'Así se verá en la landing (español).',
+    vistaNotaEn: 'Así se verá en la landing (inglés).',
+    tituloLargo: 'El título admite hasta 300 caracteres.',
+    textoLargo: 'El texto admite hasta 4000 caracteres.',
+    imagenNoSubio: 'Se guardó, pero la imagen no se pudo subir',
+    descartar: 'Descartar',
+    guardar: 'Guardar cambios',
+    ultimaActualizacion: (fecha: string) => `Última actualización: ${fecha}`,
+    canalesTitulo: 'Canales de contacto',
+    canalesNota:
+      'Los enlaces deben empezar por https:// o mailto:. Se usan en el pie de página y en la sección Contactos.',
+    enlace: 'Enlace',
+    textoVisible: 'Texto visible',
+    guardarCanales: 'Guardar canales',
+    enlaceLargo: 'El enlace admite hasta 500 caracteres.',
+    enlaceInvalido: 'El enlace debe empezar por https:// o mailto:.',
+    textoVisibleLargo: 'El texto visible admite hasta 200 caracteres.',
+    nombresCanal: {
+      whatsapp: 'WhatsApp',
+      facebook: 'Facebook',
+      instagram: 'Instagram',
+      tiktok: 'TikTok',
+      email: 'Correo',
+    },
+    reemplazarImagen: 'Reemplazar imagen',
+    notaImagen: 'PNG, JPG o WebP · máx. 5 MB',
+    descartarImagen: 'Descartar',
+    altImagen: 'Imagen actual del bloque',
+    /**
+     * Historias destacadas. No hay frame en Figma: la lista sigue el patrón de Animales.
+     */
+    historiasForm: {
+      nueva: 'Nueva historia',
+      editarTitulo: 'Editar historia',
+      guardar: 'Guardar historia',
+      guardarCambios: 'Guardar cambios',
+      vacio: 'Aún no hay historias',
+      animal: 'Nombre del animal *',
+      animalPlaceholder: 'Ej. Luna',
+      titulo: 'Título *',
+      tituloEn: 'Title *',
+      texto: 'Texto *',
+      textoEn: 'Text *',
+      autor: 'Autor (opcional)',
+      fecha: 'Fecha de la historia *',
+      fechaPlaceholder: 'dd / mm / aaaa',
+      foto: 'Foto (opcional)',
+      notaFoto: 'JPG, PNG o WebP · máx. 5 MB',
+      visible: 'Visible',
+      visibleNota: 'Si está activa, la historia se muestra en el sitio.',
+      notaAutorizacion:
+        'Publica solo contenido autorizado por la fundación. No incluyas datos personales de adoptantes.',
+      estadoVisible: 'Visible',
+      estadoOculta: 'Oculta',
+      columnaTitulo: 'Título',
+      columnaAnimal: 'Animal',
+      columnaFecha: 'Fecha',
+      columnaEstado: 'Estado',
+      columnaAcciones: 'Acciones',
+      sinFotoPublicar: 'Para mostrarla en el sitio hace falta una foto.',
+      noSePublico: 'Se guardó, pero no se pudo mostrar en el sitio.',
+      animalLargo: 'El nombre admite hasta 100 caracteres.',
+      tituloLargo: 'El título admite hasta 200 caracteres.',
+      textoLargo: 'El texto admite hasta 4000 caracteres.',
+      autorLargo: 'El autor admite hasta 100 caracteres.',
+      confirmarEliminarTitulo: 'Eliminar historia',
+      confirmarEliminar:
+        'La historia dejará de mostrarse. Esta acción no se puede deshacer desde el panel.',
+      confirmarEliminarAccion: 'Eliminar historia',
+      editar: (titulo: string) => `Editar «${titulo}»`,
+      ocultar: (titulo: string) => `Ocultar «${titulo}»`,
+      mostrar: (titulo: string) => `Mostrar «${titulo}»`,
+      eliminar: (titulo: string) => `Eliminar «${titulo}»`,
+      subir: (titulo: string) => `Subir «${titulo}»`,
+      bajar: (titulo: string) => `Bajar «${titulo}»`,
+      miniatura: (nombre: string) => `Foto de ${nombre}`,
+    },
   },
   canales: {
     titulo: 'Canales de contacto',
@@ -433,8 +543,7 @@ export const textosAdmin = {
     confirmarQrTitulo: 'Cambiar el QR',
     confirmarQr: 'El QR nuevo reemplaza al que está publicado.',
     ocultarDonacionTitulo: 'Ocultar del sitio',
-    ocultarDonacion:
-      'Al ocultar la donación del sitio tendrás que volver a ingresar los datos',
+    ocultarDonacion: 'Al ocultar la donación del sitio tendrás que volver a ingresar los datos',
     descartarTitulo: 'Descartar cambios',
     descartarCambios: 'Se perderán los cambios que no guardaste.',
     confirmar: 'Confirmar',
@@ -480,4 +589,4 @@ export const textosAdmin = {
     tabla: 'Tabla y panel de detalle',
     modal: 'Modal',
   },
-} as const;
+} as const

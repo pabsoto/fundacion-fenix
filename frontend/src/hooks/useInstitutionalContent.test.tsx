@@ -65,6 +65,7 @@ describe('useInstitutionalContent', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.text('pilar_rehabilitacion', 'titulo')).toBe('Rehabilitación integral');
     expect(result.current.text('pilar_rehabilitacion')).toBe('Descripción ES');
+    expect(result.current.image('pilar_rehabilitacion')).toBeNull();
 
     await i18n.changeLanguage('en');
     rerender();
