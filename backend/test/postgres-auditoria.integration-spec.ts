@@ -124,6 +124,9 @@ describe.skipIf(!URL_PRUEBAS)('auditoría sin duplicados (integración)', () => 
     const donaciones = new DonacionesAdminService(
       base.getRepository(DatoDonacion),
       base,
+      {
+        obtenerUrlPublica: (ruta: string) => `https://storage.example/${ruta}`,
+      } as StorageService,
     );
 
     await donaciones.guardar(

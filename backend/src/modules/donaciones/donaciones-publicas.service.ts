@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { DatoDonacionPublicoDto } from './dto/dato-donacion-publico.dto.js';
 import { DatoDonacion } from './entities/dato-donacion.entity.js';
 import { StorageService } from '../storage/storage.service.js';
+import { qrDonacionEstaVencido } from './vigencia-qr.js';
 
 @Injectable()
 export class DonacionesPublicasService {
@@ -61,7 +62,10 @@ export class DonacionesPublicasService {
   }
 
   private obtenerQrUrl(configuracion: DatoDonacion): string | null {
-    if (!configuracion.qrRuta || this.estaVencido(configuracion.qrVenceEl)) {
+    if (
+      !configuracion.qrRuta ||
+      qrDonacionEstaVencido(configuracion.qrVenceEl)
+    ) {
       return null;
     }
 
@@ -70,11 +74,5 @@ export class DonacionesPublicasService {
     } catch {
       return null;
     }
-  }
-
-  private estaVencido(venceEl: string | null): boolean {
-    if (!venceEl) return false;
-    const hoyUtc = new Date().toISOString().slice(0, 10);
-    return venceEl < hoyUtc;
   }
 }

@@ -32,6 +32,21 @@ export class DatoDonacionAdminDto {
   @ApiProperty({ example: true })
   readonly activo: boolean;
 
+  @ApiProperty({
+    nullable: true,
+    example:
+      'https://proyecto.supabase.co/storage/v1/object/public/fenix-donaciones/qr/id/archivo.png',
+    description:
+      'URL pública del QR guardado, también si está vencido. null si no hay archivo. No es la ruta interna.',
+  })
+  readonly qrUrl: string | null;
+
+  @ApiProperty({
+    format: 'date-time',
+    example: '2026-01-01T00:00:00.000Z',
+  })
+  readonly actualizadoEn: string;
+
   @ApiProperty({ type: () => EstadoQrDonacionDto })
   readonly qr: EstadoQrDonacionDto;
 }

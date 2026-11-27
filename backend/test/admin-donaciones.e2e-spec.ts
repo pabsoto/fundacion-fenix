@@ -236,10 +236,16 @@ describe('administración de donaciones (e2e)', () => {
       titular: 'Fundación FÉNIX LPB',
       banco: 'Banco anterior',
       activo: true,
+      qrUrl: expect.stringContaining('donaciones/qr-preservado.png'),
+      actualizadoEn: '2026-01-01T00:00:00.000Z',
       qr: { disponible: true, venceEl: '2027-06-30' },
     });
+    expect(respuesta.body.donacion).not.toHaveProperty('qrRuta');
+    expect(respuesta.body.donacion).not.toHaveProperty('qr_ruta');
     expect(respuesta.body.donacion).not.toHaveProperty('creadoPorId');
     expect(respuesta.body.donacion).not.toHaveProperty('actualizadoPorId');
+    expect(respuesta.body.donacion).not.toHaveProperty('creado_por');
+    expect(respuesta.body.donacion).not.toHaveProperty('actualizado_por');
   });
 
   it('devuelve una configuración ausente de forma coherente', async () => {
@@ -425,6 +431,56 @@ describe('administración de donaciones (e2e)', () => {
       },
     });
     expect(publica.body.donacion).not.toHaveProperty('creadoPorId');
+    expect(publica.headers['cache-control']).toBe('no-cache');
+  });
+
+  it('guarda activo y qrVenceEl, borra la fecha con null y rechaza una fecha inválida o un campo extra', async () => {
+    const original = crearDonacion();
+    donaciones = [original];
+
+    const guardado = await request(app.getHttpServer())
+      .put('/api/admin/donaciones')
+      .set('Cookie', COOKIE)
+      .set('X-CSRF-Token', CSRF)
+      .send({ ...cuerpoValido, activo: false, qrVenceEl: '2026-12-01' })
+      .expect(200);
+
+    expect(guardado.body.donacion).toMatchObject({
+      activo: false,
+      qr: { disponible: true, venceEl: '2026-12-01' },
+    });
+    expect(donaciones[0]).toMatchObject({
+      activo: false,
+      qrRuta: 'donaciones/qr-preservado.png',
+      qrVenceEl: '2026-12-01',
+    });
+
+    donaciones[0].activo = true;
+    const borrado = await request(app.getHttpServer())
+      .put('/api/admin/donaciones')
+      .set('Cookie', COOKIE)
+      .set('X-CSRF-Token', CSRF)
+      .send({ ...cuerpoValido, qrVenceEl: null })
+      .expect(200);
+    expect(borrado.body.donacion.qr.venceEl).toBeNull();
+    expect(donaciones[0].qrRuta).toBe('donaciones/qr-preservado.png');
+    expect(donaciones[0].qrVenceEl).toBeNull();
+
+    await request(app.getHttpServer())
+      .put('/api/admin/donaciones')
+      .set('Cookie', COOKIE)
+      .set('X-CSRF-Token', CSRF)
+      .send({ ...cuerpoValido, qrVenceEl: '2026-02-31' })
+      .expect(400);
+    expect(donaciones[0].qrVenceEl).toBeNull();
+
+    await request(app.getHttpServer())
+      .put('/api/admin/donaciones')
+      .set('Cookie', COOKIE)
+      .set('X-CSRF-Token', CSRF)
+      .send({ ...cuerpoValido, qrRuta: 'qr/no-autorizada.png' })
+      .expect(400);
+    expect(donaciones[0].qrRuta).toBe('donaciones/qr-preservado.png');
   });
 
   it('responde 503 sin filtrar detalles ante fallos de PostgreSQL', async () => {
@@ -595,6 +651,16 @@ describe('administración de donaciones (e2e)', () => {
       .get('/api/public/donaciones')
       .expect(200);
     expect(vencido.body.donacion.qrUrl).toBeNull();
+    expect(vencido.headers['cache-control']).toBe('no-cache');
+
+    const adminVencido = await request(app.getHttpServer())
+      .get('/api/admin/donaciones')
+      .set('Cookie', COOKIE)
+      .expect(200);
+    expect(adminVencido.body.donacion.qrUrl).toEqual(
+      expect.stringContaining('/qr/id/archivo.png'),
+    );
+    expect(adminVencido.body.donacion).not.toHaveProperty('qrRuta');
 
     donaciones[0].qrVenceEl = '2099-12-31';
     const vigente = await request(app.getHttpServer())

@@ -43,14 +43,17 @@ datos es válida y responde `200` con `{ "donacion": null }`.
       "es": "Verifique siempre el titular antes de donar.",
       "en": "Always verify the account holder before donating."
     },
-    "qrUrl": null
+    "qrUrl": "https://sitio-publico-autorizado.example/qr/archivo.png"
   }
 }
 ```
 
-`numeroCuenta`, `aviso.es` y `aviso.en` pueden ser `null`. `qrUrl` queda
-reservado para una URL pública autorizada por la futura integración con
-Supabase Storage; por ahora siempre es `null`. El backend no expone `qr_ruta`,
+La respuesta incluye `Cache-Control: no-cache`. `numeroCuenta`, `aviso.es`,
+`aviso.en` y `qrUrl` pueden ser `null`. `qrUrl` es la URL pública del QR
+cuando hay un archivo y sigue vigente. Es `null` si no hay archivo, si no se
+puede armar la URL o si `qr_vence_el` es anterior al día de hoy en
+`America/La_Paz`. El QR sigue vigente durante todo el día de su fecha y vence
+al día siguiente en esa zona, no en UTC. El backend no expone `qr_ruta`,
 no inventa una URL y no procesa pagos. Si hay más de una configuración activa,
 responde `503` y no elige una arbitrariamente.
 

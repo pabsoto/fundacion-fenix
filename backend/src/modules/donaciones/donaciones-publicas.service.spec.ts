@@ -74,6 +74,47 @@ describe('DonacionesPublicasService', () => {
     expect(resultado).not.toHaveProperty('qrRuta');
   });
 
+  it('oculta un QR que ya venció en La Paz y publica el que vence hoy aunque en UTC sea mañana', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-27T01:00:00.000Z'));
+    try {
+      find.mockResolvedValue([
+        {
+          titular: 'Fundación FÉNIX',
+          banco: 'Banco',
+          telefono: '70000000',
+          referencia: 'Donación',
+          numeroCuenta: null,
+          avisoEs: null,
+          avisoEn: null,
+          qrRuta: 'qr/id/archivo.png',
+          qrVenceEl: '2026-11-25',
+        },
+      ]);
+      await expect(servicio.obtenerActiva()).resolves.toMatchObject({
+        qrUrl: null,
+      });
+
+      find.mockResolvedValue([
+        {
+          titular: 'Fundación FÉNIX',
+          banco: 'Banco',
+          telefono: '70000000',
+          referencia: 'Donación',
+          numeroCuenta: null,
+          avisoEs: null,
+          avisoEn: null,
+          qrRuta: 'qr/id/archivo.png',
+          qrVenceEl: '2026-11-26',
+        },
+      ]);
+      const vigente = await servicio.obtenerActiva();
+      expect(vigente?.qrUrl).toContain('/qr/id/archivo.png');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('oculta un QR vencido', async () => {
     find.mockResolvedValue([
       {

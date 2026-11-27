@@ -12,10 +12,22 @@ export type AdminDonation = {
   avisoEs: string | null;
   avisoEn: string | null;
   activo: boolean;
+  qrUrl: string | null;
+  actualizadoEn: string;
   qr: { disponible: boolean; venceEl: string | null };
 };
 
-export type SaveAdminDonation = Omit<AdminDonation, 'activo' | 'qr'>;
+export type SaveAdminDonation = {
+  titular: string;
+  banco: string;
+  telefono: string;
+  referencia: string;
+  numeroCuenta: string | null;
+  avisoEs: string | null;
+  avisoEn: string | null;
+  activo?: boolean;
+  qrVenceEl?: string | null;
+};
 
 async function request<T>(endpoint: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${endpoint}`, {
