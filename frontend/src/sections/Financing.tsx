@@ -7,12 +7,12 @@ import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
 
 export function Financing() {
   const { t } = useTranslation();
-  const { text } = useInstitutionalContent();
+  const { text, image } = useInstitutionalContent();
 
   return (
     <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
       <Photo
-        src="/images/jornada-en-comunidad.jpg"
+        src={image('financiamiento_intro') ?? '/images/jornada-en-comunidad.jpg'}
         alt={t('financing.photo_alt')}
         radius="panel"
         width={520}

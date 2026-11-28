@@ -152,6 +152,7 @@ describe('application bootstrap (e2e)', () => {
         '/api/admin/canales/{tipo}',
         '/api/admin/contenido',
         '/api/admin/contenido/{clave}',
+        '/api/admin/contenido/{clave}/imagen',
         '/api/admin/historias',
         '/api/admin/historias/orden',
         '/api/admin/historias/{id}',
@@ -170,6 +171,7 @@ describe('application bootstrap (e2e)', () => {
         '/api/public/contactos',
         '/api/public/donaciones',
         '/api/public/estadisticas',
+        '/api/public/historias',
         '/api/public/institucional',
       ].sort(),
     );
@@ -206,9 +208,13 @@ describe('application bootstrap (e2e)', () => {
       'post',
     );
     expect(document.paths['/api/public/campanas/{id}']).toHaveProperty('get');
+    expect(document.paths['/api/public/historias']).toHaveProperty('get');
     expect(document.paths['/api/admin/contenido']).toHaveProperty('get');
     expect(document.paths['/api/admin/contenido/{clave}']).toHaveProperty(
       'put',
+    );
+    expect(document.paths['/api/admin/contenido/{clave}/imagen']).toHaveProperty(
+      'post',
     );
     expect(document.paths['/api/admin/canales']).toHaveProperty('get');
     expect(document.paths['/api/admin/canales/{tipo}']).toHaveProperty('put');

@@ -1,14 +1,19 @@
 import { ServiceUnavailableException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { vi } from 'vitest';
+import { StorageService } from '../storage/storage.service.js';
 import { ContenidoInstitucionalPublicoService } from './contenido-institucional-publico.service.js';
 import { ContenidoInstitucional } from './entities/contenido-institucional.entity.js';
 
 describe('ContenidoInstitucionalPublicoService', () => {
   const find = vi.fn();
-  const servicio = new ContenidoInstitucionalPublicoService({
-    find,
-  } as unknown as Repository<ContenidoInstitucional>);
+  const obtenerUrlPublica = vi.fn(
+    (ruta: string) => `https://cdn.test/${ruta}`,
+  );
+  const servicio = new ContenidoInstitucionalPublicoService(
+    { find } as unknown as Repository<ContenidoInstitucional>,
+    { obtenerUrlPublica } as unknown as StorageService,
+  );
 
   beforeEach(() => vi.clearAllMocks());
 
@@ -20,7 +25,7 @@ describe('ContenidoInstitucionalPublicoService', () => {
         tituloEn: 'Mission',
         textoEs: 'Texto ES',
         textoEn: 'Text EN',
-        imagenRuta: 'https://cdn.example/mision.jpg',
+        imagenRuta: 'contenido/mision/foto.jpg',
         orden: 1,
         id: 'no-debe-exponerse',
         actualizadoPorId: 'no-debe-exponerse',
@@ -32,7 +37,7 @@ describe('ContenidoInstitucionalPublicoService', () => {
         clave: 'mision',
         titulo: { es: 'Misión', en: 'Mission' },
         descripcion: { es: 'Texto ES', en: 'Text EN' },
-        imagenUrl: 'https://cdn.example/mision.jpg',
+        imagenUrl: 'https://cdn.test/contenido/mision/foto.jpg',
         orden: 1,
       },
     ]);

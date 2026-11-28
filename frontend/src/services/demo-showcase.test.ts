@@ -53,7 +53,9 @@ describe('VITE_DEMO_SHOWCASE', () => {
             total: 3,
             fotos: [],
           }]
-        : { caninos: { total: 1, machos: 1, hembras: 0 }, felinos: { total: 2, machos: 0, hembras: 2 } };
+        : url.endsWith('/public/historias')
+          ? []
+          : { caninos: { total: 1, machos: 1, hembras: 0 }, felinos: { total: 2, machos: 0, hembras: 2 } };
       return new Response(JSON.stringify(body), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -73,6 +75,6 @@ describe('VITE_DEMO_SHOWCASE', () => {
       felinos: { total: 2, males: 0, females: 2 },
     });
     expect(await getStories()).toEqual([]);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });

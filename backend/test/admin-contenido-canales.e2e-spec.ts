@@ -15,6 +15,9 @@ import { CookieSesionService } from '../src/modules/auth/services/cookie-sesion.
 import { SesionAdminService } from '../src/modules/auth/services/sesion-admin.service.js';
 import { CanalContacto } from '../src/modules/canales-contacto/entities/canal-contacto.entity.js';
 import { ContenidoInstitucional } from '../src/modules/contenido-institucional/entities/contenido-institucional.entity.js';
+import { TAMANO_MAXIMO_FOTO } from '../src/modules/campanas/fotos-campana.service.js';
+import { StorageService } from '../src/modules/storage/storage.service.js';
+import { crearJpg, crearPng } from './utils/imagenes.js';
 
 const ADMIN_ID = '11111111-1111-1111-1111-111111111111';
 const COOKIE = 'fenix_session=sesion-valida';
@@ -78,6 +81,12 @@ describe('administración de contenido y canales (e2e)', () => {
   let contenidos: ContenidoInstitucional[];
   let canales: CanalContacto[];
   let auditorias: Array<Partial<Auditoria>>;
+  let estadoCuenta: 'activo' | 'inactivo' = 'activo';
+  const storage = {
+    subir: vi.fn().mockResolvedValue(undefined),
+    eliminar: vi.fn().mockResolvedValue(undefined),
+    obtenerUrlPublica: vi.fn((ruta: string) => `https://cdn.test/${ruta}`),
+  };
 
   const repositorioContenido = {
     find: vi.fn(async () => contenidos),
@@ -138,6 +147,8 @@ describe('administración de contenido y canales (e2e)', () => {
       .useValue(repositorioContenido)
       .overrideProvider(getRepositoryToken(CanalContacto))
       .useValue(repositorioCanales)
+      .overrideProvider(StorageService)
+      .useValue(storage)
       .overrideProvider(SesionAdminService)
       .useValue({
         validar: vi.fn(async () => ({
@@ -164,7 +175,7 @@ describe('administración de contenido y canales (e2e)', () => {
       .overrideProvider(AutorizacionAdministradorService)
       .useValue({
         cargarParaSesion: vi.fn(async () => ({
-          estado: 'activo',
+          estado: estadoCuenta,
           administrador: { id: ADMIN_ID, nombre: 'Administración FÉNIX' },
         })),
       })
@@ -183,6 +194,7 @@ describe('administración de contenido y canales (e2e)', () => {
     contenidos = [crearContenido()];
     canales = [crearCanal()];
     auditorias = [];
+    estadoCuenta = 'activo';
     vi.clearAllMocks();
   });
 
@@ -262,6 +274,81 @@ describe('administración de contenido y canales (e2e)', () => {
         .set('X-CSRF-Token', CSRF)
         .send(contenidoValido)
         .expect(404);
+    });
+
+    describe('POST /api/admin/contenido/:clave/imagen', () => {
+      const subir = (clave: string, contenido: Buffer, contentType = 'image/jpeg') =>
+        request(app.getHttpServer())
+          .post(`/api/admin/contenido/${clave}/imagen`)
+          .set('Cookie', COOKIE)
+          .set('X-CSRF-Token', CSRF)
+          .attach('archivo', contenido, { filename: 'foto', contentType });
+
+      it('reemplaza la imagen, publica la URL y registra la auditoría', async () => {
+        contenidos[0].imagenRuta = 'contenido/hero_principal/anterior.jpg';
+        storage.eliminar.mockRejectedValueOnce(new Error('no se pudo borrar'));
+
+        const respuesta = await subir('hero_principal', crearJpg(12, 8)).expect(
+          201,
+        );
+
+        expect(respuesta.body.imagenRuta).toMatch(
+          /^contenido\/hero_principal\/.+\.jpg$/,
+        );
+        expect(respuesta.body.imagenUrl).toBe(
+          `https://cdn.test/${respuesta.body.imagenRuta}`,
+        );
+        expect(storage.subir).toHaveBeenCalledWith(
+          respuesta.body.imagenRuta,
+          expect.any(Buffer),
+          'image/jpeg',
+        );
+        expect(storage.eliminar).toHaveBeenCalledWith(
+          'contenido/hero_principal/anterior.jpg',
+        );
+        expect(contenidos[0].imagenRuta).toBe(respuesta.body.imagenRuta);
+        expect(auditorias).toHaveLength(1);
+        expect(auditorias[0]).toMatchObject({
+          administradorId: ADMIN_ID,
+          tabla: 'contenido_institucional',
+          registroId: contenidos[0].id,
+          accion: 'UPDATE',
+        });
+        expect(auditorias[0].camposModificados).toContain('imagen_ruta');
+      });
+
+      it('rechaza la subida sin sesión (401), sin CSRF y con la cuenta desactivada (403)', async () => {
+        const jpg = crearJpg(8, 8);
+        await request(app.getHttpServer())
+          .post('/api/admin/contenido/hero_principal/imagen')
+          .attach('archivo', jpg, { filename: 'foto', contentType: 'image/jpeg' })
+          .expect(401);
+
+        await request(app.getHttpServer())
+          .post('/api/admin/contenido/hero_principal/imagen')
+          .set('Cookie', COOKIE)
+          .attach('archivo', jpg, { filename: 'foto', contentType: 'image/jpeg' })
+          .expect(403);
+
+        estadoCuenta = 'inactivo';
+        await subir('hero_principal', jpg).expect(403);
+        expect(storage.subir).not.toHaveBeenCalled();
+      });
+
+      it('responde 404 si el bloque no existe', async () => {
+        await subir('no_existe', crearJpg(8, 8)).expect(404);
+        expect(storage.subir).not.toHaveBeenCalled();
+      });
+
+      it('rechaza un tipo inválido (415) y un archivo mayor a 5 MB (413)', async () => {
+        await subir('hero_principal', crearPng(8, 8), 'image/jpeg').expect(415);
+        await subir(
+          'hero_principal',
+          Buffer.alloc(TAMANO_MAXIMO_FOTO + 1),
+        ).expect(413);
+        expect(storage.subir).not.toHaveBeenCalled();
+        expect(contenidos[0].imagenRuta).toBeNull();
+      });
     });
   });
 

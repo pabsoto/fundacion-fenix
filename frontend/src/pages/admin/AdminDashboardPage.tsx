@@ -9,13 +9,22 @@ import { useVistaMovil } from '@/hooks/useVistaMovil';
 import { cn } from '@/lib/cn';
 import { AuthApiError, cerrarSesion } from '@/services/auth.service';
 
-const PESTANAS = [
+const PESTANAS_BARRA = [
   { to: '/admin', end: true, label: textosAdmin.nav.resumen, icono: LayoutGrid },
   { to: '/admin/campanas', end: false, label: textosAdmin.nav.campanas, icono: Calendar },
   { to: '/admin/animales', end: false, label: textosAdmin.nav.animales, icono: PawPrint },
   { to: '/admin/donaciones', end: false, label: textosAdmin.nav.donaciones, icono: Heart },
-  { to: '/admin/canales', end: false, label: textosAdmin.nav.canales, icono: Link2 },
 ] as const;
+
+/** En móvil vive en el menú del avatar: el nombre no cabe en la barra de cuatro. */
+const PESTANA_CONTENIDO = {
+  to: '/admin/contenido',
+  end: false,
+  label: textosAdmin.nav.contenido,
+  icono: Link2,
+} as const;
+
+const PESTANAS_ESCRITORIO = [...PESTANAS_BARRA, PESTANA_CONTENIDO] as const;
 
 const ENFOCABLES =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -60,7 +69,7 @@ function Marca() {
 function Pestanas({ onNavegar }: { onNavegar?: () => void }) {
   return (
     <>
-      {PESTANAS.map((pestana) => (
+      {PESTANAS_ESCRITORIO.map((pestana) => (
         <NavLink
           key={pestana.to}
           to={pestana.to}
@@ -86,7 +95,7 @@ function BarraInferior() {
       aria-label={textosAdmin.nav.etiqueta}
         className="border-linea bg-blanco fixed inset-x-0 bottom-0 z-40 flex items-start justify-center gap-(--spacing-tabs-movil) border-t px-(--spacing-barra-inferior-x) pt-(--spacing-barra-inferior-pt) pb-[max(var(--spacing-barra-inferior-pb),env(safe-area-inset-bottom,0px))]"
     >
-      {PESTANAS.map((pestana) => {
+      {PESTANAS_BARRA.map((pestana) => {
         const Icono = pestana.icono;
         return (
           <NavLink
@@ -141,7 +150,7 @@ function MenuCuenta({
     const previo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    menuRef.current?.querySelector<HTMLElement>('button')?.focus();
+    menuRef.current?.querySelector<HTMLElement>(ENFOCABLES)?.focus();
 
     function enfocable() {
       const nodo = menuRef.current;
@@ -197,6 +206,15 @@ function MenuCuenta({
           <p className="t-nota text-negro">{textosAdmin.nav.rol}</p>
         </div>
         <div className="bg-negro h-px w-full" />
+        <NavLink
+          to={PESTANA_CONTENIDO.to}
+          role="menuitem"
+          className="rounded-btn flex min-h-(--size-control-admin) w-full items-center gap-3 px-3 text-left no-underline"
+          onClick={onCerrar}
+        >
+          <Link2 className="size-5 shrink-0" aria-hidden="true" />
+          <span className="t-body-strong text-negro">{PESTANA_CONTENIDO.label}</span>
+        </NavLink>
         <button
           type="button"
           role="menuitem"

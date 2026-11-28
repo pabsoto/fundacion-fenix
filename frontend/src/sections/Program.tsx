@@ -7,7 +7,7 @@ import { useInstitutionalContent } from '@/hooks/useInstitutionalContent';
 
 export function Program() {
   const { t } = useTranslation();
-  const { text } = useInstitutionalContent();
+  const { text, image } = useInstitutionalContent();
 
   return (
     <div className="grid items-center gap-10 rounded-panel bg-naranja p-6 text-negro lg:grid-cols-2 lg:gap-16 lg:p-16">
@@ -27,7 +27,7 @@ export function Program() {
 
       <div className="relative mx-auto w-full max-w-[460px] lg:mx-0 lg:justify-self-end">
         <Photo
-          src="/images/programa-por-menos-de-ellos-sufriendo.jpg"
+          src={image('programa_encabezado') ?? '/images/programa-por-menos-de-ellos-sufriendo.jpg'}
           alt={t('program.photo_alt')}
           radius="panel"
           width={460}

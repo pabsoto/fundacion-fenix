@@ -57,6 +57,12 @@
   --spacing-foto-detalle: 120px;
   --spacing-zona-foto: 72px;
   --spacing-panel-detalle: 380px;
+  /* Admin — Contenido del sitio (nodo 583:373). */
+  --spacing-lista-bloques: 264px;
+  --spacing-canal-nombre: 150px;
+  --spacing-canal-texto: 280px;
+  --spacing-miniatura-contenido: 168px;
+  --size-miniatura-contenido: 104px;
   --spacing-lienzo-admin: 1328px;
   --spacing-pagina-admin: 56px;
   --spacing-col-nombre: 200px;

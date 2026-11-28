@@ -1,7 +1,9 @@
 import { NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { vi } from 'vitest';
+import { crearJpg } from '../../../test/utils/imagenes.js';
 import { Auditoria } from '../auditoria/entities/auditoria.entity.js';
+import { StorageService } from '../storage/storage.service.js';
 import { ContenidoInstitucionalAdminService } from './contenido-institucional-admin.service.js';
 import { ActualizarContenidoDto } from './dto/contenido-institucional-admin.dto.js';
 import { ContenidoInstitucional } from './entities/contenido-institucional.entity.js';
@@ -56,9 +58,15 @@ describe('ContenidoInstitucionalAdminService', () => {
     async (operacion: (entityManager: EntityManager) => Promise<unknown>) =>
       operacion(manager),
   );
+  const storage = {
+    subir: vi.fn().mockResolvedValue(undefined),
+    eliminar: vi.fn().mockResolvedValue(undefined),
+    obtenerUrlPublica: vi.fn((ruta: string) => `https://cdn.test/${ruta}`),
+  };
   const servicio = new ContenidoInstitucionalAdminService(
-    { find } as unknown as Repository<ContenidoInstitucional>,
+    { find, findOne } as unknown as Repository<ContenidoInstitucional>,
     { transaction } as unknown as DataSource,
+    storage as unknown as StorageService,
   );
 
   beforeEach(() => {
@@ -176,5 +184,40 @@ describe('ContenidoInstitucionalAdminService', () => {
     expect((error as Error).message).not.toContain('secreto');
     // La causa se conserva para el log, no para la respuesta.
     expect((error as Error).cause).toEqual(new Error('detalle secreto'));
+  });
+
+  it('reemplaza la imagen, audita y no falla si no se puede borrar la anterior', async () => {
+    const jpg = crearJpg(8, 8);
+    storage.eliminar.mockRejectedValue(new Error('Storage no borra'));
+
+    const resultado = await servicio.reemplazarImagen(
+      'hero_principal',
+      { buffer: jpg, mimetype: 'image/jpeg', size: jpg.length },
+      ADMIN_ID,
+    );
+
+    const ruta = storage.subir.mock.calls[0][0] as string;
+    expect(ruta).toMatch(/^contenido\/hero_principal\/.+\.jpg$/);
+    expect(storage.subir).toHaveBeenCalledWith(ruta, jpg, 'image/jpeg');
+    expect(storage.eliminar).toHaveBeenCalledExactlyOnceWith('contenido/hero.png');
+    expect(resultado.imagenRuta).toBe(ruta);
+    expect(resultado.imagenUrl).toBe(`https://cdn.test/${ruta}`);
+    expect(crearAuditoria.mock.calls[0][0].camposModificados).toContain(
+      'imagen_ruta',
+    );
+  });
+
+  it('responde 404 sin subir si el bloque no existe', async () => {
+    findOne.mockResolvedValue(null);
+    const jpg = crearJpg(8, 8);
+
+    await expect(
+      servicio.reemplazarImagen(
+        'no_existe',
+        { buffer: jpg, mimetype: 'image/jpeg', size: jpg.length },
+        ADMIN_ID,
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(storage.subir).not.toHaveBeenCalled();
   });
 });

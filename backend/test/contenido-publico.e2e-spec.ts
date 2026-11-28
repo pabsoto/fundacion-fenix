@@ -75,7 +75,11 @@ describe('API pública de contenido (e2e)', () => {
       .overrideProvider(getRepositoryToken(CanalContacto))
       .useValue(repositorioContactos)
       .overrideProvider(StorageService)
-      .useValue({ obtenerUrlPublica: vi.fn().mockReturnValue(null) })
+      .useValue({
+        obtenerUrlPublica: vi.fn((ruta: string) =>
+          ruta.startsWith('contenido/') ? `https://cdn.test/${ruta}` : null,
+        ),
+      })
       .compile();
 
     app = modulo.createNestApplication();
@@ -104,7 +108,7 @@ describe('API pública de contenido (e2e)', () => {
         tituloEn: 'Mission',
         textoEs: 'Nuestra misión',
         textoEn: 'Our mission',
-        imagenRuta: 'https://cdn.example/mision.jpg',
+        imagenRuta: 'contenido/mision/foto.jpg',
         orden: 10,
         visible: true,
       },
@@ -170,7 +174,7 @@ describe('API pública de contenido (e2e)', () => {
       clave: 'mision',
       titulo: { es: 'Misión', en: 'Mission' },
       descripcion: { es: 'Nuestra misión', en: 'Our mission' },
-      imagenUrl: 'https://cdn.example/mision.jpg',
+      imagenUrl: 'https://cdn.test/contenido/mision/foto.jpg',
       orden: 10,
     });
     expect(JSON.stringify(respuesta.body)).not.toContain('borrador');

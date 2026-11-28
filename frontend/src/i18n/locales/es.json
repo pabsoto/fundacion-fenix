@@ -169,6 +169,8 @@
     "photo_placeholder": "Foto · Mascota",
     "prev": "Ver historias anteriores",
     "next": "Ver más historias",
+    "loading": "Cargando historias…",
+    "error": "No fue posible cargar las historias en este momento.",
     "empty": "Aún no hay historias oficiales publicadas."
   },
   "collaborate": {
