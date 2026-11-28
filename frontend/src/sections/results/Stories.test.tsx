@@ -208,4 +208,22 @@ describe('estados de la sección', () => {
     );
     expect(screen.queryByText('Aún no hay historias oficiales publicadas.')).toBeNull();
   });
+
+  it('conserva las proporciones de fotos verticales y horizontales', async () => {
+    estado.stories = storiesMock.map((story, index) => ({
+      ...story,
+      photo: `/fotos/${story.id}.jpg`,
+      photoWidth: index === 0 ? 900 : 1600,
+      photoHeight: index === 0 ? 1600 : 900,
+    }));
+    await i18n.changeLanguage('es');
+    render(<Stories />);
+
+    const photos = screen.getAllByRole('img');
+    expect(photos).toHaveLength(3);
+    photos.forEach((photo) => {
+      expect(photo.className).toContain('object-contain');
+      expect(photo.className).not.toContain('object-cover');
+    });
+  });
 });
